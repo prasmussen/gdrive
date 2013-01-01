@@ -16,6 +16,45 @@ If you want to compile from source you need the go toolchain: http://golang.org/
 - Save the 'drive' binary to a location in your PATH (i.e. `/usr/local/bin/`)
 - Or compile it yourself `go build drive.go`
 
+### Downloads
+<table>
+    <tr>
+      <td>drive-darwin-386</td>
+      <td>https://drive.google.com/uc?id=0B3X9GlR6Embna3MzX2w1Vkkydmc</td>
+    </tr>
+    <tr>
+      <td>drive-darwin-amd64</td>
+      <td>https://drive.google.com/uc?id=0B3X9GlR6EmbndElsMVpaTm4yZ1k</td>
+    </tr>
+    <tr>
+      <td>drive-freebsd-386</td>
+      <td>https://drive.google.com/uc?id=0B3X9GlR6EmbnLVZDZ0dGYUVqRVk</td>
+    </tr>
+    <tr>
+      <td>drive-freebsd-amd64</td>
+      <td>https://drive.google.com/uc?id=0B3X9GlR6EmbnZlFxdGxaLWMtcjA</td>
+    </tr>
+    <tr>
+      <td>drive-linux-386</td>
+      <td>https://drive.google.com/uc?id=0B3X9GlR6EmbnemRmV25ubHdKemM</td>
+    </tr>
+    <tr>
+      <td>drive-linux-amd64</td>
+      <td>https://drive.google.com/uc?id=0B3X9GlR6EmbnSTY5RTZNT2djQmM</td>
+    </tr>
+    <tr>
+      <td>drive-linux-arm</td>
+      <td>https://drive.google.com/uc?id=0B3X9GlR6Embna1hSdWw1MFFvU00</td>
+    </tr>
+    <tr>
+      <td>drive-windows-386.exe</td>
+      <td>https://drive.google.com/uc?id=0B3X9GlR6EmbnZVVJeHoyeTNvcGs</td>
+    </tr>
+    <tr>
+      <td>drive-windows-amd64.exe</td>
+      <td>https://drive.google.com/uc?id=0B3X9GlR6EmbnVkJBOHJIUEpJWUk</td>
+    </tr>
+</table>
 
 ## Usage
     drive [global options] <verb> [verb options]
