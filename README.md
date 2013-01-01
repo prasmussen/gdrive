@@ -26,7 +26,7 @@ If you want to compile from source you need the go toolchain: http://golang.org/
         -c, --config   Set application path where config and token is stored. Defaults to ~/.gdrive
         -v, --version  Print version
         -h, --help     Show this help
-    
+
     Verbs:
         delete:
             -i, --id File Id (*)
@@ -58,7 +58,7 @@ If you want to compile from source you need the go toolchain: http://golang.org/
 ## Examples
 ###### List files
     $ drive list
-    Id                             Title                     Size     Created               
+    Id                             Title                     Size     Created
     0B3X9GlR6EmbnenBYSFI4MzN0d2M   drive-freebsd-amd64       5 MB     2013-01-01 21:57:01
     0B3X9GlR6EmbnOVRQN0t6RkxVQk0   drive-windows-amd64.exe   5 MB     2013-01-01 21:56:41
     0B3X9GlR6Embnc1BtVVU1ZHp2UjQ   drive-linux-arm           4 MB     2013-01-01 21:57:23
@@ -66,7 +66,7 @@ If you want to compile from source you need the go toolchain: http://golang.org/
     0B3X9GlR6EmbncTk1TXlMdjd1ODQ   drive-darwin-amd64        5 MB     2013-01-01 21:53:34
 
 ###### Upload file
-    $ drive upload --file drive-linux-amd64 
+    $ drive upload --file drive-linux-amd64
     Id: 0B3X9GlR6EmbnU0ZnbGV4dlk1T00
     Title: drive-linux-amd64
     Size: 5 MB
@@ -86,7 +86,7 @@ If you want to compile from source you need the go toolchain: http://golang.org/
     File 'drive-windows-amd64.exe' is now readable by everyone @ https://drive.google.com/uc?id=0B3X9GlR6EmbnOVRQN0t6RkxVQk0
 
 ###### Pipe content directly to your drive
-    $ echo "Hello World" | drive upload --stdin --title hello.txt                                                                                                                                                                                                                                          
+    $ echo "Hello World" | drive upload --stdin --title hello.txt
     Id: 0B3X9GlR6EmbnVHlHZWZCZVJ4eGs
     Title: hello.txt
     Size: 12 B
