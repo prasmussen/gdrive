@@ -1,0 +1,9 @@
+# Ignore bin folder and drive binary
+bin/
+drive
+
+# vim files
+.*.sw[a-z]
+*.un~
+Session.vim
+.netrwhist
