@@ -47,6 +47,10 @@ If you want to compile from source you need the go toolchain: http://golang.org/
       <td>https://drive.google.com/uc?id=0B3X9GlR6Embna1hSdWw1MFFvU00</td>
     </tr>
     <tr>
+      <td>drive-linux-rpi (Raspberry pi)</td>
+      <td>https://drive.google.com/uc?id=0B3X9GlR6Embnb2hpV2pCMlp2RnM</td>
+    </tr>
+    <tr>
       <td>drive-windows-386.exe</td>
       <td>https://drive.google.com/uc?id=0B3X9GlR6EmbnZVVJeHoyeTNvcGs</td>
     </tr>
