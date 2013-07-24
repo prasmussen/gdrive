@@ -288,7 +288,7 @@ func Unshare(d *gdrive.Drive, fileId string) {
         return
     }
 
-    fmt.Printf("File '%s' is now longer shared to 'anyone'\n", info.Title)
+    fmt.Printf("File '%s' is no longer shared to 'anyone'\n", info.Title)
 }
 
 func isShared(d *gdrive.Drive, fileId string) bool {
