@@ -20,43 +20,43 @@ If you want to compile from source you need the go toolchain: http://golang.org/
 <table>
     <tr>
       <td>drive-darwin-386</td>
-      <td>https://drive.google.com/uc?id=0B3X9GlR6Embna3MzX2w1Vkkydmc</td>
+      <td>https://drive.google.com/uc?id=0B3X9GlR6Embnb2JCS0JFRU52dVE</td>
     </tr>
     <tr>
       <td>drive-darwin-amd64</td>
-      <td>https://drive.google.com/uc?id=0B3X9GlR6EmbndElsMVpaTm4yZ1k</td>
+      <td>https://drive.google.com/uc?id=0B3X9GlR6EmbnWWt6Ukt1MkV3MUk</td>
     </tr>
     <tr>
       <td>drive-freebsd-386</td>
-      <td>https://drive.google.com/uc?id=0B3X9GlR6EmbnLVZDZ0dGYUVqRVk</td>
+      <td>https://drive.google.com/uc?id=0B3X9GlR6EmbnTF9Xb3RkVFRyM1E</td>
     </tr>
     <tr>
       <td>drive-freebsd-amd64</td>
-      <td>https://drive.google.com/uc?id=0B3X9GlR6EmbnZlFxdGxaLWMtcjA</td>
+      <td>https://drive.google.com/uc?id=0B3X9GlR6EmbnbTIwekpaNzQ2LTg</td>
     </tr>
     <tr>
       <td>drive-linux-386</td>
-      <td>https://drive.google.com/uc?id=0B3X9GlR6EmbnemRmV25ubHdKemM</td>
+      <td>https://drive.google.com/uc?id=0B3X9GlR6EmbndVVjdHFqc0JoM2c</td>
     </tr>
     <tr>
       <td>drive-linux-amd64</td>
-      <td>https://drive.google.com/uc?id=0B3X9GlR6EmbnSTY5RTZNT2djQmM</td>
+      <td>https://drive.google.com/uc?id=0B3X9GlR6EmbnS3M3SDNTZXhUMXM</td>
     </tr>
     <tr>
       <td>drive-linux-arm</td>
-      <td>https://drive.google.com/uc?id=0B3X9GlR6Embna1hSdWw1MFFvU00</td>
+      <td>https://drive.google.com/uc?id=0B3X9GlR6EmbnZFVWTmxRNUc4X0U</td>
     </tr>
     <tr>
       <td>drive-linux-rpi (Raspberry pi)</td>
-      <td>https://drive.google.com/uc?id=0B3X9GlR6Embnb2hpV2pCMlp2RnM</td>
+      <td>https://drive.google.com/uc?id=0B3X9GlR6EmbnY29JUWVvOTMzSEE</td>
     </tr>
     <tr>
       <td>drive-windows-386.exe</td>
-      <td>https://drive.google.com/uc?id=0B3X9GlR6EmbnZVVJeHoyeTNvcGs</td>
+      <td>https://drive.google.com/uc?id=0B3X9GlR6EmbnVDRLYktaeUxXOW8</td>
     </tr>
     <tr>
       <td>drive-windows-amd64.exe</td>
-      <td>https://drive.google.com/uc?id=0B3X9GlR6EmbnVkJBOHJIUEpJWUk</td>
+      <td>https://drive.google.com/uc?id=0B3X9GlR6EmbnMXVsWXFzVmNwTFk</td>
     </tr>
 </table>
 
