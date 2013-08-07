@@ -6,6 +6,7 @@ import (
     "io"
     "path/filepath"
     "strings"
+    "mime"
     "code.google.com/p/google-api-go-client/drive/v2"
     "../util"
     "../gdrive"
@@ -127,7 +128,11 @@ func Upload(d *gdrive.Drive, input io.ReadCloser, title string, share bool) {
         }
     }
 
-    metadata := &drive.File{Title: title}
+    var mimeType = mime.TypeByExtension(filepath.Ext(title))
+    metadata := &drive.File{
+      Title: title, 
+      MimeType: mimeType,
+    }
     getRate := util.MeasureTransferRate()
 
     info, err := d.Files.Insert(metadata).Media(input).Do()
@@ -141,6 +146,7 @@ func Upload(d *gdrive.Drive, input io.ReadCloser, title string, share bool) {
 
     // Print information about uploaded file
     printInfo(d, info)
+    fmt.Printf("MIME Type: %s\n", mimeType)
     fmt.Printf("Uploaded '%s' at %s, total %s\n", info.Title, getRate(bytes), util.FileSizeFormat(bytes))
 
     // Share file if the share flag was provided
