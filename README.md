@@ -17,48 +17,16 @@ If you want to compile from source you need the go toolchain: http://golang.org/
 - Or compile it yourself `go build drive.go`
 
 ### Downloads
-<table>
-    <tr>
-      <td>drive-darwin-386</td>
-      <td>https://drive.google.com/uc?id=0B3X9GlR6Embnb2JCS0JFRU52dVE</td>
-    </tr>
-    <tr>
-      <td>drive-darwin-amd64</td>
-      <td>https://drive.google.com/uc?id=0B3X9GlR6EmbnWWt6Ukt1MkV3MUk</td>
-    </tr>
-    <tr>
-      <td>drive-freebsd-386</td>
-      <td>https://drive.google.com/uc?id=0B3X9GlR6EmbnTF9Xb3RkVFRyM1E</td>
-    </tr>
-    <tr>
-      <td>drive-freebsd-amd64</td>
-      <td>https://drive.google.com/uc?id=0B3X9GlR6EmbnbTIwekpaNzQ2LTg</td>
-    </tr>
-    <tr>
-      <td>drive-linux-386</td>
-      <td>https://drive.google.com/uc?id=0B3X9GlR6EmbndVVjdHFqc0JoM2c</td>
-    </tr>
-    <tr>
-      <td>drive-linux-amd64</td>
-      <td>https://drive.google.com/uc?id=0B3X9GlR6EmbnS3M3SDNTZXhUMXM</td>
-    </tr>
-    <tr>
-      <td>drive-linux-arm</td>
-      <td>https://drive.google.com/uc?id=0B3X9GlR6EmbnZFVWTmxRNUc4X0U</td>
-    </tr>
-    <tr>
-      <td>drive-linux-rpi (Raspberry pi)</td>
-      <td>https://drive.google.com/uc?id=0B3X9GlR6EmbnY29JUWVvOTMzSEE</td>
-    </tr>
-    <tr>
-      <td>drive-windows-386.exe</td>
-      <td>https://drive.google.com/uc?id=0B3X9GlR6EmbnVDRLYktaeUxXOW8</td>
-    </tr>
-    <tr>
-      <td>drive-windows-amd64.exe</td>
-      <td>https://drive.google.com/uc?id=0B3X9GlR6EmbnMXVsWXFzVmNwTFk</td>
-    </tr>
-</table>
+- [drive-darwin-386 v1.0.2](https://drive.google.com/uc?id=0B3X9GlR6EmbnSzA3UFNMS2tfOUU)
+- [drive-darwin-amd64 v1.0.2](https://drive.google.com/uc?id=0B3X9GlR6EmbnQnM0SlJzZEZfYW8)
+- [drive-freebsd-386 v1.0.2](https://drive.google.com/uc?id=0B3X9GlR6EmbnS1JJSmRIVXc2QU0)
+- [drive-freebsd-amd64 v1.0.2](https://drive.google.com/uc?id=0B3X9GlR6EmbnUElHaF9DRk1fa1E)
+- [drive-linux-386 v1.0.2](https://drive.google.com/uc?id=0B3X9GlR6EmbnbGRXcWFWWWVOdTg)
+- [drive-linux-amd64 v1.0.2](https://drive.google.com/uc?id=0B3X9GlR6EmbnSGxXN3JJcW1iUzQ)
+- [drive-linux-arm v1.0.2](https://drive.google.com/uc?id=0B3X9GlR6EmbnNURrQ3RuNm8yd00)
+- [drive-linux-rpi v1.0.2](https://drive.google.com/uc?id=0B3X9GlR6EmbnNUNtOVViZTlNd2M)
+- [drive-windows-386.exe v1.0.2](https://drive.google.com/uc?id=0B3X9GlR6EmbnancwUWZjRy1IUWM)
+- [drive-windows-amd64.exe v1.0.2](https://drive.google.com/uc?id=0B3X9GlR6Embnd2pWTHVLVkNPZVk)
 
 ## Usage
     drive [global options] <verb> [verb options]
