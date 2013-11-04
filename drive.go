@@ -78,7 +78,7 @@ func main() {
     drive, err := gdrive.New(opts.AppPath, opts.Advanced)
     if err != nil {
         fmt.Printf("An error occurred creating Drive client: %v\n", err)
-        return
+        os.Exit(1)
     }
 
     switch opts.Verbs {

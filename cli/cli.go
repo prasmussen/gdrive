@@ -31,7 +31,7 @@ func List(d *gdrive.Drive, query, titleFilter string, maxResults int, sharedStat
     list, err := caller.Do()
     if err != nil {
         fmt.Println(err)
-        return
+        os.Exit(1)
     }
 
     items := make([]map[string]string, 0, 0)
@@ -95,7 +95,7 @@ func Info(d *gdrive.Drive, fileId string) {
     info, err := d.Files.Get(fileId).Do()
     if err != nil {
         fmt.Printf("An error occurred: %v\n", err)
-        return
+        os.Exit(1)
     }
     printInfo(d, info)
 }
@@ -138,7 +138,7 @@ func Upload(d *gdrive.Drive, input io.ReadCloser, title string, share bool) {
     info, err := d.Files.Insert(metadata).Media(input).Do()
     if err != nil {
         fmt.Printf("An error occurred uploading the document: %v\n", err)
-        return
+        os.Exit(1)
     }
 
     // Total bytes transferred
@@ -160,12 +160,12 @@ func DownloadLatest(d *gdrive.Drive, stdout bool) {
 
     if err != nil {
         fmt.Println(err)
-        return
+        os.Exit(1)
     }
 
     if len(list.Items) == 0 {
         fmt.Println("No files found")
-        return
+        os.Exit(1)
     }
 
     latestId := list.Items[0].Id
@@ -178,13 +178,13 @@ func Download(d *gdrive.Drive, fileId string, stdout, deleteAfterDownload bool) 
     info, err := d.Files.Get(fileId).Do()
     if err != nil {
         fmt.Printf("An error occurred: %v\n", err)
-        return
+        os.Exit(1)
     }
 
     if info.DownloadUrl == "" {
         // If there is no DownloadUrl, there is no body
         fmt.Println("An error occurred: File is not downloadable")
-        return
+        os.Exit(1)
     }
 
     // Measure transfer rate
@@ -194,7 +194,7 @@ func Download(d *gdrive.Drive, fileId string, stdout, deleteAfterDownload bool) 
     res, err := d.Client().Get(info.DownloadUrl)
     if err != nil {
         fmt.Printf("An error occurred: %v\n", err)
-        return
+        os.Exit(1)
     }
 
     // Close body on function exit
@@ -202,7 +202,7 @@ func Download(d *gdrive.Drive, fileId string, stdout, deleteAfterDownload bool) 
 
     if err != nil {
         fmt.Printf("An error occurred: %v\n", err)
-        return
+        os.Exit(1)
     }
 
     // Write file content to stdout
@@ -214,14 +214,14 @@ func Download(d *gdrive.Drive, fileId string, stdout, deleteAfterDownload bool) 
     // Check if file exists
     if util.FileExists(info.Title) {
         fmt.Printf("An error occurred: '%s' already exists\n", info.Title)
-        return
+        os.Exit(1)
     }
 
     // Create a new file
     outFile, err := os.Create(info.Title) 
     if err != nil {
         fmt.Printf("An error occurred: %v\n", err)
-        return
+        os.Exit(1)
     }
 
     // Close file on function exit
@@ -231,7 +231,7 @@ func Download(d *gdrive.Drive, fileId string, stdout, deleteAfterDownload bool) 
     bytes, err := io.Copy(outFile, res.Body)
     if err != nil {
         fmt.Printf("An error occurred: %v")
-        return
+        os.Exit(1)
     }
 
     fmt.Printf("Downloaded '%s' at %s, total %s\n", info.Title, getRate(bytes), util.FileSizeFormat(bytes))
@@ -246,12 +246,12 @@ func Delete(d *gdrive.Drive, fileId string) {
     info, err := d.Files.Get(fileId).Do()
     if err != nil {
         fmt.Printf("An error occurred: %v\n", err)
-        return
+        os.Exit(1)
     }
 
     if err = d.Files.Delete(fileId).Do(); err != nil {
         fmt.Printf("An error occurred: %v\n", err)
-        return
+        os.Exit(1)
     }
     
     fmt.Printf("Removed file '%s'\n", info.Title)
@@ -262,7 +262,7 @@ func Share(d *gdrive.Drive, fileId string) {
     info, err := d.Files.Get(fileId).Do()
     if err != nil {
         fmt.Printf("An error occurred: %v\n", err)
-        return
+        os.Exit(1)
     }
 
     perm := &drive.Permission{
@@ -274,7 +274,7 @@ func Share(d *gdrive.Drive, fileId string) {
     _, err = d.Permissions.Insert(fileId, perm).Do()
     if err != nil {
         fmt.Printf("An error occurred: %v\n", err)
-        return
+        os.Exit(1)
     }
 
     fmt.Printf("File '%s' is now readable by everyone @ %s\n", info.Title, util.PreviewUrl(fileId))
@@ -285,13 +285,13 @@ func Unshare(d *gdrive.Drive, fileId string) {
     info, err := d.Files.Get(fileId).Do()
     if err != nil {
         fmt.Printf("An error occurred: %v\n", err)
-        return
+        os.Exit(1)
     }
 
     err = d.Permissions.Delete(fileId, "anyone").Do()
     if err != nil {
         fmt.Printf("An error occurred: %v\n", err)
-        return
+        os.Exit(1)
     }
 
     fmt.Printf("File '%s' is no longer shared to 'anyone'\n", info.Title)
@@ -301,7 +301,7 @@ func isShared(d *gdrive.Drive, fileId string) bool {
     r, err := d.Permissions.List(fileId).Do()
     if err != nil {
         fmt.Printf("An error occurred: %v\n", err)
-        return false
+        os.Exit(1)
     }
 
     for _, perm := range r.Items {
