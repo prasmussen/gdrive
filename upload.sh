@@ -1,5 +1,22 @@
 #!/bin/bash
 
+# Markdown helpers
+HEADER='### Downloads'
+ROW_TEMPLATE='- [{{name}}]({{url}})'
+
+# Grab application version
+VERSION=$(bin/drive-darwin-amd64 --version | awk '{print $2}' | sed -e 's/v//')
+
+# Print markdown header
+echo "$HEADER"
+
 for bin_path in bin/drive-*; do
-    drive upload --file $bin_path --share | re -d ": " "File '([^']+)' .+(http.+)"
+    # Upload file
+    URL=$(drive upload --file $bin_path --share | awk '/https/ {print $9}')
+
+    # Render markdown row and print to screen
+    NAME="$(basename $bin_path) v${VERSION}"
+    ROW=${ROW_TEMPLATE//"{{name}}"/$NAME}
+    ROW=${ROW//"{{url}}"/$URL}
+    echo "$ROW"
 done
