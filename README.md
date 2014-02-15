@@ -33,34 +33,40 @@ If you want to compile from source you need the go toolchain: http://golang.org/
 
 #### Options
     Global options:
-        -a, --advanced Advanced Mode -- lets you specify your own oauth client id and secret on setup
-        -c, --config   Set application path where config and token is stored. Defaults to ~/.gdrive
-        -v, --version  Print version
-        -h, --help     Show this help
+            -a, --advanced Advanced Mode -- lets you specify your own oauth client id and secret on setup
+            -c, --config   Set application path where config and token is stored. Defaults to ~/.gdrive
+            -v, --version  Print version
+            -h, --help     Show this help
 
     Verbs:
         delete:
-            -i, --id File Id (*)
+            -i, --id       File Id (*)
         download:
-            -i, --id     File Id (*)
-            -s, --stdout Write file content to stdout
-                --pop    Download latest file, and remove it from google drive
+            -i, --id       File Id (*)
+            -s, --stdout   Write file content to stdout
+                --pop      Download latest file, and remove it from google drive
+        folder:
+            -t, --title    Folder to create (*)
+            -p, --parent   Parent Id of the folder
+                --share    Share created folder
         info:
-            -i, --id File Id (*)
+            -i, --id       File Id (*)
         list:
-            -m, --max    Max results
-            -t, --title  Title filter
-            -q, --query  Query (see https://developers.google.com/drive/search-parameters)
-            -s, --shared Show shared status (Note: this will generate 1 http req per file)
+            -m, --max      Max results
+            -t, --title    Title filter
+            -q, --query    Query (see https://developers.google.com/drive/search-parameters)
+            -s, --shared   Show shared status (Note: this will generate 1 http req per file)
+            -n, --noheader Do not show the header
         share:
-            -i, --id File Id (*)
+            -i, --id       File Id (*)
         unshare:
-            -i, --id File Id (*)
+            -i, --id       File Id (*)
         upload:
-            -f, --file  File to upload (*)
-            -s, --stdin Use stdin as file content (*)
-            -t, --title Title to give uploaded file. Defaults to filename
-                --share Share uploaded file
+            -f, --file     File to upload (*)
+            -s, --stdin    Use stdin as file content (*)
+            -t, --title    Title to give uploaded file. Defaults to filename
+            -p, --parent   Parent Id of the file
+                --share    Share uploaded file
         url:
             -i, --id       File Id (*)
             -p, --preview  Generate preview url (default)
