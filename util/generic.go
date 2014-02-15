@@ -74,13 +74,13 @@ func TruncateString(str string, maxRunes int) string {
     if runeCount <= maxRunes || maxRunes < 9 {
         return str
     }
-    
+
     // Number of remaining runes to be removed
     remaining := (runeCount - maxRunes) + utf8.RuneCountInString(indicator)
-    
+
     var truncated string
     var skip bool
-    
+
     for leftOffset, char := range str {
         rightOffset := runeCount - (leftOffset + remaining)
 
@@ -96,11 +96,11 @@ func TruncateString(str string, maxRunes int) string {
             remaining--
             continue
         }
-        
+
         // Add char to result string
         truncated += string(char)
     }
-    
+
     // Return truncated string
     return truncated
 }
@@ -140,22 +140,25 @@ func Print(m map[string]string, keyOrder []string) {
 }
 
 // Prints items in columns with header and correct padding
-func PrintColumns(items []map[string]string, keyOrder []string, columnSpacing int) {
-    // Create header
-    header := make(map[string]string)
-    for _, key := range keyOrder {
-        header[key] = key
-    }
+func PrintColumns(items []map[string]string, keyOrder []string, columnSpacing int, noHeader bool) {
 
-    // Add header as the first element of items
-    items = append([]map[string]string{header}, items...)
+	if !noHeader {
+		// Create header
+		header := make(map[string]string)
+		for _, key := range keyOrder {
+			header[key] = key
+		}
+
+		// Add header as the first element of items
+		items = append([]map[string]string{header}, items...)
+	}
 
     // Get a padding function for each column
     padFns := make(map[string]func(string)string)
     for _, key := range keyOrder {
         padFns[key] = columnPadder(items, key, columnSpacing)
     }
-    
+
     // Loop, pad and print items
     for _, item := range items {
         var line string
@@ -175,7 +178,7 @@ func PrintColumns(items []map[string]string, keyOrder []string, columnSpacing in
 func columnPadder(items []map[string]string, key string, spacing int) func(string)string {
     // Holds length of longest string
     var max int
-    
+
     // Find the longest string of type key in the array
     for _, item := range items {
         str := item[key]

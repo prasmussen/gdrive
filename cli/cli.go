@@ -12,7 +12,7 @@ import (
     "../gdrive"
 )
 
-func List(d *gdrive.Drive, query, titleFilter string, maxResults int, sharedStatus bool) {
+func List(d *gdrive.Drive, query, titleFilter string, maxResults int, sharedStatus bool, noHeader bool) {
     caller := d.Files.List()
 
     if maxResults > 0 {
@@ -39,8 +39,13 @@ func List(d *gdrive.Drive, query, titleFilter string, maxResults int, sharedStat
     for _, f := range list.Items {
         // Skip files that dont have a download url (they are not stored on google drive)
         if f.DownloadUrl == "" {
-            continue
+			if f.MimeType != "application/vnd.google-apps.folder" {
+				continue
+			}
         }
+        if f.Labels.Trashed {
+			continue
+		}
 
         items = append(items, map[string]string{
             "Id": f.Id,
@@ -57,7 +62,7 @@ func List(d *gdrive.Drive, query, titleFilter string, maxResults int, sharedStat
         columnOrder = append(columnOrder, "Shared")
     }
 
-    util.PrintColumns(items, columnOrder, 3)
+    util.PrintColumns(items, columnOrder, 3, noHeader)
 }
 
 // Adds the key-value-pair 'Shared: True/False' to the map
@@ -117,8 +122,30 @@ func printInfo(d *gdrive.Drive, f *drive.File) {
     util.Print(fields, order)
 }
 
+// Create folder in drive
+func Folder(d *gdrive.Drive, title string, parentId string, share bool) {
+	// File instance
+	f := &drive.File{Title: title, MimeType: "application/vnd.google-apps.folder"}
+	// Set parent (if provided)
+	if parentId != "" {
+		p := &drive.ParentReference{Id: parentId}
+		f.Parents = []*drive.ParentReference{p}
+	}
+	// Create folder
+    info, err := d.Files.Insert(f).Do()
+    if err != nil {
+        fmt.Printf("An error occurred creating the folder: %v\n", err)
+        os.Exit(1)
+    }
+    // Share folder if the share flag was provided
+    if share {
+        Share(d, info.Id)
+    }
+	fmt.Printf("Folder created in %s\n", parentId)
+}
+
 // Upload file to drive
-func Upload(d *gdrive.Drive, input io.ReadCloser, title string, share bool) {
+func Upload(d *gdrive.Drive, input io.ReadCloser, title string, parentId string, share bool) {
     // Use filename or 'untitled' as title if no title is specified
     if title == "" {
         if f, ok := input.(*os.File); ok && input != os.Stdin {
@@ -129,13 +156,16 @@ func Upload(d *gdrive.Drive, input io.ReadCloser, title string, share bool) {
     }
 
     var mimeType = mime.TypeByExtension(filepath.Ext(title))
-    metadata := &drive.File{
-      Title: title, 
-      MimeType: mimeType,
-    }
+	// File instance
+	f := &drive.File{Title: title, MimeType: mimeType}
+	// Set parent (if provided)
+	if parentId != "" {
+		p := &drive.ParentReference{Id: parentId}
+		f.Parents = []*drive.ParentReference{p}
+	}
     getRate := util.MeasureTransferRate()
 
-    info, err := d.Files.Insert(metadata).Media(input).Do()
+    info, err := d.Files.Insert(f).Media(input).Do()
     if err != nil {
         fmt.Printf("An error occurred uploading the document: %v\n", err)
         os.Exit(1)
@@ -218,7 +248,7 @@ func Download(d *gdrive.Drive, fileId string, stdout, deleteAfterDownload bool) 
     }
 
     // Create a new file
-    outFile, err := os.Create(info.Title) 
+    outFile, err := os.Create(info.Title)
     if err != nil {
         fmt.Printf("An error occurred: %v\n", err)
         os.Exit(1)
@@ -253,7 +283,7 @@ func Delete(d *gdrive.Drive, fileId string) {
         fmt.Printf("An error occurred: %v\n", err)
         os.Exit(1)
     }
-    
+
     fmt.Printf("Removed file '%s'\n", info.Title)
 }
 
