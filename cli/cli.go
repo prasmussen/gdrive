@@ -116,9 +116,21 @@ func printInfo(d *gdrive.Drive, f *drive.File) {
         "Owner": strings.Join(f.OwnerNames, ", "),
         "Md5sum": f.Md5Checksum,
         "Shared": util.FormatBool(isShared(d, f.Id)),
+        "Parents": util.ParentList(f.Parents),
     }
 
-    order := []string{"Id", "Title", "Description", "Size", "Created", "Modified", "Owner", "Md5sum", "Shared"}
+    order := []string{
+        "Id",
+        "Title",
+        "Description",
+        "Size",
+        "Created",
+        "Modified",
+        "Owner",
+        "Md5sum",
+        "Shared",
+        "Parents",
+    }
     util.Print(fields, order)
 }
 
