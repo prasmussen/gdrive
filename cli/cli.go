@@ -153,7 +153,8 @@ func Folder(d *gdrive.Drive, title string, parentId string, share bool) {
     if share {
         Share(d, info.Id)
     }
-	fmt.Printf("Folder created in %s\n", parentId)
+	printInfo(d, info)
+	fmt.Printf("Folder '%s' created\n", info.Title)
 }
 
 // Upload file to drive
