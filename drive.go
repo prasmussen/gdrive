@@ -26,16 +26,24 @@ type Options struct {
         TitleFilter string `goptions:"-t, --title, mutexgroup='query', description='Title filter'"`
         Query string `goptions:"-q, --query, mutexgroup='query', description='Query (see https://developers.google.com/drive/search-parameters)'"`
         SharedStatus bool `goptions:"-s, --shared, description='Show shared status (Note: this will generate 1 http req per file)'"`
+        NoHeader bool `goptions:"-n, --noheader, description='Do not show the header'"`
     } `goptions:"list"`
 
     Info struct {
         FileId string `goptions:"-i, --id, obligatory, description='File Id'"`
     } `goptions:"info"`
 
+    Folder struct {
+        Title string `goptions:"-t, --title, obligatory, description='Folder to create'"`
+        ParentId string `goptions:"-p, --parent, description='Parent Id of the folder'"`
+        Share bool `goptions:"--share, description='Share created folder'"`
+    } `goptions:"folder"`
+
     Upload struct {
         File *os.File `goptions:"-f, --file, mutexgroup='input', obligatory, rdonly, description='File to upload'"`
         Stdin bool `goptions:"-s, --stdin, mutexgroup='input', obligatory, description='Use stdin as file content'"`
         Title string `goptions:"-t, --title, description='Title to give uploaded file. Defaults to filename'"`
+        ParentId string `goptions:"-p, --parent, description='Parent Id of the file'"`
         Share bool `goptions:"--share, description='Share uploaded file'"`
     } `goptions:"upload"`
 
@@ -84,17 +92,21 @@ func main() {
     switch opts.Verbs {
         case "list":
             args := opts.List
-            cli.List(drive, args.Query, args.TitleFilter, args.MaxResults, args.SharedStatus)
+            cli.List(drive, args.Query, args.TitleFilter, args.MaxResults, args.SharedStatus, args.NoHeader)
 
         case "info":
             cli.Info(drive, opts.Info.FileId)
 
+        case "folder":
+            args := opts.Folder
+			cli.Folder(drive, args.Title, args.ParentId, args.Share)
+
         case "upload":
             args := opts.Upload
             if args.Stdin {
-                cli.Upload(drive, os.Stdin, args.Title, args.Share)
+                cli.Upload(drive, os.Stdin, args.Title, args.ParentId, args.Share)
             } else {
-                cli.Upload(drive, args.File, args.Title, args.Share)
+                cli.Upload(drive, args.File, args.Title, args.ParentId, args.Share)
             }
 
         case "download":
