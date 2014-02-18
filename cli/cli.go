@@ -158,7 +158,7 @@ func Folder(d *gdrive.Drive, title string, parentId string, share bool) {
 }
 
 // Upload file to drive
-func Upload(d *gdrive.Drive, input io.ReadCloser, title string, parentId string, share bool) {
+func Upload(d *gdrive.Drive, input io.ReadCloser, title string, parentId string, share bool, mimeType string) {
     // Use filename or 'untitled' as title if no title is specified
     if title == "" {
         if f, ok := input.(*os.File); ok && input != os.Stdin {
@@ -168,7 +168,10 @@ func Upload(d *gdrive.Drive, input io.ReadCloser, title string, parentId string,
         }
     }
 
-    var mimeType = mime.TypeByExtension(filepath.Ext(title))
+    if mimeType == "" {
+        mimeType = mime.TypeByExtension(filepath.Ext(title))
+    }
+
 	// File instance
 	f := &drive.File{Title: title, MimeType: mimeType}
 	// Set parent (if provided)
