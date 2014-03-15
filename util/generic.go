@@ -1,142 +1,142 @@
 package util
 
 import (
-    "fmt"
-    "os"
-    "time"
-    "strings"
-    "strconv"
-    "unicode/utf8"
-    "path/filepath"
-    "runtime"
+	"fmt"
+	"os"
+	"path/filepath"
+	"runtime"
+	"strconv"
+	"strings"
+	"time"
+	"unicode/utf8"
 )
 
 // Prompt user to input data
 func Prompt(msg string) string {
-    fmt.Printf(msg)
-    var str string
-    fmt.Scanln(&str)
-    return str
+	fmt.Printf(msg)
+	var str string
+	fmt.Scanln(&str)
+	return str
 }
 
 // Returns true if file/directory exists
 func FileExists(path string) bool {
-    _, err := os.Stat(path)
-    if err == nil {
-        return true
-    }
-    return false
+	_, err := os.Stat(path)
+	if err == nil {
+		return true
+	}
+	return false
 }
 
 func Mkdir(path string) error {
-    dir := filepath.Dir(path)
-    if FileExists(dir) {
-        return nil
-    }
-    return os.Mkdir(dir, 0700)
+	dir := filepath.Dir(path)
+	if FileExists(dir) {
+		return nil
+	}
+	return os.Mkdir(dir, 0700)
 }
 
 // Returns the users home dir
 func Homedir() string {
-    if runtime.GOOS == "windows" {
-        return os.Getenv("APPDATA")
-    }
-    return os.Getenv("HOME")
+	if runtime.GOOS == "windows" {
+		return os.Getenv("APPDATA")
+	}
+	return os.Getenv("HOME")
 }
 
 func FormatBool(b bool) string {
-    return strings.Title(strconv.FormatBool(b))
+	return strings.Title(strconv.FormatBool(b))
 }
 
 func FileSizeFormat(bytes int64) string {
-    units := []string{"B", "KB", "MB", "GB", "TB", "PB"}
+	units := []string{"B", "KB", "MB", "GB", "TB", "PB"}
 
-    var i int
-    value := bytes
+	var i int
+	value := bytes
 
-    for value > 1000 {
-        value /= 1000
-        i++
-    }
-    return fmt.Sprintf("%d %s", value, units[i])
+	for value > 1000 {
+		value /= 1000
+		i++
+	}
+	return fmt.Sprintf("%d %s", value, units[i])
 }
 
 // Truncates string to given max length, and inserts ellipsis into
 // the middle of the string to signify that the string has been truncated
 func TruncateString(str string, maxRunes int) string {
-    indicator := "..."
+	indicator := "..."
 
-    // Number of runes in string
-    runeCount := utf8.RuneCountInString(str)
+	// Number of runes in string
+	runeCount := utf8.RuneCountInString(str)
 
-    // Return input string if length of input string is less than max length
-    // Input string is also returned if max length is less than 9 which is the minmal supported length
-    if runeCount <= maxRunes || maxRunes < 9 {
-        return str
-    }
+	// Return input string if length of input string is less than max length
+	// Input string is also returned if max length is less than 9 which is the minmal supported length
+	if runeCount <= maxRunes || maxRunes < 9 {
+		return str
+	}
 
-    // Number of remaining runes to be removed
-    remaining := (runeCount - maxRunes) + utf8.RuneCountInString(indicator)
+	// Number of remaining runes to be removed
+	remaining := (runeCount - maxRunes) + utf8.RuneCountInString(indicator)
 
-    var truncated string
-    var skip bool
+	var truncated string
+	var skip bool
 
-    for leftOffset, char := range str {
-        rightOffset := runeCount - (leftOffset + remaining)
+	for leftOffset, char := range str {
+		rightOffset := runeCount - (leftOffset + remaining)
 
-        // Start skipping chars when the left and right offsets are equal
-        // Or in the case where we wont be able to do an even split: when the left offset is larger than the right offset
-        if leftOffset == rightOffset || (leftOffset > rightOffset && !skip) {
-            skip = true
-            truncated += indicator
-        }
+		// Start skipping chars when the left and right offsets are equal
+		// Or in the case where we wont be able to do an even split: when the left offset is larger than the right offset
+		if leftOffset == rightOffset || (leftOffset > rightOffset && !skip) {
+			skip = true
+			truncated += indicator
+		}
 
-        if skip && remaining > 0 {
-            // Skip char and decrement the remaining skip counter
-            remaining--
-            continue
-        }
+		if skip && remaining > 0 {
+			// Skip char and decrement the remaining skip counter
+			remaining--
+			continue
+		}
 
-        // Add char to result string
-        truncated += string(char)
-    }
+		// Add char to result string
+		truncated += string(char)
+	}
 
-    // Return truncated string
-    return truncated
+	// Return truncated string
+	return truncated
 }
 
 func ISODateToLocal(iso string) string {
-    t, err := time.Parse(time.RFC3339, iso)
-    if err != nil {
-        return iso
-    }
-    local := t.Local()
-    year, month, day := local.Date()
-    hour, min, sec := local.Clock()
-    return fmt.Sprintf("%04d-%02d-%02d %02d:%02d:%02d", year, month, day, hour, min, sec)
+	t, err := time.Parse(time.RFC3339, iso)
+	if err != nil {
+		return iso
+	}
+	local := t.Local()
+	year, month, day := local.Date()
+	hour, min, sec := local.Clock()
+	return fmt.Sprintf("%04d-%02d-%02d %02d:%02d:%02d", year, month, day, hour, min, sec)
 }
 
-func MeasureTransferRate() func(int64)string {
-    start := time.Now()
+func MeasureTransferRate() func(int64) string {
+	start := time.Now()
 
-    return func(bytes int64) string {
-        seconds := int64(time.Now().Sub(start).Seconds())
-        if seconds < 1 {
-            return fmt.Sprintf("%s/s", FileSizeFormat(bytes))
-        }
-        bps := bytes / seconds
-        return fmt.Sprintf("%s/s", FileSizeFormat(bps))
-    }
+	return func(bytes int64) string {
+		seconds := int64(time.Now().Sub(start).Seconds())
+		if seconds < 1 {
+			return fmt.Sprintf("%s/s", FileSizeFormat(bytes))
+		}
+		bps := bytes / seconds
+		return fmt.Sprintf("%s/s", FileSizeFormat(bps))
+	}
 }
 
 // Prints a map in the provided order with one key-value-pair per line
 func Print(m map[string]string, keyOrder []string) {
-    for _, key := range keyOrder {
-        value, ok := m[key]
-        if ok && value != "" {
-            fmt.Printf("%s: %s\n", key, value)
-        }
-    }
+	for _, key := range keyOrder {
+		value, ok := m[key]
+		if ok && value != "" {
+			fmt.Printf("%s: %s\n", key, value)
+		}
+	}
 }
 
 // Prints items in columns with header and correct padding
@@ -153,47 +153,47 @@ func PrintColumns(items []map[string]string, keyOrder []string, columnSpacing in
 		items = append([]map[string]string{header}, items...)
 	}
 
-    // Get a padding function for each column
-    padFns := make(map[string]func(string)string)
-    for _, key := range keyOrder {
-        padFns[key] = columnPadder(items, key, columnSpacing)
-    }
+	// Get a padding function for each column
+	padFns := make(map[string]func(string) string)
+	for _, key := range keyOrder {
+		padFns[key] = columnPadder(items, key, columnSpacing)
+	}
 
-    // Loop, pad and print items
-    for _, item := range items {
-        var line string
+	// Loop, pad and print items
+	for _, item := range items {
+		var line string
 
-        // Add each column to line with correct padding
-        for _, key := range keyOrder {
-            value, _ := item[key]
-            line += padFns[key](value)
-        }
+		// Add each column to line with correct padding
+		for _, key := range keyOrder {
+			value, _ := item[key]
+			line += padFns[key](value)
+		}
 
-        // Print line
-        fmt.Println(line)
-    }
+		// Print line
+		fmt.Println(line)
+	}
 }
 
 // Returns a padding function, that pads input to the longest string in items
-func columnPadder(items []map[string]string, key string, spacing int) func(string)string {
-    // Holds length of longest string
-    var max int
+func columnPadder(items []map[string]string, key string, spacing int) func(string) string {
+	// Holds length of longest string
+	var max int
 
-    // Find the longest string of type key in the array
-    for _, item := range items {
-        str := item[key]
-        length := utf8.RuneCountInString(str)
-        if length > max {
-            max = length
-        }
-    }
+	// Find the longest string of type key in the array
+	for _, item := range items {
+		str := item[key]
+		length := utf8.RuneCountInString(str)
+		if length > max {
+			max = length
+		}
+	}
 
-    // Return padding function
-    return func(str string) string {
-        column := str
-        for utf8.RuneCountInString(column) < max + spacing {
-            column += " "
-        }
-        return column
-    }
+	// Return padding function
+	return func(str string) string {
+		column := str
+		for utf8.RuneCountInString(column) < max+spacing {
+			column += " "
+		}
+		return column
+	}
 }
