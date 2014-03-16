@@ -12,7 +12,7 @@ import (
 	"strings"
 )
 
-func List(d *gdrive.Drive, query, titleFilter string, maxResults int, sharedStatus bool, noHeader bool) {
+func List(d *gdrive.Drive, query, titleFilter string, maxResults int, sharedStatus bool, noHeader bool) error {
 	caller := d.Files.List()
 
 	if maxResults > 0 {
@@ -30,8 +30,7 @@ func List(d *gdrive.Drive, query, titleFilter string, maxResults int, sharedStat
 
 	list, err := caller.Do()
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		return err
 	}
 
 	items := make([]map[string]string, 0, 0)
@@ -63,6 +62,7 @@ func List(d *gdrive.Drive, query, titleFilter string, maxResults int, sharedStat
 	}
 
 	util.PrintColumns(items, columnOrder, 3, noHeader)
+	return nil
 }
 
 // Adds the key-value-pair 'Shared: True/False' to the map
@@ -96,13 +96,13 @@ func addSharedStatus(d *gdrive.Drive, items []map[string]string) {
 	}
 }
 
-func Info(d *gdrive.Drive, fileId string) {
+func Info(d *gdrive.Drive, fileId string) error {
 	info, err := d.Files.Get(fileId).Do()
 	if err != nil {
-		fmt.Printf("An error occurred: %v\n", err)
-		os.Exit(1)
+		return fmt.Errorf("An error occurred: %v\n", err)
 	}
 	printInfo(d, info)
+	return nil
 }
 
 func printInfo(d *gdrive.Drive, f *drive.File) {
@@ -135,7 +135,7 @@ func printInfo(d *gdrive.Drive, f *drive.File) {
 }
 
 // Create folder in drive
-func Folder(d *gdrive.Drive, title string, parentId string, share bool) {
+func Folder(d *gdrive.Drive, title string, parentId string, share bool) error {
 	// File instance
 	f := &drive.File{Title: title, MimeType: "application/vnd.google-apps.folder"}
 	// Set parent (if provided)
@@ -146,8 +146,7 @@ func Folder(d *gdrive.Drive, title string, parentId string, share bool) {
 	// Create folder
 	info, err := d.Files.Insert(f).Do()
 	if err != nil {
-		fmt.Printf("An error occurred creating the folder: %v\n", err)
-		os.Exit(1)
+		return fmt.Errorf("An error occurred creating the folder: %v\n", err)
 	}
 	// Share folder if the share flag was provided
 	if share {
@@ -155,10 +154,11 @@ func Folder(d *gdrive.Drive, title string, parentId string, share bool) {
 	}
 	printInfo(d, info)
 	fmt.Printf("Folder '%s' created\n", info.Title)
+	return nil
 }
 
 // Upload file to drive
-func Upload(d *gdrive.Drive, input io.ReadCloser, title string, parentId string, share bool, mimeType string) {
+func Upload(d *gdrive.Drive, input io.ReadCloser, title string, parentId string, share bool, mimeType string) error {
 	// Use filename or 'untitled' as title if no title is specified
 	if title == "" {
 		if f, ok := input.(*os.File); ok && input != os.Stdin {
@@ -183,8 +183,7 @@ func Upload(d *gdrive.Drive, input io.ReadCloser, title string, parentId string,
 
 	info, err := d.Files.Insert(f).Media(input).Do()
 	if err != nil {
-		fmt.Printf("An error occurred uploading the document: %v\n", err)
-		os.Exit(1)
+		return fmt.Errorf("An error occurred uploading the document: %v\n", err)
 	}
 
 	// Total bytes transferred
@@ -197,40 +196,36 @@ func Upload(d *gdrive.Drive, input io.ReadCloser, title string, parentId string,
 
 	// Share file if the share flag was provided
 	if share {
-		Share(d, info.Id)
+		err = Share(d, info.Id)
 	}
+	return err
 }
 
-func DownloadLatest(d *gdrive.Drive, stdout bool) {
+func DownloadLatest(d *gdrive.Drive, stdout bool) error {
 	list, err := d.Files.List().Do()
-
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		return err
 	}
 
 	if len(list.Items) == 0 {
-		fmt.Println("No files found")
-		os.Exit(1)
+		return fmt.Errorf("No files found")
 	}
 
 	latestId := list.Items[0].Id
-	Download(d, latestId, stdout, true)
+	return Download(d, latestId, stdout, true)
 }
 
 // Download file from drive
-func Download(d *gdrive.Drive, fileId string, stdout, deleteAfterDownload bool) {
+func Download(d *gdrive.Drive, fileId string, stdout, deleteAfterDownload bool) error {
 	// Get file info
 	info, err := d.Files.Get(fileId).Do()
 	if err != nil {
-		fmt.Printf("An error occurred: %v\n", err)
-		os.Exit(1)
+		return fmt.Errorf("An error occurred: %v\n", err)
 	}
 
 	if info.DownloadUrl == "" {
 		// If there is no DownloadUrl, there is no body
-		fmt.Println("An error occurred: File is not downloadable")
-		os.Exit(1)
+		return fmt.Errorf("An error occurred: File is not downloadable")
 	}
 
 	// Measure transfer rate
@@ -239,35 +234,27 @@ func Download(d *gdrive.Drive, fileId string, stdout, deleteAfterDownload bool) 
 	// GET the download url
 	res, err := d.Client().Get(info.DownloadUrl)
 	if err != nil {
-		fmt.Printf("An error occurred: %v\n", err)
-		os.Exit(1)
+		return fmt.Errorf("An error occurred: %v\n", err)
 	}
 
 	// Close body on function exit
 	defer res.Body.Close()
 
-	if err != nil {
-		fmt.Printf("An error occurred: %v\n", err)
-		os.Exit(1)
-	}
-
 	// Write file content to stdout
 	if stdout {
 		io.Copy(os.Stdout, res.Body)
-		return
+		return nil
 	}
 
 	// Check if file exists
 	if util.FileExists(info.Title) {
-		fmt.Printf("An error occurred: '%s' already exists\n", info.Title)
-		os.Exit(1)
+		return fmt.Errorf("An error occurred: '%s' already exists\n", info.Title)
 	}
 
 	// Create a new file
 	outFile, err := os.Create(info.Title)
 	if err != nil {
-		fmt.Printf("An error occurred: %v\n", err)
-		os.Exit(1)
+		return fmt.Errorf("An error occurred: %v\n", err)
 	}
 
 	// Close file on function exit
@@ -276,39 +263,38 @@ func Download(d *gdrive.Drive, fileId string, stdout, deleteAfterDownload bool) 
 	// Save file to disk
 	bytes, err := io.Copy(outFile, res.Body)
 	if err != nil {
-		fmt.Printf("An error occurred: %v")
-		os.Exit(1)
+		return fmt.Errorf("An error occurred: %s", err)
 	}
 
 	fmt.Printf("Downloaded '%s' at %s, total %s\n", info.Title, getRate(bytes), util.FileSizeFormat(bytes))
 
 	if deleteAfterDownload {
-		Delete(d, fileId)
+		err = Delete(d, fileId)
 	}
+	return err
 }
 
 // Delete file with given file id
-func Delete(d *gdrive.Drive, fileId string) {
+func Delete(d *gdrive.Drive, fileId string) error {
 	info, err := d.Files.Get(fileId).Do()
 	if err != nil {
-		fmt.Printf("An error occurred: %v\n", err)
-		os.Exit(1)
+		return fmt.Errorf("An error occurred: %v\n", err)
 	}
 
-	if err = d.Files.Delete(fileId).Do(); err != nil {
-		fmt.Printf("An error occurred: %v\n", err)
-		os.Exit(1)
+	if err := d.Files.Delete(fileId).Do(); err != nil {
+		return fmt.Errorf("An error occurred: %v\n", err)
+
 	}
 
 	fmt.Printf("Removed file '%s'\n", info.Title)
+	return nil
 }
 
 // Make given file id readable by anyone -- auth not required to view/download file
-func Share(d *gdrive.Drive, fileId string) {
+func Share(d *gdrive.Drive, fileId string) error {
 	info, err := d.Files.Get(fileId).Do()
 	if err != nil {
-		fmt.Printf("An error occurred: %v\n", err)
-		os.Exit(1)
+		return fmt.Errorf("An error occurred: %v\n", err)
 	}
 
 	perm := &drive.Permission{
@@ -317,30 +303,27 @@ func Share(d *gdrive.Drive, fileId string) {
 		Role:  "reader",
 	}
 
-	_, err = d.Permissions.Insert(fileId, perm).Do()
-	if err != nil {
-		fmt.Printf("An error occurred: %v\n", err)
-		os.Exit(1)
+	if _, err := d.Permissions.Insert(fileId, perm).Do(); err != nil {
+		return fmt.Errorf("An error occurred: %v\n", err)
 	}
 
 	fmt.Printf("File '%s' is now readable by everyone @ %s\n", info.Title, util.PreviewUrl(fileId))
+	return nil
 }
 
 // Removes the 'anyone' permission -- auth will be required to view/download file
-func Unshare(d *gdrive.Drive, fileId string) {
+func Unshare(d *gdrive.Drive, fileId string) error {
 	info, err := d.Files.Get(fileId).Do()
 	if err != nil {
-		fmt.Printf("An error occurred: %v\n", err)
-		os.Exit(1)
+		return fmt.Errorf("An error occurred: %v\n", err)
 	}
 
-	err = d.Permissions.Delete(fileId, "anyone").Do()
-	if err != nil {
-		fmt.Printf("An error occurred: %v\n", err)
-		os.Exit(1)
+	if err := d.Permissions.Delete(fileId, "anyone").Do(); err != nil {
+		return fmt.Errorf("An error occurred: %v\n", err)
 	}
 
 	fmt.Printf("File '%s' is no longer shared to 'anyone'\n", info.Title)
+	return nil
 }
 
 func isShared(d *gdrive.Drive, fileId string) bool {

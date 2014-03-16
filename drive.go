@@ -86,46 +86,45 @@ func main() {
 	// Get authorized drive client
 	drive, err := gdrive.New(opts.AppPath, opts.Advanced)
 	if err != nil {
-		fmt.Printf("An error occurred creating Drive client: %v\n", err)
-		os.Exit(1)
+		writeError("An error occurred creating Drive client: %v\n", err)
 	}
 
 	switch opts.Verbs {
 	case "list":
 		args := opts.List
-		cli.List(drive, args.Query, args.TitleFilter, args.MaxResults, args.SharedStatus, args.NoHeader)
+		err = cli.List(drive, args.Query, args.TitleFilter, args.MaxResults, args.SharedStatus, args.NoHeader)
 
 	case "info":
-		cli.Info(drive, opts.Info.FileId)
+		err = cli.Info(drive, opts.Info.FileId)
 
 	case "folder":
 		args := opts.Folder
-		cli.Folder(drive, args.Title, args.ParentId, args.Share)
+		err = cli.Folder(drive, args.Title, args.ParentId, args.Share)
 
 	case "upload":
 		args := opts.Upload
 		if args.Stdin {
-			cli.Upload(drive, os.Stdin, args.Title, args.ParentId, args.Share, args.MimeType)
+			err = cli.Upload(drive, os.Stdin, args.Title, args.ParentId, args.Share, args.MimeType)
 		} else {
-			cli.Upload(drive, args.File, args.Title, args.ParentId, args.Share, args.MimeType)
+			err = cli.Upload(drive, args.File, args.Title, args.ParentId, args.Share, args.MimeType)
 		}
 
 	case "download":
 		args := opts.Download
 		if args.Pop {
-			cli.DownloadLatest(drive, args.Stdout)
+			err = cli.DownloadLatest(drive, args.Stdout)
 		} else {
-			cli.Download(drive, args.FileId, args.Stdout, false)
+			err = cli.Download(drive, args.FileId, args.Stdout, false)
 		}
 
 	case "delete":
-		cli.Delete(drive, opts.Delete.FileId)
+		err = cli.Delete(drive, opts.Delete.FileId)
 
 	case "share":
-		cli.Share(drive, opts.Share.FileId)
+		err = cli.Share(drive, opts.Share.FileId)
 
 	case "unshare":
-		cli.Unshare(drive, opts.Unshare.FileId)
+		err = cli.Unshare(drive, opts.Unshare.FileId)
 
 	case "url":
 		if opts.Url.Download {
@@ -137,4 +136,13 @@ func main() {
 	default:
 		goptions.PrintHelp()
 	}
+
+	if err != nil {
+		writeError("%s", err)
+	}
+}
+
+func writeError(format string, err error) {
+	fmt.Fprintf(os.Stderr, format, err)
+	os.Exit(1)
 }
