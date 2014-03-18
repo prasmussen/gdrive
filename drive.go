@@ -144,5 +144,6 @@ func main() {
 
 func writeError(format string, err error) {
 	fmt.Fprintf(os.Stderr, format, err)
+	fmt.Print("\n")
 	os.Exit(1)
 }
