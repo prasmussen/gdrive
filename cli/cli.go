@@ -158,7 +158,8 @@ func Folder(d *gdrive.Drive, title string, parentId string, share bool) error {
 }
 
 // Upload file to drive
-func Upload(d *gdrive.Drive, input io.ReadCloser, title string, parentId string, share bool, mimeType string) error {
+func Upload(d *gdrive.Drive, input io.ReadCloser, title string, parentId string, share bool, mimeType string, convert bool) error {
+
 	// Use filename or 'untitled' as title if no title is specified
 	if title == "" {
 		if f, ok := input.(*os.File); ok && input != os.Stdin {
@@ -181,7 +182,11 @@ func Upload(d *gdrive.Drive, input io.ReadCloser, title string, parentId string,
 	}
 	getRate := util.MeasureTransferRate()
 
-	info, err := d.Files.Insert(f).Media(input).Do()
+	if convert {
+		fmt.Printf("Converting to Google Docs format enabled\n")
+	}
+		
+	info, err := d.Files.Insert(f).Convert(convert).Media(input).Do()
 	if err != nil {
 		return fmt.Errorf("An error occurred uploading the document: %v\n", err)
 	}

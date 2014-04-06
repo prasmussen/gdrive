@@ -46,6 +46,7 @@ type Options struct {
 		ParentId string   `goptions:"-p, --parent, description='Parent Id of the file'"`
 		Share    bool     `goptions:"--share, description='Share uploaded file'"`
 		MimeType string   `goptions:"--mimetype, description='The MIME type (default will try to figure it out)'"`
+		Convert  bool     `goptions:"--convert, description='File will be converted to Google Docs format'"`
 	} `goptions:"upload"`
 
 	Download struct {
@@ -104,9 +105,9 @@ func main() {
 	case "upload":
 		args := opts.Upload
 		if args.Stdin {
-			err = cli.Upload(drive, os.Stdin, args.Title, args.ParentId, args.Share, args.MimeType)
+			err = cli.Upload(drive, os.Stdin, args.Title, args.ParentId, args.Share, args.MimeType, args.Convert)
 		} else {
-			err = cli.Upload(drive, args.File, args.Title, args.ParentId, args.Share, args.MimeType)
+			err = cli.Upload(drive, args.File, args.Title, args.ParentId, args.Share, args.MimeType, args.Convert)
 		}
 
 	case "download":
