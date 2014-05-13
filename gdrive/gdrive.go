@@ -28,7 +28,7 @@ func (self *Drive) Client() *http.Client {
 	return self.client
 }
 
-func New(customAppPath string, advancedMode bool) (*Drive, error) {
+func New(customAppPath string, advancedMode bool, promptUser bool) (*Drive, error) {
 	if customAppPath != "" {
 		AppPath = customAppPath
 	}
@@ -38,7 +38,7 @@ func New(customAppPath string, advancedMode bool) (*Drive, error) {
 	tokenPath := filepath.Join(AppPath, TokenFname)
 
 	config := config.Load(configPath, advancedMode)
-	client, err := auth.GetOauth2Client(config.ClientId, config.ClientSecret, tokenPath)
+	client, err := auth.GetOauth2Client(config.ClientId, config.ClientSecret, tokenPath, promptUser)
 	if err != nil {
 		return nil, err
 	}

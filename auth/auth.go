@@ -35,7 +35,7 @@ func hasValidToken(cacheFile oauth.CacheFile, transport *oauth.Transport) bool {
 	return true
 }
 
-func GetOauth2Client(clientId, clientSecret, cachePath string) (*http.Client, error) {
+func GetOauth2Client(clientId, clientSecret, cachePath string, promptUser bool) (*http.Client, error) {
 	cacheFile := oauth.CacheFile(cachePath)
 
 	config := &oauth.Config{
