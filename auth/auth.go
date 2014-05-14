@@ -2,6 +2,7 @@ package auth
 
 import (
 	"code.google.com/p/goauth2/oauth"
+	"errors"
 	"fmt"
 	"github.com/prasmussen/gdrive/util"
 	"net/http"
@@ -35,7 +36,7 @@ func hasValidToken(cacheFile oauth.CacheFile, transport *oauth.Transport) bool {
 	return true
 }
 
-func GetOauth2Client(clientId, clientSecret, cachePath string) (*http.Client, error) {
+func GetOauth2Client(clientId, clientSecret, cachePath string, promptUser bool) (*http.Client, error) {
 	cacheFile := oauth.CacheFile(cachePath)
 
 	config := &oauth.Config{
@@ -56,6 +57,10 @@ func GetOauth2Client(clientId, clientSecret, cachePath string) (*http.Client, er
 	// Return client if we have a valid token
 	if hasValidToken(cacheFile, transport) {
 		return transport.Client(), nil
+	}
+
+	if !promptUser {
+		return nil, errors.New("no valid token found")
 	}
 
 	// Get auth code from user and request a new token

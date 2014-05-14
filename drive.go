@@ -85,7 +85,7 @@ func main() {
 	}
 
 	// Get authorized drive client
-	drive, err := gdrive.New(opts.AppPath, opts.Advanced)
+	drive, err := gdrive.New(opts.AppPath, opts.Advanced, true)
 	if err != nil {
 		writeError("An error occurred creating Drive client: %v\n", err)
 	}
