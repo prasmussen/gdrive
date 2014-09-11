@@ -136,6 +136,16 @@ func printInfo(d *gdrive.Drive, f *drive.File) {
 
 // Create folder in drive
 func Folder(d *gdrive.Drive, title string, parentId string, share bool) error {
+	info, err := makeFolder(d, title, parentId, share)
+	if err != nil {
+		return err
+	}
+	printInfo(d, info)
+	fmt.Printf("Folder '%s' created\n", info.Title)
+	return nil
+}
+
+func makeFolder(d *gdrive.Drive, title string, parentId string, share bool) (*drive.File, error) {
 	// File instance
 	f := &drive.File{Title: title, MimeType: "application/vnd.google-apps.folder"}
 	// Set parent (if provided)
@@ -146,15 +156,13 @@ func Folder(d *gdrive.Drive, title string, parentId string, share bool) error {
 	// Create folder
 	info, err := d.Files.Insert(f).Do()
 	if err != nil {
-		return fmt.Errorf("An error occurred creating the folder: %v\n", err)
+		return nil, fmt.Errorf("An error occurred creating the folder: %v\n", err)
 	}
 	// Share folder if the share flag was provided
 	if share {
 		Share(d, info.Id)
 	}
-	printInfo(d, info)
-	fmt.Printf("Folder '%s' created\n", info.Title)
-	return nil
+	return info, err
 }
 
 // Upload file to drive
@@ -163,7 +171,58 @@ func Upload(d *gdrive.Drive, input io.ReadCloser, title string, parentId string,
 	// Use filename or 'untitled' as title if no title is specified
 	if title == "" {
 		if f, ok := input.(*os.File); ok && input != os.Stdin {
+			fi, err := f.Stat()
+			if err != nil {
+				return err
+			}
+			fmt.Println("yooo")
+			if fi.Mode().IsDir() {
+				fmt.Println("is dir yo")
+				// then upload the entire directory, calling Upload recursively
+				// make dir first
+				folder, err := makeFolder(d, filepath.Base(f.Name()), parentId, share)
+				if err != nil {
+					return err
+				}
+				currDir, err := os.Getwd()
+				if err != nil {
+					return err
+				}
+
+				files, err := f.Readdir(0)
+				if err != nil {
+					return err
+				}
+				fmt.Println("files:", files)
+				// need to change dirs to get the files in the dir
+				err = f.Chdir()
+				if err != nil {
+					return err
+				}
+				for _, el := range files {
+					fmt.Println(el)
+					if el.IsDir() {
+						// todo: recursively do this, would need to keep track of parent ids for new directories
+					} else {
+						fmt.Println(el.Name())
+						f2, err := os.Open(el.Name())
+						if err != nil {
+							return err
+						}
+						fmt.Println("uploading", el.Name())
+						Upload(d, f2, filepath.Base(el.Name()), folder.Id, share, mimeType, convert)
+					}
+				}
+				// go back to previous dir
+				err = os.Chdir(currDir)
+				if err != nil {
+					return err
+				}
+				return nil
+			}
+			// normal file, not a directory
 			title = filepath.Base(f.Name())
+
 		} else {
 			title = "untitled"
 		}
@@ -185,7 +244,7 @@ func Upload(d *gdrive.Drive, input io.ReadCloser, title string, parentId string,
 	if convert {
 		fmt.Printf("Converting to Google Docs format enabled\n")
 	}
-		
+
 	info, err := d.Files.Insert(f).Convert(convert).Media(input).Do()
 	if err != nil {
 		return fmt.Errorf("An error occurred uploading the document: %v\n", err)
