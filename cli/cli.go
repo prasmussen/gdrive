@@ -169,16 +169,18 @@ func makeFolder(d *gdrive.Drive, title string, parentId string, share bool) (*dr
 func Upload(d *gdrive.Drive, input io.ReadCloser, title string, parentId string, share bool, mimeType string, convert bool) error {
 
 	// Use filename or 'untitled' as title if no title is specified
+	f2, ok := input.(*os.File)
 	if title == "" {
-		if f, ok := input.(*os.File); ok && input != os.Stdin {
-			fi, err := f.Stat()
+		if ok && input != os.Stdin {
+			// then find title if it's a file or upload directory if it's a directory (directory can't have a title).
+			fi, err := f2.Stat()
 			if err != nil {
 				return err
 			}
 			if fi.Mode().IsDir() {
 				// then upload the entire directory, calling Upload recursively
 				// make dir first
-				folder, err := makeFolder(d, filepath.Base(f.Name()), parentId, share)
+				folder, err := makeFolder(d, filepath.Base(f2.Name()), parentId, share)
 				if err != nil {
 					return err
 				}
@@ -187,12 +189,12 @@ func Upload(d *gdrive.Drive, input io.ReadCloser, title string, parentId string,
 					return err
 				}
 
-				files, err := f.Readdir(0)
+				files, err := f2.Readdir(0)
 				if err != nil {
 					return err
 				}
 				// need to change dirs to get the files in the dir
-				err = f.Chdir()
+				err = f2.Chdir()
 				if err != nil {
 					return err
 				}
@@ -215,7 +217,7 @@ func Upload(d *gdrive.Drive, input io.ReadCloser, title string, parentId string,
 				return nil
 			}
 			// normal file, not a directory
-			title = filepath.Base(f.Name())
+			title = filepath.Base(f2.Name())
 
 		} else {
 			title = "untitled"
