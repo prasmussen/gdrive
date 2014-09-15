@@ -40,7 +40,7 @@ type Options struct {
 	} `goptions:"folder"`
 
 	Upload struct {
-		File     *os.File `goptions:"-f, --file, mutexgroup='input', obligatory, rdonly, description='File to upload'"`
+		File     *os.File `goptions:"-f, --file, mutexgroup='input', obligatory, rdonly, description='File or directory to upload'"`
 		Stdin    bool     `goptions:"-s, --stdin, mutexgroup='input', obligatory, description='Use stdin as file content'"`
 		Title    string   `goptions:"-t, --title, description='Title to give uploaded file. Defaults to filename'"`
 		ParentId string   `goptions:"-p, --parent, description='Parent Id of the file'"`
