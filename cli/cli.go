@@ -175,9 +175,7 @@ func Upload(d *gdrive.Drive, input io.ReadCloser, title string, parentId string,
 			if err != nil {
 				return err
 			}
-			fmt.Println("yooo")
 			if fi.Mode().IsDir() {
-				fmt.Println("is dir yo")
 				// then upload the entire directory, calling Upload recursively
 				// make dir first
 				folder, err := makeFolder(d, filepath.Base(f.Name()), parentId, share)
@@ -193,23 +191,19 @@ func Upload(d *gdrive.Drive, input io.ReadCloser, title string, parentId string,
 				if err != nil {
 					return err
 				}
-				fmt.Println("files:", files)
 				// need to change dirs to get the files in the dir
 				err = f.Chdir()
 				if err != nil {
 					return err
 				}
 				for _, el := range files {
-					fmt.Println(el)
 					if el.IsDir() {
 						// todo: recursively do this, would need to keep track of parent ids for new directories
 					} else {
-						fmt.Println(el.Name())
 						f2, err := os.Open(el.Name())
 						if err != nil {
 							return err
 						}
-						fmt.Println("uploading", el.Name())
 						Upload(d, f2, filepath.Base(el.Name()), folder.Id, share, mimeType, convert)
 					}
 				}
