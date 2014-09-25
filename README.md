@@ -17,16 +17,16 @@ If you want to compile from source you need the go toolchain: http://golang.org/
 - Or compile it yourself `go build drive.go`
 
 ### Downloads
-- [drive-darwin-386 v1.2.0](https://drive.google.com/uc?id=0B3X9GlR6Embnb0daZ18xLUhvVnM)
-- [drive-darwin-amd64 v1.2.0](https://drive.google.com/uc?id=0B3X9GlR6EmbnbWJwTlp2d0g2LWs)
-- [drive-freebsd-386 v1.2.0](https://drive.google.com/uc?id=0B3X9GlR6EmbnUDZZajBERllQOFk)
-- [drive-freebsd-amd64 v1.2.0](https://drive.google.com/uc?id=0B3X9GlR6EmbnOVhlSlkyaWRJcWs)
-- [drive-linux-386 v1.2.0](https://drive.google.com/uc?id=0B3X9GlR6EmbnbFBYZUpFUW96NTg)
-- [drive-linux-amd64 v1.2.0](https://drive.google.com/uc?id=0B3X9GlR6EmbnbEhlZ20xNGVWTVE)
-- [drive-linux-arm v1.2.0](https://drive.google.com/uc?id=0B3X9GlR6EmbnNzhJcnBNUWJJX1U)
-- [drive-linux-rpi v1.2.0](https://drive.google.com/uc?id=0B3X9GlR6EmbnMXJ4ZDdVNjJhUkE)
-- [drive-windows-386.exe v1.2.0](https://drive.google.com/uc?id=0B3X9GlR6EmbnbG5kTkdzbGR3QTA)
-- [drive-windows-amd64.exe v1.2.0](https://drive.google.com/uc?id=0B3X9GlR6Embnc1hwYU0tcUFCc2c)
+- [drive-darwin-386 v1.3.0](https://drive.google.com/uc?id=0B3X9GlR6EmbnMmdkdjByVjZSZXM)
+- [drive-darwin-amd64 v1.3.0](https://drive.google.com/uc?id=0B3X9GlR6EmbnOWZNdHFaT0trTHc)
+- [drive-freebsd-386 v1.3.0](https://drive.google.com/uc?id=0B3X9GlR6EmbnRE5BVHJvNTgwU2s)
+- [drive-freebsd-amd64 v1.3.0](https://drive.google.com/uc?id=0B3X9GlR6EmbnR3NkRkUzMU9OeWc)
+- [drive-linux-386 v1.3.0](https://drive.google.com/uc?id=0B3X9GlR6EmbnZkdnOXBEVS1CdVU)
+- [drive-linux-amd64 v1.3.0](https://drive.google.com/uc?id=0B3X9GlR6EmbnTjk4MGNEbEFRRWs)
+- [drive-linux-arm v1.3.0](https://drive.google.com/uc?id=0B3X9GlR6EmbncE9pLUpCTV9CMVE)
+- [drive-linux-rpi v1.3.0](https://drive.google.com/uc?id=0B3X9GlR6EmbnVG5tYXBrRTZMeWM)
+- [drive-windows-386.exe v1.3.0](https://drive.google.com/uc?id=0B3X9GlR6EmbnbzNNbUlhM0tsUGs)
+- [drive-windows-amd64.exe v1.3.0](https://drive.google.com/uc?id=0B3X9GlR6EmbnWnJwRFhrcWtiY2c)
 
 ## Usage
     drive [global options] <verb> [verb options]
