@@ -62,7 +62,7 @@ If you want to compile from source you need the go toolchain: http://golang.org/
         unshare:
             -i, --id       File Id (*)
         upload:
-            -f, --file     File to upload (*)
+            -f, --file     File or directory to upload (*)
             -s, --stdin    Use stdin as file content (*)
             -t, --title    Title to give uploaded file. Defaults to filename
             -p, --parent   Parent Id of the file
@@ -82,7 +82,7 @@ If you want to compile from source you need the go toolchain: http://golang.org/
     0B3X9GlR6EmbnU0ZnbGV4dlk1T00   drive-linux-amd64         5 MB     2013-01-01 21:55:06
     0B3X9GlR6EmbncTk1TXlMdjd1ODQ   drive-darwin-amd64        5 MB     2013-01-01 21:53:34
 
-###### Upload file
+###### Upload file or directory
     $ drive upload --file drive-linux-amd64
     Id: 0B3X9GlR6EmbnU0ZnbGV4dlk1T00
     Title: drive-linux-amd64
