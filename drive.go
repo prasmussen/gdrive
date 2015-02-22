@@ -105,10 +105,10 @@ func main() {
 	case "upload":
 		args := opts.Upload
 		if args.Stdin {
-			err = cli.Upload(drive, os.Stdin, args.Title, args.ParentId, args.Share, args.MimeType, args.Convert)
+			err = cli.UploadStdin(drive, os.Stdin, args.Title, args.ParentId, args.Share, args.MimeType, args.Convert)
 		} else {
 			err = cli.Upload(drive, args.File, args.Title, args.ParentId, args.Share, args.MimeType, args.Convert)
-		}
+        }
 
 	case "download":
 		args := opts.Download

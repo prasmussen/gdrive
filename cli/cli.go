@@ -166,62 +166,109 @@ func makeFolder(d *gdrive.Drive, title string, parentId string, share bool) (*dr
 }
 
 // Upload file to drive
-func Upload(d *gdrive.Drive, input io.ReadCloser, title string, parentId string, share bool, mimeType string, convert bool) error {
+func UploadStdin(d *gdrive.Drive, input io.ReadCloser, title string, parentId string, share bool, mimeType string, convert bool) error {
+	// File instance
+	f := &drive.File{Title: "untitled"}
+	// Set parent (if provided)
+	if parentId != "" {
+		p := &drive.ParentReference{Id: parentId}
+		f.Parents = []*drive.ParentReference{p}
+	}
+	getRate := util.MeasureTransferRate()
 
-	// Use filename or 'untitled' as title if no title is specified
-	f2, ok := input.(*os.File)
-	if title == "" {
-		if ok && input != os.Stdin {
-			// then find title if it's a file or upload directory if it's a directory (directory can't have a title).
-			fi, err := f2.Stat()
-			if err != nil {
-				return err
-			}
-			if fi.Mode().IsDir() {
-				// then upload the entire directory, calling Upload recursively
-				// make dir first
-				folder, err := makeFolder(d, filepath.Base(f2.Name()), parentId, share)
-				if err != nil {
-					return err
-				}
-				currDir, err := os.Getwd()
-				if err != nil {
-					return err
-				}
+	if convert {
+		fmt.Printf("Converting to Google Docs format enabled\n")
+	}
 
-				files, err := f2.Readdir(0)
-				if err != nil {
-					return err
-				}
-				// need to change dirs to get the files in the dir
-				err = f2.Chdir()
-				if err != nil {
-					return err
-				}
-				for _, el := range files {
-					if el.IsDir() {
-						// todo: recursively do this, would need to keep track of parent ids for new directories
-					} else {
-						f2, err := os.Open(el.Name())
-						if err != nil {
-							return err
-						}
-						Upload(d, f2, filepath.Base(el.Name()), folder.Id, share, mimeType, convert)
-					}
-				}
-				// go back to previous dir
-				err = os.Chdir(currDir)
-				if err != nil {
-					return err
-				}
-				return nil
-			}
-			// normal file, not a directory
-			title = filepath.Base(f2.Name())
+	info, err := d.Files.Insert(f).Convert(convert).Media(input).Do()
+	if err != nil {
+		return fmt.Errorf("An error occurred uploading the document: %v\n", err)
+	}
 
-		} else {
-			title = "untitled"
+	// Total bytes transferred
+	bytes := info.FileSize
+
+	// Print information about uploaded file
+	printInfo(d, info)
+	fmt.Printf("MIME Type: %s\n", mimeType)
+	fmt.Printf("Uploaded '%s' at %s, total %s\n", info.Title, getRate(bytes), util.FileSizeFormat(bytes))
+
+	// Share file if the share flag was provided
+	if share {
+		err = Share(d, info.Id)
+	}
+	return err
+}
+
+func Upload(d *gdrive.Drive, input *os.File, title string, parentId string, share bool, mimeType string, convert bool) error {
+	// Grab file info
+	inputInfo, err := input.Stat()
+	if err != nil {
+		return err
+	}
+
+	if inputInfo.IsDir() {
+		return uploadDirectory(d, input, inputInfo, title, parentId, share, mimeType, convert)
+	} else {
+		return uploadFile(d, input, inputInfo, title, parentId, share, mimeType, convert)
+	}
+
+	return nil
+}
+
+func uploadDirectory(d *gdrive.Drive, input *os.File, inputInfo os.FileInfo, title string, parentId string, share bool, mimeType string, convert bool) error {
+	// Create folder
+	folder, err := makeFolder(d, filepath.Base(inputInfo.Name()), parentId, share)
+	if err != nil {
+		return err
+	}
+
+	// Read all files in directory
+	files, err := input.Readdir(0)
+	if err != nil {
+		return err
+	}
+
+	// Get current dir
+	currentDir, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+
+	// Go into directory
+	err = input.Chdir()
+	if err != nil {
+		return err
+	}
+
+	// Change back to original directory when done
+	defer func() {
+		os.Chdir(currentDir)
+	}()
+
+	for _, fi := range files {
+		f, err := os.Open(fi.Name())
+		if err != nil {
+			return err
 		}
+
+		if fi.IsDir() {
+			err = uploadDirectory(d, f, fi, "", folder.Id, share, mimeType, convert)
+		} else {
+			err = uploadFile(d, f, fi, "", folder.Id, share, mimeType, convert)
+		}
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func uploadFile(d *gdrive.Drive, input *os.File, inputInfo os.FileInfo, title string, parentId string, share bool, mimeType string, convert bool) error {
+	if title == "" {
+		title = filepath.Base(inputInfo.Name())
 	}
 
 	if mimeType == "" {
