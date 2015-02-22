@@ -1,7 +1,7 @@
 package util
 
 import (
-	"code.google.com/p/google-api-go-client/drive/v2"
+	"github.com/google/google-api-go-client/drive/v2"
 	"fmt"
 	"strings"
 )
