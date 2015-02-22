@@ -33,7 +33,7 @@ for PLATFORM in $PLATFORMS; do
         unset GOARM
     fi
 
-    BUILD_CMD="go-${GOOS}-${GOARCH} build -o bin/${BIN_NAME} $APP_NAME.go"
+    BUILD_CMD="go-${GOOS}-${GOARCH} build -ldflags "-w" -o bin/${BIN_NAME} $APP_NAME.go"
 
     echo "Building $BIN_NAME"
     $BUILD_CMD &
