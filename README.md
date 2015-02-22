@@ -17,16 +17,16 @@ If you want to compile from source you need the go toolchain: http://golang.org/
 - Or compile it yourself `go build drive.go`
 
 ### Downloads
-- [drive-darwin-386 v1.3.0](https://drive.google.com/uc?id=0B3X9GlR6EmbnMmdkdjByVjZSZXM)
-- [drive-darwin-amd64 v1.3.0](https://drive.google.com/uc?id=0B3X9GlR6EmbnOWZNdHFaT0trTHc)
-- [drive-freebsd-386 v1.3.0](https://drive.google.com/uc?id=0B3X9GlR6EmbnRE5BVHJvNTgwU2s)
-- [drive-freebsd-amd64 v1.3.0](https://drive.google.com/uc?id=0B3X9GlR6EmbnR3NkRkUzMU9OeWc)
-- [drive-linux-386 v1.3.0](https://drive.google.com/uc?id=0B3X9GlR6EmbnZkdnOXBEVS1CdVU)
-- [drive-linux-amd64 v1.3.0](https://drive.google.com/uc?id=0B3X9GlR6EmbnTjk4MGNEbEFRRWs)
-- [drive-linux-arm v1.3.0](https://drive.google.com/uc?id=0B3X9GlR6EmbncE9pLUpCTV9CMVE)
-- [drive-linux-rpi v1.3.0](https://drive.google.com/uc?id=0B3X9GlR6EmbnVG5tYXBrRTZMeWM)
-- [drive-windows-386.exe v1.3.0](https://drive.google.com/uc?id=0B3X9GlR6EmbnbzNNbUlhM0tsUGs)
-- [drive-windows-amd64.exe v1.3.0](https://drive.google.com/uc?id=0B3X9GlR6EmbnWnJwRFhrcWtiY2c)
+- [drive-osx-386 v1.4.0](https://drive.google.com/uc?id=0B3X9GlR6EmbncGxTRVMtVFowMWM)
+- [drive-osx-amd64 v1.4.0](https://drive.google.com/uc?id=0B3X9GlR6EmbnM0FSUFY4TDYxMFk)
+- [drive-freebsd-386 v1.4.0](https://drive.google.com/uc?id=0B3X9GlR6EmbncjhleU84ZmdPWUU)
+- [drive-freebsd-amd64 v1.4.0](https://drive.google.com/uc?id=0B3X9GlR6EmbncEcySTZEdUVIYUU)
+- [drive-linux-386 v1.4.0](https://drive.google.com/uc?id=0B3X9GlR6EmbnblQ3N0hhMnZCcTA)
+- [drive-linux-amd64 v1.4.0](https://drive.google.com/uc?id=0B3X9GlR6EmbnVW5VZ0dvdmlsd1k)
+- [drive-linux-arm v1.4.0](https://drive.google.com/uc?id=0B3X9GlR6EmbnaUt1VkJwQkFWT1k)
+- [drive-linux-rpi v1.4.0](https://drive.google.com/uc?id=0B3X9GlR6EmbnZFhTNXBGaVl5TG8)
+- [drive-windows-386.exe v1.4.0](https://drive.google.com/uc?id=0B3X9GlR6EmbndTNpNUlxUVdralU)
+- [drive-windows-amd64.exe v1.4.0](https://drive.google.com/uc?id=0B3X9GlR6EmbncVVxendwazcwM00)
 
 ## Usage
     drive [global options] <verb> [verb options]
