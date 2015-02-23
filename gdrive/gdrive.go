@@ -1,7 +1,7 @@
 package gdrive
 
 import (
-	"github.com/google/google-api-go-client/drive/v2"
+	"github.com/prasmussen/google-api-go-client/drive/v2"
 	"github.com/prasmussen/gdrive/auth"
 	"github.com/prasmussen/gdrive/config"
 	"github.com/prasmussen/gdrive/util"

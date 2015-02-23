@@ -1,10 +1,10 @@
 package cli
 
 import (
-	"github.com/google/google-api-go-client/drive/v2"
 	"fmt"
 	"github.com/prasmussen/gdrive/gdrive"
 	"github.com/prasmussen/gdrive/util"
+	"github.com/prasmussen/google-api-go-client/drive/v2"
 	"io"
 	"mime"
 	"os"
