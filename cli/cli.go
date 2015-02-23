@@ -5,6 +5,7 @@ import (
 	"github.com/prasmussen/gdrive/gdrive"
 	"github.com/prasmussen/gdrive/util"
 	"github.com/prasmussen/google-api-go-client/drive/v2"
+	"golang.org/x/net/context"
 	"io"
 	"mime"
 	"os"
@@ -288,7 +289,7 @@ func uploadFile(d *gdrive.Drive, input *os.File, inputInfo os.FileInfo, title st
 		fmt.Printf("Converting to Google Docs format enabled\n")
 	}
 
-	info, err := d.Files.Insert(f).Convert(convert).Media(input).Do()
+	info, err := d.Files.Insert(f).Convert(convert).ResumableMedia(context.Background(), input, inputInfo.Size(), mimeType).Do()
 	if err != nil {
 		return fmt.Errorf("An error occurred uploading the document: %v\n", err)
 	}
