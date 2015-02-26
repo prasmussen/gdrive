@@ -169,7 +169,7 @@ func makeFolder(d *gdrive.Drive, title string, parentId string, share bool) (*dr
 // Upload file to drive
 func UploadStdin(d *gdrive.Drive, input io.ReadCloser, title string, parentId string, share bool, mimeType string, convert bool) error {
 	// File instance
-	f := &drive.File{Title: "untitled"}
+	f := &drive.File{Title: title}
 	// Set parent (if provided)
 	if parentId != "" {
 		p := &drive.ParentReference{Id: parentId}
