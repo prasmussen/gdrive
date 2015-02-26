@@ -17,16 +17,16 @@ If you want to compile from source you need the go toolchain: http://golang.org/
 - Or compile it yourself `go build drive.go`
 
 ### Downloads
-- [drive-osx-386 v1.5.0](https://drive.google.com/uc?id=0B3X9GlR6EmbnMG50SVpKMzV2LUU)
-- [drive-osx-amd64 v1.5.0](https://drive.google.com/uc?id=0B3X9GlR6EmbnX0pOVzlQc1prbW8)
-- [drive-freebsd-386 v1.5.0](https://drive.google.com/uc?id=0B3X9GlR6EmbnWThaaGpwbDgyQjQ)
-- [drive-freebsd-amd64 v1.5.0](https://drive.google.com/uc?id=0B3X9GlR6EmbnbEVuTlBBUlNObkk)
-- [drive-linux-386 v1.5.0](https://drive.google.com/uc?id=0B3X9GlR6EmbnWUM1enVQMHpTU00)
-- [drive-linux-amd64 v1.5.0](https://drive.google.com/uc?id=0B3X9GlR6EmbnXzlOaUs0RlRxUHc)
-- [drive-linux-arm v1.5.0](https://drive.google.com/uc?id=0B3X9GlR6EmbnZlFUbVBIM1RsUkk)
-- [drive-linux-rpi v1.5.0](https://drive.google.com/uc?id=0B3X9GlR6EmbnY0ZlY1lQZXZNUU0)
-- [drive-windows-386.exe v1.5.0](https://drive.google.com/uc?id=0B3X9GlR6EmbnUE1Ual9Lb08wRHM)
-- [drive-windows-amd64.exe v1.5.0](https://drive.google.com/uc?id=0B3X9GlR6EmbnbW8xczBQZXNEY1k)
+- [drive-osx-386 v1.5.1](https://drive.google.com/uc?id=0B3X9GlR6Embnai1leVVJbG5tYkE)
+- [drive-osx-amd64 v1.5.1](https://drive.google.com/uc?id=0B3X9GlR6EmbnS2xTS3JCRjNzOEk)
+- [drive-freebsd-386 v1.5.1](https://drive.google.com/uc?id=0B3X9GlR6EmbnRDZzbDBsSlZycjQ)
+- [drive-freebsd-amd64 v1.5.1](https://drive.google.com/uc?id=0B3X9GlR6EmbnaGZkMW1sOElYSlU)
+- [drive-linux-386 v1.5.1](https://drive.google.com/uc?id=0B3X9GlR6EmbnUWZjbWhjcS0wUFE)
+- [drive-linux-amd64 v1.5.1](https://drive.google.com/uc?id=0B3X9GlR6EmbndFBkTWllLWxEVWM)
+- [drive-linux-arm v1.5.1](https://drive.google.com/uc?id=0B3X9GlR6EmbnWXRGWmw2T0xsa1k)
+- [drive-linux-rpi v1.5.1](https://drive.google.com/uc?id=0B3X9GlR6EmbnM0s2NmxNVnd5aWs)
+- [drive-windows-386.exe v1.5.1](https://drive.google.com/uc?id=0B3X9GlR6EmbnaUJQU0Y4NHZsNjQ)
+- [drive-windows-amd64.exe v1.5.1](https://drive.google.com/uc?id=0B3X9GlR6EmbnSl9MaERXX0c0R0U)
 
 ## Usage
     drive [global options] <verb> [verb options]
