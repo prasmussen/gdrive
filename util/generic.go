@@ -52,13 +52,13 @@ func FileSizeFormat(bytes int64) string {
 	units := []string{"B", "KB", "MB", "GB", "TB", "PB"}
 
 	var i int
-	value := bytes
+	value := float64(bytes)
 
 	for value > 1000 {
 		value /= 1000
 		i++
 	}
-	return fmt.Sprintf("%d %s", value, units[i])
+	return fmt.Sprintf("%.1f %s", value, units[i])
 }
 
 // Truncates string to given max length, and inserts ellipsis into
