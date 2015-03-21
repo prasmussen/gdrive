@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+    "github.com/prasmussen/google-api-go-client/googleapi"
 	"github.com/prasmussen/gdrive/cli"
 	"github.com/prasmussen/gdrive/gdrive"
 	"github.com/prasmussen/gdrive/util"
@@ -47,6 +48,7 @@ type Options struct {
 		Share    bool     `goptions:"--share, description='Share uploaded file'"`
 		MimeType string   `goptions:"--mimetype, description='The MIME type (default will try to figure it out)'"`
 		Convert  bool     `goptions:"--convert, description='File will be converted to Google Docs format'"`
+        ChunkSize int64   `goptions:"-C, --chunksize, description='Set chunk size in bytes. Minimum is 262144, default is 1048576. Recommended to be a power of two.'"`
 	} `goptions:"upload"`
 
 	Download struct {
@@ -104,6 +106,12 @@ func main() {
 
 	case "upload":
 		args := opts.Upload
+
+        // Set custom chunksize if given
+        if args.ChunkSize >= (1 << 18) {
+            googleapi.SetChunkSize(args.ChunkSize)
+        }
+
 		if args.Stdin {
 			err = cli.UploadStdin(drive, os.Stdin, args.Title, args.ParentId, args.Share, args.MimeType, args.Convert)
 		} else {
