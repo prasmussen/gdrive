@@ -2,10 +2,10 @@ package main
 
 import (
 	"fmt"
-    "github.com/prasmussen/google-api-go-client/googleapi"
 	"github.com/prasmussen/gdrive/cli"
 	"github.com/prasmussen/gdrive/gdrive"
 	"github.com/prasmussen/gdrive/util"
+	"github.com/prasmussen/google-api-go-client/googleapi"
 	"github.com/voxelbrain/goptions"
 	"os"
 )
@@ -41,14 +41,14 @@ type Options struct {
 	} `goptions:"folder"`
 
 	Upload struct {
-		File     *os.File `goptions:"-f, --file, mutexgroup='input', obligatory, rdonly, description='File or directory to upload'"`
-		Stdin    bool     `goptions:"-s, --stdin, mutexgroup='input', obligatory, description='Use stdin as file content'"`
-		Title    string   `goptions:"-t, --title, description='Title to give uploaded file. Defaults to filename'"`
-		ParentId string   `goptions:"-p, --parent, description='Parent Id of the file'"`
-		Share    bool     `goptions:"--share, description='Share uploaded file'"`
-		MimeType string   `goptions:"--mimetype, description='The MIME type (default will try to figure it out)'"`
-		Convert  bool     `goptions:"--convert, description='File will be converted to Google Docs format'"`
-        ChunkSize int64   `goptions:"-C, --chunksize, description='Set chunk size in bytes. Minimum is 262144, default is 1048576. Recommended to be a power of two.'"`
+		File      *os.File `goptions:"-f, --file, mutexgroup='input', obligatory, rdonly, description='File or directory to upload'"`
+		Stdin     bool     `goptions:"-s, --stdin, mutexgroup='input', obligatory, description='Use stdin as file content'"`
+		Title     string   `goptions:"-t, --title, description='Title to give uploaded file. Defaults to filename'"`
+		ParentId  string   `goptions:"-p, --parent, description='Parent Id of the file'"`
+		Share     bool     `goptions:"--share, description='Share uploaded file'"`
+		MimeType  string   `goptions:"--mimetype, description='The MIME type (default will try to figure it out)'"`
+		Convert   bool     `goptions:"--convert, description='File will be converted to Google Docs format'"`
+		ChunkSize int64    `goptions:"-C, --chunksize, description='Set chunk size in bytes. Minimum is 262144, default is 1048576. Recommended to be a power of two.'"`
 	} `goptions:"upload"`
 
 	Download struct {
@@ -107,16 +107,16 @@ func main() {
 	case "upload":
 		args := opts.Upload
 
-        // Set custom chunksize if given
-        if args.ChunkSize >= (1 << 18) {
-            googleapi.SetChunkSize(args.ChunkSize)
-        }
+		// Set custom chunksize if given
+		if args.ChunkSize >= (1 << 18) {
+			googleapi.SetChunkSize(args.ChunkSize)
+		}
 
 		if args.Stdin {
 			err = cli.UploadStdin(drive, os.Stdin, args.Title, args.ParentId, args.Share, args.MimeType, args.Convert)
 		} else {
 			err = cli.Upload(drive, args.File, args.Title, args.ParentId, args.Share, args.MimeType, args.Convert)
-        }
+		}
 
 	case "download":
 		args := opts.Download
