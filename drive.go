@@ -48,7 +48,7 @@ type Options struct {
 		Share     bool     `goptions:"--share, description='Share uploaded file'"`
 		MimeType  string   `goptions:"--mimetype, description='The MIME type (default will try to figure it out)'"`
 		Convert   bool     `goptions:"--convert, description='File will be converted to Google Docs format'"`
-		ChunkSize int64    `goptions:"-C, --chunksize, description='Set chunk size in bytes. Minimum is 262144, default is 1048576. Recommended to be a power of two.'"`
+		ChunkSize int64    `goptions:"-C, --chunksize, description='Set chunk size in bytes. Minimum is 262144, default is 4194304. Recommended to be a power of two.'"`
 	} `goptions:"upload"`
 
 	Download struct {

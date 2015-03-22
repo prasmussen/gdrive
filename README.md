@@ -69,7 +69,7 @@ If you want to compile from source you need the go toolchain: http://golang.org/
                 --share     Share uploaded file
                 --mimetype  The MIME type (default will try to figure it out)
                 --convert   File will be converted to Google Docs format
-            -C, --chunksize Set chunk size in bytes. Minimum is 262144, default is 1048576. Recommended to be a power of two.
+            -C, --chunksize Set chunk size in bytes. Minimum is 262144, default is 4194304. Recommended to be a power of two.
         url:
             -i, --id        File Id (*)
             -p, --preview   Generate preview url (default)
