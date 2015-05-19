@@ -53,7 +53,9 @@ type Options struct {
 
 	Download struct {
 		FileId string `goptions:"-i, --id, mutexgroup='download', obligatory, description='File Id'"`
+		Export string `goptions:"-e, --export, description='Export file format for google docs'"`
 		Stdout bool   `goptions:"-s, --stdout, description='Write file content to stdout'"`
+		Force  bool   `goptions:"--force, description='Overwrite existing file'"`
 		Pop    bool   `goptions:"--pop, mutexgroup='download', description='Download latest file, and remove it from google drive'"`
 	} `goptions:"download"`
 
@@ -121,9 +123,9 @@ func main() {
 	case "download":
 		args := opts.Download
 		if args.Pop {
-			err = cli.DownloadLatest(drive, args.Stdout)
+			err = cli.DownloadLatest(drive, args.Stdout, args.Export, args.Force)
 		} else {
-			err = cli.Download(drive, args.FileId, args.Stdout, false)
+			err = cli.Download(drive, args.FileId, args.Stdout, false, args.Export, args.Force)
 		}
 
 	case "delete":
