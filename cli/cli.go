@@ -118,8 +118,6 @@ func printInfo(d *gdrive.Drive, f *drive.File) {
 		"Md5sum":      f.Md5Checksum,
 		"Shared":      util.FormatBool(isShared(d, f.Id)),
 		"Parents":     util.ParentList(f.Parents),
-		"Download":    f.DownloadUrl,
-		"Export":      f.ExportLinks["text/csv"],
 	}
 
 	order := []string{
@@ -133,8 +131,6 @@ func printInfo(d *gdrive.Drive, f *drive.File) {
 		"Md5sum",
 		"Shared",
 		"Parents",
-		"Download",
-		"Export",
 	}
 	util.Print(fields, order)
 }
