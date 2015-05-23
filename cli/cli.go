@@ -331,14 +331,7 @@ func Download(d *gdrive.Drive, fileId string, stdout, deleteAfterDownload bool, 
 		return fmt.Errorf("An error occurred: %v\n", err)
 	}
 
-	downloadUrl := info.DownloadUrl
-	extension := ""
-
-	if downloadUrl == "" && format == "" {
-		return fmt.Errorf("Document has no download url. Try to specify an export format.")
-	}
-
-	downloadUrl, extension, err = util.ExportFormat(info, format)
+	downloadUrl, extension, err := util.InternalDownloadUrlAndExtension(info, format)
 	if err != nil {
 		return err
 	}

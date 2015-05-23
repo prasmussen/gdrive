@@ -197,3 +197,13 @@ func columnPadder(items []map[string]string, key string, spacing int) func(strin
 		return column
 	}
 }
+
+func inArray(needle string, haystack []string) bool {
+    for _, x := range haystack {
+        if needle == x {
+            return true
+        }
+    }
+
+    return false
+}
