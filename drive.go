@@ -77,6 +77,10 @@ type Options struct {
 		Preview  bool   `goptions:"-p, --preview, mutexgroup='urltype', description='Generate preview url (default)'"`
 		Download bool   `goptions:"-d, --download, mutexgroup='urltype', description='Generate download url'"`
 	} `goptions:"url"`
+
+	Quota struct {
+		SizeInBytes bool `goptions:"--bytes, description='Show size in bytes'"`
+	} `goptions:"quota"`
 }
 
 func main() {
@@ -144,6 +148,9 @@ func main() {
 		} else {
 			fmt.Println(util.PreviewUrl(opts.Url.FileId))
 		}
+
+	case "quota":
+		err = cli.Quota(drive, opts.Quota.SizeInBytes)
 
 	default:
 		goptions.PrintHelp()

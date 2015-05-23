@@ -49,7 +49,7 @@ func List(d *gdrive.Drive, query, titleFilter string, maxResults int, sharedStat
 		items = append(items, map[string]string{
 			"Id":      f.Id,
 			"Title":   util.TruncateString(f.Title, 40),
-			"Size":    util.FileSizeFormat(f.FileSize),
+			"Size":    util.FileSizeFormat(f.FileSize, false),
 			"Created": util.ISODateToLocal(f.CreatedDate),
 		})
 	}
@@ -101,16 +101,16 @@ func Info(d *gdrive.Drive, fileId string) error {
 	if err != nil {
 		return fmt.Errorf("An error occurred: %v\n", err)
 	}
-	printInfo(d, info)
+	printInfo(d, info, false)
 	return nil
 }
 
-func printInfo(d *gdrive.Drive, f *drive.File) {
+func printInfo(d *gdrive.Drive, f *drive.File, sizeInBytes bool) {
 	fields := map[string]string{
 		"Id":          f.Id,
 		"Title":       f.Title,
 		"Description": f.Description,
-		"Size":        util.FileSizeFormat(f.FileSize),
+		"Size":        util.FileSizeFormat(f.FileSize, sizeInBytes),
 		"Created":     util.ISODateToLocal(f.CreatedDate),
 		"Modified":    util.ISODateToLocal(f.ModifiedDate),
 		"Owner":       strings.Join(f.OwnerNames, ", "),
@@ -140,7 +140,7 @@ func Folder(d *gdrive.Drive, title string, parentId string, share bool) error {
 	if err != nil {
 		return err
 	}
-	printInfo(d, info)
+	printInfo(d, info, false)
 	fmt.Printf("Folder '%s' created\n", info.Title)
 	return nil
 }
@@ -189,9 +189,9 @@ func UploadStdin(d *gdrive.Drive, input io.ReadCloser, title string, parentId st
 	bytes := info.FileSize
 
 	// Print information about uploaded file
-	printInfo(d, info)
+	printInfo(d, info, false)
 	fmt.Printf("MIME Type: %s\n", mimeType)
-	fmt.Printf("Uploaded '%s' at %s, total %s\n", info.Title, getRate(bytes), util.FileSizeFormat(bytes))
+	fmt.Printf("Uploaded '%s' at %s, total %s\n", info.Title, getRate(bytes), util.FileSizeFormat(bytes, false))
 
 	// Share file if the share flag was provided
 	if share {
@@ -297,9 +297,9 @@ func uploadFile(d *gdrive.Drive, input *os.File, inputInfo os.FileInfo, title st
 	bytes := info.FileSize
 
 	// Print information about uploaded file
-	printInfo(d, info)
+	printInfo(d, info, false)
 	fmt.Printf("MIME Type: %s\n", mimeType)
-	fmt.Printf("Uploaded '%s' at %s, total %s\n", info.Title, getRate(bytes), util.FileSizeFormat(bytes))
+	fmt.Printf("Uploaded '%s' at %s, total %s\n", info.Title, getRate(bytes), util.FileSizeFormat(bytes, false))
 
 	// Share file if the share flag was provided
 	if share {
@@ -375,7 +375,7 @@ func Download(d *gdrive.Drive, fileId string, stdout, deleteAfterDownload bool, 
 		return fmt.Errorf("An error occurred: %s", err)
 	}
 
-	fmt.Printf("Downloaded '%s' at %s, total %s\n", fileName, getRate(bytes), util.FileSizeFormat(bytes))
+	fmt.Printf("Downloaded '%s' at %s, total %s\n", fileName, getRate(bytes), util.FileSizeFormat(bytes, false))
 
 	if deleteAfterDownload {
 		err = Delete(d, fileId)
@@ -432,6 +432,18 @@ func Unshare(d *gdrive.Drive, fileId string) error {
 	}
 
 	fmt.Printf("File '%s' is no longer shared to 'anyone'\n", info.Title)
+	return nil
+}
+
+func Quota(d *gdrive.Drive, sizeInBytes bool) error {
+	info, err := d.About.Get().Do()
+	if err != nil {
+		return fmt.Errorf("An error occurred: %v\n", err)
+	}
+
+	fmt.Printf("Used: %s\n", util.FileSizeFormat(info.QuotaBytesUsed, sizeInBytes))
+	fmt.Printf("Free: %s\n", util.FileSizeFormat(info.QuotaBytesTotal-info.QuotaBytesUsed, sizeInBytes))
+	fmt.Printf("Total: %s\n", util.FileSizeFormat(info.QuotaBytesTotal, sizeInBytes))
 	return nil
 }
 

@@ -48,7 +48,11 @@ func FormatBool(b bool) string {
 	return strings.Title(strconv.FormatBool(b))
 }
 
-func FileSizeFormat(bytes int64) string {
+func FileSizeFormat(bytes int64, forceBytes bool) string {
+	if forceBytes {
+		return fmt.Sprintf("%v B", bytes)
+	}
+
 	units := []string{"B", "KB", "MB", "GB", "TB", "PB"}
 
 	var i int
@@ -122,10 +126,10 @@ func MeasureTransferRate() func(int64) string {
 	return func(bytes int64) string {
 		seconds := int64(time.Now().Sub(start).Seconds())
 		if seconds < 1 {
-			return fmt.Sprintf("%s/s", FileSizeFormat(bytes))
+			return fmt.Sprintf("%s/s", FileSizeFormat(bytes, false))
 		}
 		bps := bytes / seconds
-		return fmt.Sprintf("%s/s", FileSizeFormat(bps))
+		return fmt.Sprintf("%s/s", FileSizeFormat(bps, false))
 	}
 }
 
