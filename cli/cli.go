@@ -309,7 +309,7 @@ func uploadFile(d *gdrive.Drive, input *os.File, inputInfo os.FileInfo, title st
 	return err
 }
 
-func DownloadLatest(d *gdrive.Drive, stdout bool) error {
+func DownloadLatest(d *gdrive.Drive, stdout bool, format string, force bool) error {
 	list, err := d.Files.List().Do()
 	if err != nil {
 		return err
@@ -320,29 +320,36 @@ func DownloadLatest(d *gdrive.Drive, stdout bool) error {
 	}
 
 	latestId := list.Items[0].Id
-	return Download(d, latestId, stdout, true)
+	return Download(d, latestId, stdout, true, format, force)
 }
 
 // Download file from drive
-func Download(d *gdrive.Drive, fileId string, stdout, deleteAfterDownload bool) error {
+func Download(d *gdrive.Drive, fileId string, stdout, deleteAfterDownload bool, format string, force bool) error {
 	// Get file info
 	info, err := d.Files.Get(fileId).Do()
 	if err != nil {
 		return fmt.Errorf("An error occurred: %v\n", err)
 	}
 
-	if info.DownloadUrl == "" {
-		// If there is no DownloadUrl, there is no body
-		return fmt.Errorf("An error occurred: File is not downloadable")
+	downloadUrl := info.DownloadUrl
+	extension := ""
+
+	if downloadUrl == "" && format == "" {
+		return fmt.Errorf("Document has no download url. Try to specify an export format.")
+	}
+
+	downloadUrl, extension, err = util.ExportFormat(info, format)
+	if err != nil {
+		return err
 	}
 
 	// Measure transfer rate
 	getRate := util.MeasureTransferRate()
 
 	// GET the download url
-	res, err := d.Client().Get(info.DownloadUrl)
+	res, err := d.Client().Get(downloadUrl)
 	if err != nil {
-		return fmt.Errorf("An error occurred: %v\n", err)
+		return fmt.Errorf("An error occurred: %v", err)
 	}
 
 	// Close body on function exit
@@ -354,13 +361,15 @@ func Download(d *gdrive.Drive, fileId string, stdout, deleteAfterDownload bool) 
 		return nil
 	}
 
+	fileName := fmt.Sprintf("%s%s", info.Title, extension)
+
 	// Check if file exists
-	if util.FileExists(info.Title) {
-		return fmt.Errorf("An error occurred: '%s' already exists\n", info.Title)
+	if !force && util.FileExists(fileName) {
+		return fmt.Errorf("An error occurred: '%s' already exists", fileName)
 	}
 
 	// Create a new file
-	outFile, err := os.Create(info.Title)
+	outFile, err := os.Create(fileName)
 	if err != nil {
 		return fmt.Errorf("An error occurred: %v\n", err)
 	}
@@ -374,7 +383,7 @@ func Download(d *gdrive.Drive, fileId string, stdout, deleteAfterDownload bool) 
 		return fmt.Errorf("An error occurred: %s", err)
 	}
 
-	fmt.Printf("Downloaded '%s' at %s, total %s\n", info.Title, getRate(bytes), util.FileSizeFormat(bytes))
+	fmt.Printf("Downloaded '%s' at %s, total %s\n", fileName, getRate(bytes), util.FileSizeFormat(bytes))
 
 	if deleteAfterDownload {
 		err = Delete(d, fileId)
