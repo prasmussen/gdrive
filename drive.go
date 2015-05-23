@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	VersionNumber = "1.7.0"
+	VersionNumber = "1.8.0"
 )
 
 type Options struct {
