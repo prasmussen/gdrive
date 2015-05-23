@@ -33,47 +33,50 @@ If you want to compile from source you need the go toolchain: http://golang.org/
 
 #### Options
     Global options:
-            -a, --advanced  Advanced Mode -- lets you specify your own oauth client id and secret on setup
-            -c, --config    Set application path where config and token is stored. Defaults to ~/.gdrive
-            -v, --version   Print version
-            -h, --help      Show this help
+            -a, --advanced     Advanced Mode -- lets you specify your own oauth client id and secret on setup
+            -c, --config       Set application path where config and token is stored. Defaults to ~/.gdrive
+            -v, --version      Print version
+            -h, --help         Show this help
 
     Verbs:
         delete:
-            -i, --id        File Id (*)
+            -i, --id           File Id (*)
         download:
-            -i, --id        File Id (*)
-            -s, --stdout    Write file content to stdout
-                --pop       Download latest file, and remove it from google drive
+            -i, --id           File Id (*)
+                --format       Download file in a specified format (needed for google docs)
+            -s, --stdout       Write file content to stdout
+                --force        Overwrite existing file
+                --pop          Download latest file, and remove it from google drive
         folder:
-            -t, --title     Folder to create (*)
-            -p, --parent    Parent Id of the folder
-                --share     Share created folder
+            -t, --title        Folder to create (*)
+            -p, --parent       Parent Id of the folder
+                --share        Share created folder
         info:
-            -i, --id        File Id (*)
+            -i, --id           File Id (*)
         list:
-            -m, --max       Max results
-            -t, --title     Title filter
-            -q, --query     Query (see https://developers.google.com/drive/search-parameters)
-            -s, --shared    Show shared status (Note: this will generate 1 http req per file)
-            -n, --noheader  Do not show the header
+            -m, --max          Max results
+                --include-docs Include google docs in listing
+            -t, --title        Title filter
+            -q, --query        Query (see https://developers.google.com/drive/search-parameters)
+            -s, --shared       Show shared status (Note: this will generate 1 http req per file)
+            -n, --noheader     Do not show the header
         share:
-            -i, --id        File Id (*)
+            -i, --id           File Id (*)
         unshare:
-            -i, --id        File Id (*)
+            -i, --id           File Id (*)
         upload:
-            -f, --file      File or directory to upload (*)
-            -s, --stdin     Use stdin as file content (*)
-            -t, --title     Title to give uploaded file. Defaults to filename
-            -p, --parent    Parent Id of the file
-                --share     Share uploaded file
-                --mimetype  The MIME type (default will try to figure it out)
-                --convert   File will be converted to Google Docs format
-            -C, --chunksize Set chunk size in bytes. Minimum is 262144, default is 4194304. Recommended to be a power of two.
+            -f, --file         File or directory to upload (*)
+            -s, --stdin        Use stdin as file content (*)
+            -t, --title        Title to give uploaded file. Defaults to filename
+            -p, --parent       Parent Id of the file
+                --share        Share uploaded file
+                --mimetype     The MIME type (default will try to figure it out)
+                --convert      File will be converted to Google Docs format
+            -C, --chunksize    Set chunk size in bytes. Minimum is 262144, default is 4194304. Recommended to be a power of two.
         url:
-            -i, --id        File Id (*)
-            -p, --preview   Generate preview url (default)
-            -d, --download  Generate download url
+            -i, --id           File Id (*)
+            -p, --preview      Generate preview url (default)
+            -d, --download     Generate download url
 
 ## Examples
 ###### List files
@@ -100,6 +103,10 @@ If you want to compile from source you need the go toolchain: http://golang.org/
 ###### Download file
     $ drive download --id 0B3X9GlR6EmbnenBYSFI4MzN0d2M
     Downloaded 'drive-freebsd-amd64' at 2 MB/s, total 5 MB
+
+###### Download google doc as docx
+    $ drive download -i 1ooNQwHdIRNcm-boOU7RVH8mQKhoOJ8rgABWBXleytg0 --format docx
+    Downloaded 'testdoc.docx' at 4.3 KB/s, total 4.3 KB
 
 ###### Share a file
     $ drive share --id 0B3X9GlR6EmbnOVRQN0t6RkxVQk0
