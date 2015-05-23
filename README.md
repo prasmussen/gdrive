@@ -53,6 +53,7 @@ If you want to compile from source you need the go toolchain: http://golang.org/
                 --share        Share created folder
         info:
             -i, --id           File Id (*)
+                --bytes        Show size in bytes
         list:
             -m, --max          Max results
                 --include-docs Include google docs in listing
@@ -60,6 +61,9 @@ If you want to compile from source you need the go toolchain: http://golang.org/
             -q, --query        Query (see https://developers.google.com/drive/search-parameters)
             -s, --shared       Show shared status (Note: this will generate 1 http req per file)
             -n, --noheader     Do not show the header
+                --bytes        Show size in bytes
+        quota:
+                --bytes        Show size in bytes
         share:
             -i, --id           File Id (*)
         unshare:
