@@ -24,7 +24,7 @@ type Options struct {
 
 	List struct {
 		MaxResults   int    `goptions:"-m, --max, description='Max results'"`
-		IncludeDocs  bool   `goptions:"--include-docs, mutexgroup='query', description='Include google docs in listing'"`
+		IncludeDocs  bool   `goptions:"--include-docs, description='Include google docs in listing'"`
 		TitleFilter  string `goptions:"-t, --title, mutexgroup='query', description='Title filter'"`
 		Query        string `goptions:"-q, --query, mutexgroup='query', description='Query (see https://developers.google.com/drive/search-parameters)'"`
 		SharedStatus bool   `goptions:"-s, --shared, description='Show shared status (Note: this will generate 1 http req per file)'"`
