@@ -13,7 +13,7 @@ import (
 	"strings"
 )
 
-func List(d *gdrive.Drive, query, titleFilter string, maxResults int, sharedStatus bool, noHeader bool, includeDocs bool) error {
+func List(d *gdrive.Drive, query, titleFilter string, maxResults int, sharedStatus, noHeader, includeDocs, sizeInBytes bool) error {
 	caller := d.Files.List()
 
 	if maxResults > 0 {
@@ -49,7 +49,7 @@ func List(d *gdrive.Drive, query, titleFilter string, maxResults int, sharedStat
 		items = append(items, map[string]string{
 			"Id":      f.Id,
 			"Title":   util.TruncateString(f.Title, 40),
-			"Size":    util.FileSizeFormat(f.FileSize, false),
+			"Size":    util.FileSizeFormat(f.FileSize, sizeInBytes),
 			"Created": util.ISODateToLocal(f.CreatedDate),
 		})
 	}
@@ -96,12 +96,12 @@ func addSharedStatus(d *gdrive.Drive, items []map[string]string) {
 	}
 }
 
-func Info(d *gdrive.Drive, fileId string) error {
+func Info(d *gdrive.Drive, fileId string, sizeInBytes bool) error {
 	info, err := d.Files.Get(fileId).Do()
 	if err != nil {
 		return fmt.Errorf("An error occurred: %v\n", err)
 	}
-	printInfo(d, info, false)
+	printInfo(d, info, sizeInBytes)
 	return nil
 }
 
