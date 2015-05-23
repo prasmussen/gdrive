@@ -13,7 +13,7 @@ import (
 	"strings"
 )
 
-func List(d *gdrive.Drive, query, titleFilter string, maxResults int, sharedStatus bool, noHeader bool) error {
+func List(d *gdrive.Drive, query, titleFilter string, maxResults int, sharedStatus bool, noHeader bool, includeDocs bool) error {
 	caller := d.Files.List()
 
 	if maxResults > 0 {
@@ -37,8 +37,7 @@ func List(d *gdrive.Drive, query, titleFilter string, maxResults int, sharedStat
 	items := make([]map[string]string, 0, 0)
 
 	for _, f := range list.Items {
-		// Skip files that dont have a download url (they are not stored on google drive)
-		if f.DownloadUrl == "" {
+		if f.DownloadUrl == "" && !includeDocs {
 			if f.MimeType != "application/vnd.google-apps.folder" {
 				continue
 			}
