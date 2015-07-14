@@ -34,9 +34,20 @@ func List(d *gdrive.Drive, query, titleFilter string, maxResults int, sharedStat
 		return err
 	}
 
+	files := list.Items
+
+	for(list.NextPageToken != "") {
+		caller.PageToken(list.NextPageToken)
+		list, err = caller.Do()
+		if err != nil {
+			return err
+		}
+		files = append(files,list.Items...)
+	}
+
 	items := make([]map[string]string, 0, 0)
 
-	for _, f := range list.Items {
+	for _, f := range files {
 		if f.DownloadUrl == "" && !includeDocs {
 			if f.MimeType != "application/vnd.google-apps.folder" {
 				continue
