@@ -13,8 +13,27 @@ import (
 	"strings"
 )
 
+// List of google docs mime types excluding vnd.google-apps.folder
+var googleMimeTypes = []string{
+	"application/vnd.google-apps.audio",
+	"application/vnd.google-apps.document",
+	"application/vnd.google-apps.drawing",
+	"application/vnd.google-apps.file",
+	"application/vnd.google-apps.form",
+	"application/vnd.google-apps.fusiontable",
+	"application/vnd.google-apps.photo",
+	"application/vnd.google-apps.presentation",
+	"application/vnd.google-apps.script",
+	"application/vnd.google-apps.sites",
+	"application/vnd.google-apps.spreadsheet",
+	"application/vnd.google-apps.unknown",
+	"application/vnd.google-apps.video",
+	"application/vnd.google-apps.map",
+}
+
 func List(d *gdrive.Drive, query, titleFilter string, maxResults int, sharedStatus, noHeader, includeDocs, sizeInBytes bool) error {
 	caller := d.Files.List()
+	queryList := []string{}
 
 	if maxResults > 0 {
 		caller.MaxResults(int64(maxResults))
@@ -22,11 +41,27 @@ func List(d *gdrive.Drive, query, titleFilter string, maxResults int, sharedStat
 
 	if titleFilter != "" {
 		q := fmt.Sprintf("title contains '%s'", titleFilter)
-		caller.Q(q)
+		queryList = append(queryList, q)
 	}
 
 	if query != "" {
-		caller.Q(query)
+		queryList = append(queryList, query)
+	} else {
+		// Skip trashed files
+		queryList = append(queryList, "trashed = false")
+
+		// Skip google docs
+		if !includeDocs {
+			for _, mime := range googleMimeTypes {
+				q := fmt.Sprintf("mimeType != '%s'", mime)
+				queryList = append(queryList, q)
+			}
+		}
+	}
+
+	if len(queryList) > 0 {
+		q := strings.Join(queryList, " and ")
+		caller.Q(q)
 	}
 
 	list, err := caller.Do()
@@ -36,25 +71,24 @@ func List(d *gdrive.Drive, query, titleFilter string, maxResults int, sharedStat
 
 	files := list.Items
 
-	for(list.NextPageToken != "") {
+	for list.NextPageToken != "" {
+		if maxResults > 0 && len(files) > maxResults {
+			break
+		}
+
 		caller.PageToken(list.NextPageToken)
 		list, err = caller.Do()
 		if err != nil {
 			return err
 		}
-		files = append(files,list.Items...)
+		files = append(files, list.Items...)
 	}
 
 	items := make([]map[string]string, 0, 0)
 
 	for _, f := range files {
-		if f.DownloadUrl == "" && !includeDocs {
-			if f.MimeType != "application/vnd.google-apps.folder" {
-				continue
-			}
-		}
-		if f.Labels.Trashed {
-			continue
+		if maxResults > 0 && len(items) >= maxResults {
+			break
 		}
 
 		items = append(items, map[string]string{
