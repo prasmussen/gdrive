@@ -57,7 +57,11 @@ func InternalDownloadUrlAndExtension(info *drive.File, format string) (downloadU
 	// Return DownloadUrl if no format is specified
 	if format == "" {
 		if info.DownloadUrl == "" {
-			return "", "", fmt.Errorf("A format needs to be specified to download this file (--format). Available formats: %s", strings.Join(availableFormats, ", "))
+			if len(availableFormats) > 0 {
+				return "", "", fmt.Errorf("A format needs to be specified to download this file (--format). Available formats: %s", strings.Join(availableFormats, ", "))
+			} else {
+				return "", "", fmt.Errorf("Download is not supported for this filetype")
+			}
 		}
 		return info.DownloadUrl, "", nil
 	}
