@@ -1,5 +1,5 @@
 # Ignore bin folder and drive binary
-bin/
+_release/bin
 drive
 
 # vim files

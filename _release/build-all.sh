@@ -1,25 +1,22 @@
 #!/bin/bash
 
-if [ -z "$1" ]; then
-    echo "Usage: $0 <app>"
-    exit 1
-fi
-
 # Load crosscompile environment
-source /Users/pii/scripts/golang-crosscompile/crosscompile.bash
+source _release/crosscompile.bash
 
+APP_NAME="drive"
 PLATFORMS="darwin/386 darwin/amd64 freebsd/386 freebsd/amd64 linux/386 linux/amd64 linux/arm linux/rpi windows/386 windows/amd64"
-APP_NAME=$1
+BIN_PATH="_release/bin"
 
-# Remove old binaries
-rm bin/*
+# Initialize bin dir
+mkdir -p $BIN_PATH
+rm $BIN_PATH/*
 
 
 # Build binary for each platform in parallel
 for PLATFORM in $PLATFORMS; do
     GOOS=${PLATFORM%/*}
     GOARCH=${PLATFORM#*/}
-    BIN_NAME="${APP_NAME}-$GOOS-$GOARCH"
+    BIN_NAME="${APP_NAME}-${GOOS/darwin/osx}-${GOARCH/amd64/x64}"
 
     if [ $GOOS == "windows" ]; then
         BIN_NAME="${BIN_NAME}.exe"
@@ -33,7 +30,7 @@ for PLATFORM in $PLATFORMS; do
         unset GOARM
     fi
 
-    BUILD_CMD="go-${GOOS}-${GOARCH} build -ldflags "-w" -o bin/${BIN_NAME} $APP_NAME.go"
+    BUILD_CMD="go-${GOOS}-${GOARCH} build -ldflags '-w' -o ${BIN_PATH}/${BIN_NAME} $APP_NAME.go"
 
     echo "Building $BIN_NAME"
     $BUILD_CMD &
