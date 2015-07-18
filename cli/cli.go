@@ -281,7 +281,8 @@ func uploadDirectory(d *gdrive.Drive, input *os.File, inputInfo os.FileInfo, tit
 	}
 
 	// Go into directory
-	err = input.Chdir()
+	dstDir := filepath.Join(currentDir, inputInfo.Name())
+	err = os.Chdir(dstDir)
 	if err != nil {
 		return err
 	}
