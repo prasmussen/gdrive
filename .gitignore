@@ -1,9 +1,9 @@
 # Ignore bin folder and drive binary
 _release/bin
-drive
 
 # vim files
 .*.sw[a-z]
 *.un~
 Session.vim
 .netrwhist
+drive_old
