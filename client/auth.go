@@ -25,8 +25,9 @@ func NewOauthClient(clientId, clientSecret, tokenFile string, authFn authCodeFn)
         return nil, err
     }
 
-    // Request auth code if token does not exist
-    if !exists {
+    // Require auth code if token file does not exist
+    // or refresh token is missing
+    if !exists || token.RefreshToken == "" {
         authUrl := conf.AuthCodeURL("state", oauth2.AccessTypeOffline)
         authCode := authFn(authUrl)()
         token, err = conf.Exchange(oauth2.NoContext, authCode)
