@@ -14,9 +14,11 @@ func (self *Drive) List(args ListFilesArgs) {
     fileList, err := self.service.Files.List().PageSize(args.MaxFiles).Q(args.Query).Fields("nextPageToken", "files(id,name,size,createdTime)").Do()
     errorF(err, "Failed listing files: %s\n", err)
 
-    for _, f := range fileList.Files {
-        fmt.Printf("%s %s %d %s\n", f.Id, f.Name, f.Size, f.CreatedTime)
-    }
+    PrintFileList(PrintFileListArgs{
+        Files: fileList.Files,
+        SkipHeader: args.SkipHeader,
+        SizeInBytes: args.SizeInBytes,
+    })
 }
 
 

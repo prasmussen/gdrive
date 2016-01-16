@@ -51,6 +51,12 @@ type FileInfoArgs struct {
     SizeInBytes bool
 }
 
+type PrintFileListArgs struct {
+    Files []*drive.File
+    SkipHeader bool
+    SizeInBytes bool
+}
+
 type PrintFileInfoArgs struct {
     File *drive.File
     SizeInBytes bool
