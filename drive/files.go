@@ -12,9 +12,7 @@ import (
 
 func (self *Drive) List(args ListFilesArgs) {
     fileList, err := self.service.Files.List().PageSize(args.MaxFiles).Q(args.Query).Fields("nextPageToken", "files(id,name,size,createdTime)").Do()
-    if err != nil {
-        exitF("Failed listing files: %s\n", err.Error())
-    }
+    errorF(err, "Failed listing files: %s\n", err)
 
     for _, f := range fileList.Files {
         fmt.Printf("%s %s %d %s\n", f.Id, f.Name, f.Size, f.CreatedTime)
@@ -26,14 +24,10 @@ func (self *Drive) Download(args DownloadFileArgs) {
     getFile := self.service.Files.Get(args.Id)
 
     f, err := getFile.Do()
-    if err != nil {
-        exitF("Failed to get file: %s", err.Error())
-    }
+    errorF(err, "Failed to get file: %s", err)
 
     res, err := getFile.Download()
-    if err != nil {
-        exitF("Failed to download file: %s", err.Error())
-    }
+    errorF(err, "Failed to download file: %s", err)
 
     // Close body on function exit
     defer res.Body.Close()
@@ -51,18 +45,14 @@ func (self *Drive) Download(args DownloadFileArgs) {
 
     // Create new file
     outFile, err := os.Create(f.Name)
-    if err != nil {
-        exitF("Unable to create new file: %s", err.Error())
-    }
+    errorF(err, "Unable to create new file: %s", err)
 
     // Close file on function exit
     defer outFile.Close()
 
     // Save file to disk
     bytes, err := io.Copy(outFile, res.Body)
-    if err != nil {
-        exitF("Failed saving file: %s", err.Error())
-    }
+    errorF(err, "Failed saving file: %s", err)
 
     fmt.Printf("Downloaded '%s' at %s, total %d\n", f.Name, "x/s", bytes)
 
@@ -77,14 +67,10 @@ func (self *Drive) Upload(args UploadFileArgs) {
     //}
 
     srcFile, err := os.Open(args.Path)
-    if err != nil {
-        exitF("Failed to open file: %s", err.Error())
-    }
+    errorF(err, "Failed to open file: %s", err)
 
     srcFileInfo, err := srcFile.Stat()
-    if err != nil {
-        exitF("Failed to read file metadata: %s", err.Error())
-    }
+    errorF(err, "Failed to read file metadata: %s", err)
 
     // Instantiate empty drive file
     dstFile := &drive.File{}
@@ -109,9 +95,7 @@ func (self *Drive) Upload(args UploadFileArgs) {
     }
 
     f, err := self.service.Files.Create(dstFile).ResumableMedia(context.Background(), srcFile, srcFileInfo.Size(), dstFile.MimeType).Do()
-    if err != nil {
-        exitF("Failed to upload file: %s", err.Error())
-    }
+    errorF(err, "Failed to upload file: %s", err)
 
     fmt.Printf("Uploaded '%s' at %s, total %d\n", f.Name, "x/s", f.Size)
     //if args.Share {
