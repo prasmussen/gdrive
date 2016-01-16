@@ -12,7 +12,7 @@ func GetDefaultConfigDir() string {
 }
 
 func GetDefaultTokenFilePath() string {
-    return filepath.Join(GetDefaultConfigDir(), "token.json")
+    return filepath.Join(GetDefaultConfigDir(), "token_v2.json")
 }
 
 func Homedir() string {
