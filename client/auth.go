@@ -3,12 +3,11 @@ package client
 import (
     "net/http"
     "golang.org/x/oauth2"
-    "go4.org/oauthutil"
 )
 
 type authCodeFn func(string) func() string
 
-func NewOauthClient(clientId, clientSecret, cacheFile string, authFn authCodeFn) *http.Client {
+func NewOauthClient(clientId, clientSecret, tokenFile string, authFn authCodeFn) (*http.Client, error) {
     conf := &oauth2.Config{
         ClientID:     clientId,
         ClientSecret: clientSecret,
@@ -20,13 +19,21 @@ func NewOauthClient(clientId, clientSecret, cacheFile string, authFn authCodeFn)
         },
     }
 
-    authUrl := conf.AuthCodeURL("state", oauth2.AccessTypeOffline)
-
-    tokenSource := oauthutil.TokenSource{
-        Config: conf,
-        CacheFile: cacheFile,
-        AuthCode: authFn(authUrl),
+    // Read cached token
+    token, exists, err := ReadToken(tokenFile)
+    if err != nil {
+        return nil, err
     }
 
-    return oauth2.NewClient(oauth2.NoContext, tokenSource)
+    // Request auth code if token does not exist
+    if !exists {
+        authUrl := conf.AuthCodeURL("state", oauth2.AccessTypeOffline)
+        authCode := authFn(authUrl)()
+        token, err = conf.Exchange(oauth2.NoContext, authCode)
+    }
+
+    return oauth2.NewClient(
+        oauth2.NoContext,
+        FileSource(tokenFile, token, conf),
+    ), nil
 }

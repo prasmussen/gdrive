@@ -75,7 +75,11 @@ func printCommandHelp(ctx cli.Context) {
 }
 
 func newDrive() *drive.Drive {
-    oauth := client.NewOauthClient(ClientId, ClientSecret, DefaultTokenFilePath, authCodePrompt)
+    oauth, err := client.NewOauthClient(ClientId, ClientSecret, DefaultTokenFilePath, authCodePrompt)
+    if err != nil {
+        ExitF("Failed getting oauth client: %s", err.Error())
+    }
+
     client, err := client.NewClient(oauth)
     if err != nil {
         ExitF("Failed getting drive: %s", err.Error())
