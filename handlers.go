@@ -47,6 +47,16 @@ func uploadHandler(ctx cli.Context) {
     })
 }
 
+func infoHandler(ctx cli.Context) {
+    args := ctx.Args()
+    gdrive := newDrive()
+
+    gdrive.Info(drive.FileInfoArgs{
+        Id: args.String("id"),
+        SizeInBytes: args.Bool("sizeInBytes"),
+    })
+}
+
 func deleteHandler(ctx cli.Context) {
     fmt.Println("Deleting...")
 }

@@ -45,3 +45,23 @@ type UploadFileArgs struct {
     Stdin bool
     Share bool
 }
+
+type FileInfoArgs struct {
+    Id string
+    SizeInBytes bool
+}
+
+type PrintFileInfoArgs struct {
+    File *drive.File
+    SizeInBytes bool
+}
+
+type kv [2]string
+
+func (self kv) key() string {
+    return self[0]
+}
+
+func (self kv) value() string {
+    return self[1]
+}

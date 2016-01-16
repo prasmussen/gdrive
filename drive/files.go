@@ -103,6 +103,16 @@ func (self *Drive) Upload(args UploadFileArgs) {
     //}
 }
 
+func (self *Drive) Info(args FileInfoArgs) {
+    f, err := self.service.Files.Get(args.Id).Fields("id", "name", "size", "createdTime", "modifiedTime", "md5Checksum", "mimeType", "parents", "shared", "description").Do()
+    errorF(err, "Failed to get file: %s", err)
+
+    PrintFileInfo(PrintFileInfoArgs{
+        File: f,
+        SizeInBytes: args.SizeInBytes,
+    })
+}
+
 //func newFile(args UploadFileArgs) *drive.File {
 //
 //}

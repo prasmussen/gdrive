@@ -142,7 +142,7 @@ func main() {
         &cli.Handler{
             Pattern: "[global options] info [options] <id>",
             Description: "Show file info",
-            Callback: handler,
+            Callback: infoHandler,
             Flags: cli.Flags{
                 "global options": globalFlags,
                 "options": []cli.Flag{
