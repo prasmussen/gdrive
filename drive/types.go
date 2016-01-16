@@ -35,3 +35,13 @@ type DownloadFileArgs struct {
     NoProgress bool
     Stdout bool
 }
+
+type UploadFileArgs struct {
+    Path string
+    Name string
+    Parent string
+    Mime string
+    Recursive bool
+    Stdin bool
+    Share bool
+}

@@ -13,7 +13,6 @@ const ClientId     = "367116221053-7n0vf5akeru7on6o2fjinrecpdoe99eg.apps.googleu
 const ClientSecret = "1qsNodXNaWq1mQuBjUjmvhoO"
 
 const DefaultMaxFiles = 100
-const DefaultChunkSize = 4194304
 
 var DefaultConfigDir = GetDefaultConfigDir()
 var DefaultTokenFilePath = GetDefaultTokenFilePath()
@@ -50,7 +49,7 @@ func main() {
                     },
                     cli.BoolFlag{
                         Name: "skipHeader",
-                        Patterns: []string{"--noheader"},
+                        Patterns: []string{"--no-header"},
                         Description: "Dont print the header",
                         OmitValue: true,
                     },
@@ -78,7 +77,7 @@ func main() {
                     },
                     cli.BoolFlag{
                         Name: "noProgress",
-                        Patterns: []string{"--noprogress"},
+                        Patterns: []string{"--no-progress"},
                         Description: "Hide progress",
                         OmitValue: true,
                     },
@@ -94,7 +93,7 @@ func main() {
         &cli.Handler{
             Pattern: "[global options] upload [options] <path>",
             Description: "Upload file or directory",
-            Callback: handler,
+            Callback: uploadHandler,
             Flags: cli.Flags{
                 "global options": globalFlags,
                 "options": []cli.Flag{
@@ -115,9 +114,9 @@ func main() {
                         Description: "Filename",
                     },
                     cli.BoolFlag{
-                        Name: "progress",
-                        Patterns: []string{"--progress"},
-                        Description: "Show progress",
+                        Name: "noProgress",
+                        Patterns: []string{"--no-progress"},
+                        Description: "Hide progress",
                         OmitValue: true,
                     },
                     cli.BoolFlag{
@@ -136,18 +135,6 @@ func main() {
                         Patterns: []string{"--share"},
                         Description: "Share file",
                         OmitValue: true,
-                    },
-                    cli.BoolFlag{
-                        Name: "share",
-                        Patterns: []string{"--convert"},
-                        Description: "Convert file to google docs format",
-                        OmitValue: true,
-                    },
-                    cli.IntFlag{
-                        Name: "chunksize",
-                        Patterns: []string{"--chunksize"},
-                        Description: fmt.Sprintf("Set chunk size in bytes. Minimum is 262144, default is %d", DefaultChunkSize),
-                        DefaultValue: DefaultChunkSize,
                     },
                 },
             },

@@ -32,6 +32,21 @@ func downloadHandler(ctx cli.Context) {
     })
 }
 
+func uploadHandler(ctx cli.Context) {
+    args := ctx.Args()
+    gdrive := newDrive()
+
+    gdrive.Upload(drive.UploadFileArgs{
+        Path: args.String("path"),
+        Name: args.String("name"),
+        Parent: args.String("parent"),
+        Mime: args.String("mime"),
+        Recursive: args.Bool("recursive"),
+        Stdin: args.Bool("stdin"),
+        Share: args.Bool("share"),
+    })
+}
+
 func deleteHandler(ctx cli.Context) {
     fmt.Println("Deleting...")
 }
@@ -74,6 +89,7 @@ func printCommandHelp(ctx cli.Context) {
     }
 }
 
+// TODO: take app path as arg
 func newDrive() *drive.Drive {
     oauth, err := client.NewOauthClient(ClientId, ClientSecret, DefaultTokenFilePath, authCodePrompt)
     if err != nil {

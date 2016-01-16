@@ -3,7 +3,11 @@ package drive
 import (
     "fmt"
     "io"
+    "mime"
     "os"
+    "path/filepath"
+    "google.golang.org/api/drive/v3"
+    "golang.org/x/net/context"
 )
 
 func (self *Drive) List(args ListFilesArgs) {
@@ -66,3 +70,55 @@ func (self *Drive) Download(args DownloadFileArgs) {
     //    self.Delete(args.Id)
     //}
 }
+
+func (self *Drive) Upload(args UploadFileArgs) {
+    //if args.Stdin {
+    //    self.uploadStdin()
+    //}
+
+    srcFile, err := os.Open(args.Path)
+    if err != nil {
+        exitF("Failed to open file: %s", err.Error())
+    }
+
+    srcFileInfo, err := srcFile.Stat()
+    if err != nil {
+        exitF("Failed to read file metadata: %s", err.Error())
+    }
+
+    // Instantiate empty drive file
+    dstFile := &drive.File{}
+
+    // Use provided file name or use filename
+    if args.Name == "" {
+        dstFile.Name = filepath.Base(srcFileInfo.Name())
+    } else {
+        dstFile.Name = args.Name
+    }
+
+    // Set provided mime type or get type based on file extension
+    if args.Mime == "" {
+        dstFile.MimeType = mime.TypeByExtension(filepath.Ext(dstFile.Name))
+    } else {
+        dstFile.MimeType = args.Mime
+    }
+
+    // Set parent folder if provided
+    if args.Parent != "" {
+        dstFile.Parents = []string{args.Parent}
+    }
+
+    f, err := self.service.Files.Create(dstFile).ResumableMedia(context.Background(), srcFile, srcFileInfo.Size(), dstFile.MimeType).Do()
+    if err != nil {
+        exitF("Failed to upload file: %s", err.Error())
+    }
+
+    fmt.Printf("Uploaded '%s' at %s, total %d\n", f.Name, "x/s", f.Size)
+    //if args.Share {
+    //    self.Share(TODO)
+    //}
+}
+
+//func newFile(args UploadFileArgs) *drive.File {
+//
+//}
