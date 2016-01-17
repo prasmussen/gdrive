@@ -59,6 +59,10 @@ func formatList(a []string) string {
 }
 
 func formatSize(bytes int64, forceBytes bool) string {
+    if bytes == 0 {
+        return ""
+    }
+
     if forceBytes {
         return fmt.Sprintf("%v B", bytes)
     }

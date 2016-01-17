@@ -52,6 +52,12 @@ type FileInfoArgs struct {
     SizeInBytes bool
 }
 
+type MkdirArgs struct {
+    Name string
+    Parent string
+    Share bool
+}
+
 type PrintFileListArgs struct {
     Files []*drive.File
     NameWidth int

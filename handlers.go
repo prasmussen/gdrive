@@ -15,9 +15,8 @@ const TokenFilename = "token_v2.json"
 
 func listHandler(ctx cli.Context) {
     args := ctx.Args()
-    gdrive := newDrive(args)
 
-    gdrive.List(drive.ListFilesArgs{
+    newDrive(args).List(drive.ListFilesArgs{
         MaxFiles: args.Int64("maxFiles"),
         NameWidth: args.Int64("nameWidth"),
         Query: args.String("query"),
@@ -28,9 +27,8 @@ func listHandler(ctx cli.Context) {
 
 func downloadHandler(ctx cli.Context) {
     args := ctx.Args()
-    gdrive := newDrive(args)
 
-    gdrive.Download(drive.DownloadFileArgs{
+    newDrive(args).Download(drive.DownloadFileArgs{
         Id: args.String("id"),
         Force: args.Bool("force"),
         Stdout: args.Bool("stdout"),
@@ -40,9 +38,8 @@ func downloadHandler(ctx cli.Context) {
 
 func uploadHandler(ctx cli.Context) {
     args := ctx.Args()
-    gdrive := newDrive(args)
 
-    gdrive.Upload(drive.UploadFileArgs{
+    newDrive(args).Upload(drive.UploadFileArgs{
         Path: args.String("path"),
         Name: args.String("name"),
         Parent: args.String("parent"),
@@ -55,11 +52,20 @@ func uploadHandler(ctx cli.Context) {
 
 func infoHandler(ctx cli.Context) {
     args := ctx.Args()
-    gdrive := newDrive(args)
 
-    gdrive.Info(drive.FileInfoArgs{
+    newDrive(args).Info(drive.FileInfoArgs{
         Id: args.String("id"),
         SizeInBytes: args.Bool("sizeInBytes"),
+    })
+}
+
+func mkdirHandler(ctx cli.Context) {
+    args := ctx.Args()
+
+    newDrive(args).Mkdir(drive.MkdirArgs{
+        Name: args.String("name"),
+        Parent: args.String("parent"),
+        Share: args.Bool("share"),
     })
 }
 

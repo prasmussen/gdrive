@@ -10,6 +10,8 @@ import (
     "golang.org/x/net/context"
 )
 
+const DirectoryMimeType = "application/vnd.google-apps.folder"
+
 func (self *Drive) List(args ListFilesArgs) {
     fileList, err := self.service.Files.List().PageSize(args.MaxFiles).Q(args.Query).Fields("nextPageToken", "files(id,name,size,createdTime)").Do()
     errorF(err, "Failed listing files: %s\n", err)
@@ -114,6 +116,25 @@ func (self *Drive) Info(args FileInfoArgs) {
         File: f,
         SizeInBytes: args.SizeInBytes,
     })
+}
+
+func (self *Drive) Mkdir(args MkdirArgs) {
+    dstFile := &drive.File{Name: args.Name, MimeType: DirectoryMimeType}
+
+    // Set parent folder if provided
+    if args.Parent != "" {
+        dstFile.Parents = []string{args.Parent}
+    }
+
+    // Create folder
+    f, err := self.service.Files.Create(dstFile).Do()
+    errorF(err, "Failed to create folder: %s", err)
+
+    PrintFileInfo(PrintFileInfoArgs{File: f})
+
+    //if args.Share {
+    //    self.Share(TODO)
+    //}
 }
 
 //func newFile(args UploadFileArgs) *drive.File {

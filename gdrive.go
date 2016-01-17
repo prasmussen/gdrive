@@ -162,7 +162,7 @@ func main() {
         &cli.Handler{
             Pattern: "[global options] mkdir [options] <name>",
             Description: "Create directory",
-            Callback: handler,
+            Callback: mkdirHandler,
             Flags: cli.Flags{
                 "global options": globalFlags,
                 "options": []cli.Flag{
