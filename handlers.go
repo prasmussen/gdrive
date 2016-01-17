@@ -82,6 +82,15 @@ func shareHandler(ctx cli.Context) {
     })
 }
 
+func urlHandler(ctx cli.Context) {
+    args := ctx.Args()
+
+    newDrive(args).Url(drive.UrlArgs{
+        FileId: args.String("id"),
+        DownloadUrl: args.Bool("download"),
+    })
+}
+
 func deleteHandler(ctx cli.Context) {
     fmt.Println("Deleting...")
 }

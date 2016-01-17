@@ -224,7 +224,7 @@ func main() {
         &cli.Handler{
             Pattern: "[global options] url [options] <id>",
             Description: "Get url to file or directory",
-            Callback: handler,
+            Callback: urlHandler,
             Flags: cli.Flags{
                 "global options": globalFlags,
                 "options": []cli.Flag{
