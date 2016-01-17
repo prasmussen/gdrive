@@ -9,15 +9,10 @@ import (
 const Name = "gdrive"
 const Version = "2.0.0"
 
-const ClientId     = "367116221053-7n0vf5akeru7on6o2fjinrecpdoe99eg.apps.googleusercontent.com"
-const ClientSecret = "1qsNodXNaWq1mQuBjUjmvhoO"
-
 const DefaultMaxFiles = 30
 const DefaultNameWidth = 40
 const DefaultQuery = "trashed = false and 'me' in owners"
-
 var DefaultConfigDir = GetDefaultConfigDir()
-var DefaultTokenFilePath = GetDefaultTokenFilePath()
 
 
 func main() {

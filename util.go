@@ -11,8 +11,8 @@ func GetDefaultConfigDir() string {
     return filepath.Join(Homedir(), ".gdrive")
 }
 
-func GetDefaultTokenFilePath() string {
-    return filepath.Join(GetDefaultConfigDir(), "token_v2.json")
+func ConfigFilePath(basePath, name string) string {
+    return filepath.Join(basePath, name)
 }
 
 func Homedir() string {

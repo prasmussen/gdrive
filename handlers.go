@@ -8,9 +8,14 @@ import (
 	"./drive"
 )
 
+const ClientId     = "367116221053-7n0vf5akeru7on6o2fjinrecpdoe99eg.apps.googleusercontent.com"
+const ClientSecret = "1qsNodXNaWq1mQuBjUjmvhoO"
+const TokenFilename = "token_v2.json"
+
+
 func listHandler(ctx cli.Context) {
     args := ctx.Args()
-    gdrive := newDrive()
+    gdrive := newDrive(args)
 
     gdrive.List(drive.ListFilesArgs{
         MaxFiles: args.Int64("maxFiles"),
@@ -23,7 +28,7 @@ func listHandler(ctx cli.Context) {
 
 func downloadHandler(ctx cli.Context) {
     args := ctx.Args()
-    gdrive := newDrive()
+    gdrive := newDrive(args)
 
     gdrive.Download(drive.DownloadFileArgs{
         Id: args.String("id"),
@@ -35,7 +40,7 @@ func downloadHandler(ctx cli.Context) {
 
 func uploadHandler(ctx cli.Context) {
     args := ctx.Args()
-    gdrive := newDrive()
+    gdrive := newDrive(args)
 
     gdrive.Upload(drive.UploadFileArgs{
         Path: args.String("path"),
@@ -50,7 +55,7 @@ func uploadHandler(ctx cli.Context) {
 
 func infoHandler(ctx cli.Context) {
     args := ctx.Args()
-    gdrive := newDrive()
+    gdrive := newDrive(args)
 
     gdrive.Info(drive.FileInfoArgs{
         Id: args.String("id"),
@@ -100,9 +105,10 @@ func printCommandHelp(ctx cli.Context) {
     }
 }
 
-// TODO: take app path as arg
-func newDrive() *drive.Drive {
-    oauth, err := client.NewOauthClient(ClientId, ClientSecret, DefaultTokenFilePath, authCodePrompt)
+func newDrive(args cli.Arguments) *drive.Drive {
+    configDir := args.String("configDir")
+    tokenPath := ConfigFilePath(configDir, TokenFilename)
+    oauth, err := client.NewOauthClient(ClientId, ClientSecret, tokenPath, authCodePrompt)
     if err != nil {
         ExitF("Failed getting oauth client: %s", err.Error())
     }
