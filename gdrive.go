@@ -13,6 +13,7 @@ const ClientId     = "367116221053-7n0vf5akeru7on6o2fjinrecpdoe99eg.apps.googleu
 const ClientSecret = "1qsNodXNaWq1mQuBjUjmvhoO"
 
 const DefaultMaxFiles = 100
+const DefaultQuery = "trashed = false and 'me' in owners"
 
 var DefaultConfigDir = GetDefaultConfigDir()
 var DefaultTokenFilePath = GetDefaultTokenFilePath()
@@ -45,7 +46,8 @@ func main() {
                     cli.StringFlag{
                         Name: "query",
                         Patterns: []string{"-q", "--query"},
-                        Description: "Query, see https://developers.google.com/drive/search-parameters",
+                        Description: fmt.Sprintf(`Default query: "%s". See https://developers.google.com/drive/search-parameters`, DefaultQuery),
+                        DefaultValue: DefaultQuery,
                     },
                     cli.BoolFlag{
                         Name: "skipHeader",
