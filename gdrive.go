@@ -12,6 +12,8 @@ const Version = "2.0.0"
 const DefaultMaxFiles = 30
 const DefaultNameWidth = 40
 const DefaultQuery = "trashed = false and 'me' in owners"
+const DefaultShareRole = "reader"
+const DefaultShareType = "anyone"
 var DefaultConfigDir = GetDefaultConfigDir()
 
 
@@ -181,16 +183,39 @@ func main() {
             },
         },
         &cli.Handler{
-            Pattern: "[global options] share <id>",
+            Pattern: "[global options] share [options] <id>",
             Description: "Share file or directory",
-            Callback: handler,
+            Callback: shareHandler,
             Flags: cli.Flags{
                 "global options": globalFlags,
                 "options": []cli.Flag{
                     cli.BoolFlag{
+                        Name: "discoverable",
+                        Patterns: []string{"--discoverable"},
+                        Description: "Make file discoverable by search engines",
+                        OmitValue: true,
+                    },
+                    cli.StringFlag{
+                        Name: "role",
+                        Patterns: []string{"--role"},
+                        Description: fmt.Sprintf("Share role. Default: %s", DefaultShareRole),
+                        DefaultValue: DefaultShareRole,
+                    },
+                    cli.StringFlag{
+                        Name: "type",
+                        Patterns: []string{"--type"},
+                        Description: fmt.Sprintf("Share type. Default: %s", DefaultShareType),
+                        DefaultValue: DefaultShareType,
+                    },
+                    cli.StringFlag{
+                        Name: "email",
+                        Patterns: []string{"--email"},
+                        Description: "The email address of the user or group to share the file with. Requires 'user' or 'group' as type",
+                    },
+                    cli.BoolFlag{
                         Name: "revoke",
                         Patterns: []string{"--revoke"},
-                        Description: "Unshare file or directory",
+                        Description: "Delete all sharing permissions",
                         OmitValue: true,
                     },
                 },

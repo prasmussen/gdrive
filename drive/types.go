@@ -58,6 +58,15 @@ type MkdirArgs struct {
     Share bool
 }
 
+type ShareArgs struct {
+    FileId string
+    Role string
+    Type string
+    Email string
+    Discoverable bool
+    Revoke bool
+}
+
 type PrintFileListArgs struct {
     Files []*drive.File
     NameWidth int

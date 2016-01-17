@@ -12,6 +12,7 @@ import (
 
 const DirectoryMimeType = "application/vnd.google-apps.folder"
 
+
 func (self *Drive) List(args ListFilesArgs) {
     fileList, err := self.service.Files.List().PageSize(args.MaxFiles).Q(args.Query).Fields("nextPageToken", "files(id,name,size,createdTime)").Do()
     errorF(err, "Failed listing files: %s\n", err)
@@ -136,7 +137,3 @@ func (self *Drive) Mkdir(args MkdirArgs) {
     //    self.Share(TODO)
     //}
 }
-
-//func newFile(args UploadFileArgs) *drive.File {
-//
-//}

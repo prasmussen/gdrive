@@ -69,6 +69,19 @@ func mkdirHandler(ctx cli.Context) {
     })
 }
 
+func shareHandler(ctx cli.Context) {
+    args := ctx.Args()
+
+    newDrive(args).Share(drive.ShareArgs{
+        FileId: args.String("id"),
+        Role: args.String("role"),
+        Type: args.String("type"),
+        Email: args.String("email"),
+        Discoverable: args.Bool("discoverable"),
+        Revoke: args.Bool("revoke"),
+    })
+}
+
 func deleteHandler(ctx cli.Context) {
     fmt.Println("Deleting...")
 }
