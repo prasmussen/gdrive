@@ -16,6 +16,7 @@ func (self *Drive) List(args ListFilesArgs) {
 
     PrintFileList(PrintFileListArgs{
         Files: fileList.Files,
+        NameWidth: int(args.NameWidth),
         SkipHeader: args.SkipHeader,
         SizeInBytes: args.SizeInBytes,
     })

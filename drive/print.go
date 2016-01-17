@@ -22,7 +22,7 @@ func PrintFileList(args PrintFileListArgs) {
     for _, f := range args.Files {
         fmt.Fprintf(w, "%s\t%s\t%s\t%s\n",
             f.Id,
-            truncateString(f.Name, 40),
+            truncateString(f.Name, args.NameWidth),
             formatSize(f.Size, args.SizeInBytes),
             formatDatetime(f.CreatedTime),
         )

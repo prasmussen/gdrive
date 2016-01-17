@@ -14,6 +14,7 @@ func listHandler(ctx cli.Context) {
 
     gdrive.List(drive.ListFilesArgs{
         MaxFiles: args.Int64("maxFiles"),
+        NameWidth: args.Int64("nameWidth"),
         Query: args.String("query"),
         SkipHeader: args.Bool("skipHeader"),
         SizeInBytes: args.Bool("sizeInBytes"),

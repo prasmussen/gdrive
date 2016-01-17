@@ -24,6 +24,7 @@ func NewDrive(client Client) *Drive {
 
 type ListFilesArgs struct {
     MaxFiles int64
+    NameWidth int64
     Query string
     SkipHeader bool
     SizeInBytes bool
@@ -53,6 +54,7 @@ type FileInfoArgs struct {
 
 type PrintFileListArgs struct {
     Files []*drive.File
+    NameWidth int
     SkipHeader bool
     SizeInBytes bool
 }

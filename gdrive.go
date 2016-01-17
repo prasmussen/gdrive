@@ -13,6 +13,7 @@ const ClientId     = "367116221053-7n0vf5akeru7on6o2fjinrecpdoe99eg.apps.googleu
 const ClientSecret = "1qsNodXNaWq1mQuBjUjmvhoO"
 
 const DefaultMaxFiles = 30
+const DefaultNameWidth = 40
 const DefaultQuery = "trashed = false and 'me' in owners"
 
 var DefaultConfigDir = GetDefaultConfigDir()
@@ -48,6 +49,12 @@ func main() {
                         Patterns: []string{"-q", "--query"},
                         Description: fmt.Sprintf(`Default query: "%s". See https://developers.google.com/drive/search-parameters`, DefaultQuery),
                         DefaultValue: DefaultQuery,
+                    },
+                    cli.IntFlag{
+                        Name: "nameWidth",
+                        Patterns: []string{"--name-width"},
+                        Description: fmt.Sprintf("Width of name column, default: %d, minimum: 9, use 0 for full width", DefaultNameWidth),
+                        DefaultValue: DefaultNameWidth,
                     },
                     cli.BoolFlag{
                         Name: "skipHeader",
