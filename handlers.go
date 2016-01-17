@@ -92,7 +92,11 @@ func urlHandler(ctx cli.Context) {
 }
 
 func deleteHandler(ctx cli.Context) {
-    fmt.Println("Deleting...")
+    args := ctx.Args()
+
+    newDrive(args).Delete(drive.DeleteArgs{
+        Id: args.String("id"),
+    })
 }
 
 func handler(ctx cli.Context) {
