@@ -12,9 +12,11 @@ type AboutArgs struct {
     ExportFormats bool
 }
 
-func (self *Drive) About(args AboutArgs) {
+func (self *Drive) About(args AboutArgs) (err error) {
     about, err := self.service.About.Get().Fields("exportFormats", "importFormats", "maxImportSizes", "maxUploadSize", "storageQuota", "user").Do()
-    errorF(err, "Failed to get about %s", err)
+    if err != nil {
+        return fmt.Errorf("Failed to get about: %s", err)
+    }
 
     if args.ExportFormats {
         printSupportedFormats(about.ExportFormats)
@@ -34,6 +36,7 @@ func (self *Drive) About(args AboutArgs) {
     fmt.Printf("Free: %s\n", formatSize(quota.Limit - quota.UsageInDrive, args.SizeInBytes))
     fmt.Printf("Total: %s\n", formatSize(quota.Limit, args.SizeInBytes))
     fmt.Printf("Max upload size: %s\n", formatSize(about.MaxUploadSize, args.SizeInBytes))
+    return
 }
 
 func printSupportedFormats(formats map[string][]string) {

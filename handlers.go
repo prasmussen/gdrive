@@ -15,31 +15,30 @@ const TokenFilename = "token_v2.json"
 
 func listHandler(ctx cli.Context) {
     args := ctx.Args()
-
-    newDrive(args).List(drive.ListFilesArgs{
+    err := newDrive(args).List(drive.ListFilesArgs{
         MaxFiles: args.Int64("maxFiles"),
         NameWidth: args.Int64("nameWidth"),
         Query: args.String("query"),
         SkipHeader: args.Bool("skipHeader"),
         SizeInBytes: args.Bool("sizeInBytes"),
     })
+    checkErr(err)
 }
 
 func downloadHandler(ctx cli.Context) {
     args := ctx.Args()
-
-    newDrive(args).Download(drive.DownloadFileArgs{
+    err := newDrive(args).Download(drive.DownloadFileArgs{
         Id: args.String("id"),
         Force: args.Bool("force"),
         Stdout: args.Bool("stdout"),
         NoProgress: args.Bool("noprogress"),
     })
+    checkErr(err)
 }
 
 func uploadHandler(ctx cli.Context) {
     args := ctx.Args()
-
-    newDrive(args).Upload(drive.UploadFileArgs{
+    err := newDrive(args).Upload(drive.UploadFileArgs{
         Path: args.String("path"),
         Name: args.String("name"),
         Parent: args.String("parent"),
@@ -48,31 +47,31 @@ func uploadHandler(ctx cli.Context) {
         Stdin: args.Bool("stdin"),
         Share: args.Bool("share"),
     })
+    checkErr(err)
 }
 
 func infoHandler(ctx cli.Context) {
     args := ctx.Args()
-
-    newDrive(args).Info(drive.FileInfoArgs{
+    err := newDrive(args).Info(drive.FileInfoArgs{
         Id: args.String("id"),
         SizeInBytes: args.Bool("sizeInBytes"),
     })
+    checkErr(err)
 }
 
 func mkdirHandler(ctx cli.Context) {
     args := ctx.Args()
-
-    newDrive(args).Mkdir(drive.MkdirArgs{
+    err := newDrive(args).Mkdir(drive.MkdirArgs{
         Name: args.String("name"),
         Parent: args.String("parent"),
         Share: args.Bool("share"),
     })
+    checkErr(err)
 }
 
 func shareHandler(ctx cli.Context) {
     args := ctx.Args()
-
-    newDrive(args).Share(drive.ShareArgs{
+    err := newDrive(args).Share(drive.ShareArgs{
         FileId: args.String("id"),
         Role: args.String("role"),
         Type: args.String("type"),
@@ -80,11 +79,11 @@ func shareHandler(ctx cli.Context) {
         Discoverable: args.Bool("discoverable"),
         Revoke: args.Bool("revoke"),
     })
+    checkErr(err)
 }
 
 func urlHandler(ctx cli.Context) {
     args := ctx.Args()
-
     newDrive(args).Url(drive.UrlArgs{
         FileId: args.String("id"),
         DownloadUrl: args.Bool("download"),
@@ -93,20 +92,20 @@ func urlHandler(ctx cli.Context) {
 
 func deleteHandler(ctx cli.Context) {
     args := ctx.Args()
-
-    newDrive(args).Delete(drive.DeleteArgs{
+    err := newDrive(args).Delete(drive.DeleteArgs{
         Id: args.String("id"),
     })
+    checkErr(err)
 }
 
 func aboutHandler(ctx cli.Context) {
     args := ctx.Args()
-
-    newDrive(args).About(drive.AboutArgs{
+    err := newDrive(args).About(drive.AboutArgs{
         SizeInBytes: args.Bool("sizeInBytes"),
         ImportFormats: args.Bool("importFormats"),
         ExportFormats: args.Bool("exportFormats"),
     })
+    checkErr(err)
 }
 
 func printVersion(ctx cli.Context) {

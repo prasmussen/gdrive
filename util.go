@@ -27,3 +27,10 @@ func ExitF(format string, a ...interface{}) {
 	fmt.Println("")
 	os.Exit(1)
 }
+
+func checkErr(err error) {
+    if err != nil {
+        fmt.Println(err)
+        os.Exit(1)
+    }
+}

@@ -14,10 +14,12 @@ type ShareArgs struct {
     Revoke bool
 }
 
-func (self *Drive) Share(args ShareArgs) {
+func (self *Drive) Share(args ShareArgs) (err error) {
     if args.Revoke {
-        err := self.deletePermissions(args)
-        errorF(err, "Failed delete permissions: %s", err)
+        err = self.deletePermissions(args)
+        if err != nil {
+            return fmt.Errorf("Failed delete permissions: %s", err)
+        }
     }
 
     permission := &drive.Permission{
@@ -28,9 +30,12 @@ func (self *Drive) Share(args ShareArgs) {
     }
 
     p, err := self.service.Permissions.Create(args.FileId, permission).Do()
-    errorF(err, "Failed share file: %s", err)
+    if err != nil {
+        return fmt.Errorf("Failed share file: %s", err)
+    }
 
     fmt.Println(p)
+    return
 }
 
 func (self *Drive) deletePermissions(args ShareArgs) error {

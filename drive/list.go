@@ -15,9 +15,11 @@ type ListFilesArgs struct {
     SizeInBytes bool
 }
 
-func (self *Drive) List(args ListFilesArgs) {
+func (self *Drive) List(args ListFilesArgs) (err error) {
     fileList, err := self.service.Files.List().PageSize(args.MaxFiles).Q(args.Query).Fields("nextPageToken", "files(id,name,size,createdTime)").Do()
-    errorF(err, "Failed listing files: %s\n", err)
+    if err != nil {
+        return fmt.Errorf("Failed listing files: %s", err)
+    }
 
     PrintFileList(PrintFileListArgs{
         Files: fileList.Files,
@@ -25,6 +27,8 @@ func (self *Drive) List(args ListFilesArgs) {
         SkipHeader: args.SkipHeader,
         SizeInBytes: args.SizeInBytes,
     })
+
+    return
 }
 
 type PrintFileListArgs struct {

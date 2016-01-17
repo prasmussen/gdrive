@@ -8,11 +8,17 @@ type DeleteArgs struct {
     Id string
 }
 
-func (self *Drive) Delete(args DeleteArgs) {
+func (self *Drive) Delete(args DeleteArgs) (err error) {
     f, err := self.service.Files.Get(args.Id).Fields("name").Do()
-    errorF(err, "Failed to get file: %s", err)
+    if err != nil {
+        return fmt.Errorf("Failed to get file: %s", err)
+    }
 
     err = self.service.Files.Delete(args.Id).Do()
-    errorF(err, "Failed to delete file")
+    if err != nil {
+        return fmt.Errorf("Failed to delete file", err)
+    }
+
     fmt.Printf("Removed file '%s'\n", f.Name)
+    return
 }

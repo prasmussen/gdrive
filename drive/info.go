@@ -10,14 +10,18 @@ type FileInfoArgs struct {
     SizeInBytes bool
 }
 
-func (self *Drive) Info(args FileInfoArgs) {
+func (self *Drive) Info(args FileInfoArgs) (err error) {
     f, err := self.service.Files.Get(args.Id).Fields("id", "name", "size", "createdTime", "modifiedTime", "md5Checksum", "mimeType", "parents", "shared", "description").Do()
-    errorF(err, "Failed to get file: %s", err)
+    if err != nil {
+        return fmt.Errorf("Failed to get file: %s", err)
+    }
 
     PrintFileInfo(PrintFileInfoArgs{
         File: f,
         SizeInBytes: args.SizeInBytes,
     })
+
+    return
 }
 
 type PrintFileInfoArgs struct {

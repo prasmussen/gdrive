@@ -2,6 +2,7 @@ package drive
 
 import (
     "google.golang.org/api/drive/v3"
+    "fmt"
 )
 
 const DirectoryMimeType = "application/vnd.google-apps.folder"
@@ -12,7 +13,7 @@ type MkdirArgs struct {
     Share bool
 }
 
-func (self *Drive) Mkdir(args MkdirArgs) {
+func (self *Drive) Mkdir(args MkdirArgs) (err error) {
     dstFile := &drive.File{Name: args.Name, MimeType: DirectoryMimeType}
 
     // Set parent folder if provided
@@ -22,11 +23,14 @@ func (self *Drive) Mkdir(args MkdirArgs) {
 
     // Create folder
     f, err := self.service.Files.Create(dstFile).Do()
-    errorF(err, "Failed to create folder: %s", err)
+    if err != nil {
+        return fmt.Errorf("Failed to create folder: %s", err)
+    }
 
     PrintFileInfo(PrintFileInfoArgs{File: f})
 
     //if args.Share {
     //    self.Share(TODO)
     //}
+    return
 }

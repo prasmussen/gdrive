@@ -19,16 +19,20 @@ type UploadFileArgs struct {
     Share bool
 }
 
-func (self *Drive) Upload(args UploadFileArgs) {
+func (self *Drive) Upload(args UploadFileArgs) (err error) {
     //if args.Stdin {
     //    self.uploadStdin()
     //}
 
     srcFile, err := os.Open(args.Path)
-    errorF(err, "Failed to open file: %s", err)
+    if err != nil {
+        return fmt.Errorf("Failed to open file: %s", err)
+    }
 
     srcFileInfo, err := srcFile.Stat()
-    errorF(err, "Failed to read file metadata: %s", err)
+    if err != nil {
+        return fmt.Errorf("Failed to read file metadata: %s", err)
+    }
 
     // Instantiate empty drive file
     dstFile := &drive.File{}
@@ -53,10 +57,13 @@ func (self *Drive) Upload(args UploadFileArgs) {
     }
 
     f, err := self.service.Files.Create(dstFile).ResumableMedia(context.Background(), srcFile, srcFileInfo.Size(), dstFile.MimeType).Do()
-    errorF(err, "Failed to upload file: %s", err)
+    if err != nil {
+        return fmt.Errorf("Failed to upload file: %s", err)
+    }
 
     fmt.Printf("Uploaded '%s' at %s, total %d\n", f.Name, "x/s", f.Size)
     //if args.Share {
     //    self.Share(TODO)
     //}
+    return
 }
