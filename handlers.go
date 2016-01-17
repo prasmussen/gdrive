@@ -99,6 +99,16 @@ func deleteHandler(ctx cli.Context) {
     })
 }
 
+func aboutHandler(ctx cli.Context) {
+    args := ctx.Args()
+
+    newDrive(args).About(drive.AboutArgs{
+        SizeInBytes: args.Bool("sizeInBytes"),
+        ImportFormats: args.Bool("importFormats"),
+        ExportFormats: args.Bool("exportFormats"),
+    })
+}
+
 func handler(ctx cli.Context) {
     fmt.Println("handler...")
 }

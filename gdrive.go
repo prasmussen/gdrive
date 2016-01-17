@@ -246,9 +246,9 @@ func main() {
             },
         },
         &cli.Handler{
-            Pattern: "[global options] quota [options]",
-            Description: "Show free space",
-            Callback: handler,
+            Pattern: "[global options] about [options]",
+            Description: "Google drive metadata, quota usage, import/export formats",
+            Callback: aboutHandler,
             Flags: cli.Flags{
                 "global options": globalFlags,
                 "options": []cli.Flag{
@@ -256,6 +256,18 @@ func main() {
                         Name: "sizeInBytes",
                         Patterns: []string{"--bytes"},
                         Description: "Show size in bytes",
+                        OmitValue: true,
+                    },
+                    cli.BoolFlag{
+                        Name: "exportFormats",
+                        Patterns: []string{"--export"},
+                        Description: "Show supported export formats",
+                        OmitValue: true,
+                    },
+                    cli.BoolFlag{
+                        Name: "importFormats",
+                        Patterns: []string{"--import"},
+                        Description: "Show supported import formats",
                         OmitValue: true,
                     },
                 },
