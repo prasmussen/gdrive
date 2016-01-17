@@ -109,10 +109,6 @@ func aboutHandler(ctx cli.Context) {
     })
 }
 
-func handler(ctx cli.Context) {
-    fmt.Println("handler...")
-}
-
 func printVersion(ctx cli.Context) {
     fmt.Printf("%s v%s\n", Name, Version)
 }
