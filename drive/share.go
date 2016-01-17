@@ -5,6 +5,14 @@ import (
     "google.golang.org/api/drive/v3"
 )
 
+type ShareArgs struct {
+    FileId string
+    Role string
+    Type string
+    Email string
+    Discoverable bool
+    Revoke bool
+}
 
 func (self *Drive) Share(args ShareArgs) {
     if args.Revoke {
