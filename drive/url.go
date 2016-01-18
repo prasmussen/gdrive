@@ -1,20 +1,22 @@
 package drive
 
 import (
+    "io"
     "fmt"
 )
 
 type UrlArgs struct {
+    Out io.Writer
     FileId string    
     DownloadUrl bool    
 }
 
 func (self *Drive) Url(args UrlArgs) {
     if args.DownloadUrl {
-        fmt.Println(downloadUrl(args.FileId))
+        fmt.Fprintln(args.Out, downloadUrl(args.FileId))
         return
     }
-    fmt.Println(previewUrl(args.FileId))
+    fmt.Fprintln(args.Out, previewUrl(args.FileId))
 }
 
 func previewUrl(id string) string {

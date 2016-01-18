@@ -1,12 +1,13 @@
 package drive
 
 import (
+    "io"
     "fmt"
-    "os"
     "text/tabwriter"
 )
 
 type AboutArgs struct {
+    Out io.Writer
     SizeInBytes bool
     ImportFormats bool
     ExportFormats bool
@@ -19,29 +20,29 @@ func (self *Drive) About(args AboutArgs) (err error) {
     }
 
     if args.ExportFormats {
-        printSupportedFormats(about.ExportFormats)
+        printSupportedFormats(args.Out, about.ExportFormats)
         return
     }
 
     if args.ImportFormats {
-        printSupportedFormats(about.ImportFormats)
+        printSupportedFormats(args.Out, about.ImportFormats)
         return
     }
 
     user := about.User
     quota := about.StorageQuota
 
-    fmt.Printf("User: %s, %s\n", user.DisplayName, user.EmailAddress)
-    fmt.Printf("Used: %s\n", formatSize(quota.UsageInDrive, args.SizeInBytes))
-    fmt.Printf("Free: %s\n", formatSize(quota.Limit - quota.UsageInDrive, args.SizeInBytes))
-    fmt.Printf("Total: %s\n", formatSize(quota.Limit, args.SizeInBytes))
-    fmt.Printf("Max upload size: %s\n", formatSize(about.MaxUploadSize, args.SizeInBytes))
+    fmt.Fprintf(args.Out, "User: %s, %s\n", user.DisplayName, user.EmailAddress)
+    fmt.Fprintf(args.Out, "Used: %s\n", formatSize(quota.UsageInDrive, args.SizeInBytes))
+    fmt.Fprintf(args.Out, "Free: %s\n", formatSize(quota.Limit - quota.UsageInDrive, args.SizeInBytes))
+    fmt.Fprintf(args.Out, "Total: %s\n", formatSize(quota.Limit, args.SizeInBytes))
+    fmt.Fprintf(args.Out, "Max upload size: %s\n", formatSize(about.MaxUploadSize, args.SizeInBytes))
     return
 }
 
-func printSupportedFormats(formats map[string][]string) {
+func printSupportedFormats(out io.Writer, formats map[string][]string) {
     w := new(tabwriter.Writer)
-    w.Init(os.Stdout, 0, 0, 3, ' ', 0)
+    w.Init(out, 0, 0, 3, ' ', 0)
 
     fmt.Fprintln(w, "From\tTo")
 

@@ -1,11 +1,13 @@
 package drive
 
 import (
+    "io"
     "fmt"
     "google.golang.org/api/drive/v3"
 )
 
 type FileInfoArgs struct {
+    Out io.Writer
     Id string
     SizeInBytes bool
 }
@@ -17,6 +19,7 @@ func (self *Drive) Info(args FileInfoArgs) (err error) {
     }
 
     PrintFileInfo(PrintFileInfoArgs{
+        Out: args.Out,
         File: f,
         SizeInBytes: args.SizeInBytes,
     })
@@ -25,6 +28,7 @@ func (self *Drive) Info(args FileInfoArgs) (err error) {
 }
 
 type PrintFileInfoArgs struct {
+    Out io.Writer
     File *drive.File
     SizeInBytes bool
 }
@@ -47,7 +51,7 @@ func PrintFileInfo(args PrintFileInfoArgs) {
 
     for _, item := range items {
         if item.value() != "" {
-            fmt.Printf("%s: %s\n", item.key(), item.value())
+            fmt.Fprintf(args.Out, "%s: %s\n", item.key(), item.value())
         }
     }
 }

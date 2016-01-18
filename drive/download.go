@@ -7,6 +7,7 @@ import (
 )
 
 type DownloadFileArgs struct {
+    Out io.Writer
     Id string
     Force bool
     NoProgress bool
@@ -55,7 +56,7 @@ func (self *Drive) Download(args DownloadFileArgs) (err error) {
         return fmt.Errorf("Failed saving file: %s", err)
     }
 
-    fmt.Printf("Downloaded '%s' at %s, total %d\n", f.Name, "x/s", bytes)
+    fmt.Fprintf(args.Out, "Downloaded '%s' at %s, total %d\n", f.Name, "x/s", bytes)
 
     //if deleteSourceFile {
     //    self.Delete(args.Id)

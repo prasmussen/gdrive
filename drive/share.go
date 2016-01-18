@@ -1,11 +1,13 @@
 package drive
 
 import (
+    "io"
     "fmt"
     "google.golang.org/api/drive/v3"
 )
 
 type ShareArgs struct {
+    Out io.Writer
     FileId string
     Role string
     Type string
@@ -34,7 +36,7 @@ func (self *Drive) Share(args ShareArgs) (err error) {
         return fmt.Errorf("Failed share file: %s", err)
     }
 
-    fmt.Println(p)
+    fmt.Fprintln(args.Out, p)
     return
 }
 

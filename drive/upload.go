@@ -4,12 +4,14 @@ import (
     "fmt"
     "mime"
     "os"
+    "io"
     "path/filepath"
     "google.golang.org/api/drive/v3"
     "golang.org/x/net/context"
 )
 
 type UploadFileArgs struct {
+    Out io.Writer
     Path string
     Name string
     Parent string
@@ -61,7 +63,7 @@ func (self *Drive) Upload(args UploadFileArgs) (err error) {
         return fmt.Errorf("Failed to upload file: %s", err)
     }
 
-    fmt.Printf("Uploaded '%s' at %s, total %d\n", f.Name, "x/s", f.Size)
+    fmt.Fprintf(args.Out, "Uploaded '%s' at %s, total %d\n", f.Name, "x/s", f.Size)
     //if args.Share {
     //    self.Share(TODO)
     //}

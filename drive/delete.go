@@ -1,10 +1,12 @@
 package drive
 
 import (
+    "io"
     "fmt"
 )
 
 type DeleteArgs struct {
+    Out io.Writer
     Id string
 }
 
@@ -19,6 +21,6 @@ func (self *Drive) Delete(args DeleteArgs) (err error) {
         return fmt.Errorf("Failed to delete file", err)
     }
 
-    fmt.Printf("Removed file '%s'\n", f.Name)
+    fmt.Fprintf(args.Out, "Removed file '%s'\n", f.Name)
     return
 }

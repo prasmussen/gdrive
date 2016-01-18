@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"strings"
     "./cli"
 	"./client"
@@ -16,6 +17,7 @@ const TokenFilename = "token_v2.json"
 func listHandler(ctx cli.Context) {
     args := ctx.Args()
     err := newDrive(args).List(drive.ListFilesArgs{
+        Out: os.Stdout,
         MaxFiles: args.Int64("maxFiles"),
         NameWidth: args.Int64("nameWidth"),
         Query: args.String("query"),
@@ -28,6 +30,7 @@ func listHandler(ctx cli.Context) {
 func downloadHandler(ctx cli.Context) {
     args := ctx.Args()
     err := newDrive(args).Download(drive.DownloadFileArgs{
+        Out: os.Stdout,
         Id: args.String("id"),
         Force: args.Bool("force"),
         Stdout: args.Bool("stdout"),
@@ -39,6 +42,7 @@ func downloadHandler(ctx cli.Context) {
 func uploadHandler(ctx cli.Context) {
     args := ctx.Args()
     err := newDrive(args).Upload(drive.UploadFileArgs{
+        Out: os.Stdout,
         Path: args.String("path"),
         Name: args.String("name"),
         Parent: args.String("parent"),
@@ -53,6 +57,7 @@ func uploadHandler(ctx cli.Context) {
 func infoHandler(ctx cli.Context) {
     args := ctx.Args()
     err := newDrive(args).Info(drive.FileInfoArgs{
+        Out: os.Stdout,
         Id: args.String("id"),
         SizeInBytes: args.Bool("sizeInBytes"),
     })
@@ -62,6 +67,7 @@ func infoHandler(ctx cli.Context) {
 func mkdirHandler(ctx cli.Context) {
     args := ctx.Args()
     err := newDrive(args).Mkdir(drive.MkdirArgs{
+        Out: os.Stdout,
         Name: args.String("name"),
         Parent: args.String("parent"),
         Share: args.Bool("share"),
@@ -72,6 +78,7 @@ func mkdirHandler(ctx cli.Context) {
 func shareHandler(ctx cli.Context) {
     args := ctx.Args()
     err := newDrive(args).Share(drive.ShareArgs{
+        Out: os.Stdout,
         FileId: args.String("id"),
         Role: args.String("role"),
         Type: args.String("type"),
@@ -85,6 +92,7 @@ func shareHandler(ctx cli.Context) {
 func urlHandler(ctx cli.Context) {
     args := ctx.Args()
     newDrive(args).Url(drive.UrlArgs{
+        Out: os.Stdout,
         FileId: args.String("id"),
         DownloadUrl: args.Bool("download"),
     })
@@ -93,6 +101,7 @@ func urlHandler(ctx cli.Context) {
 func deleteHandler(ctx cli.Context) {
     args := ctx.Args()
     err := newDrive(args).Delete(drive.DeleteArgs{
+        Out: os.Stdout,
         Id: args.String("id"),
     })
     checkErr(err)
@@ -101,6 +110,7 @@ func deleteHandler(ctx cli.Context) {
 func aboutHandler(ctx cli.Context) {
     args := ctx.Args()
     err := newDrive(args).About(drive.AboutArgs{
+        Out: os.Stdout,
         SizeInBytes: args.Bool("sizeInBytes"),
         ImportFormats: args.Bool("importFormats"),
         ExportFormats: args.Bool("exportFormats"),

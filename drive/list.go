@@ -2,12 +2,13 @@ package drive
 
 import (
     "fmt"
-    "os"
+    "io"
     "text/tabwriter"
     "google.golang.org/api/drive/v3"
 )
 
 type ListFilesArgs struct {
+    Out io.Writer
     MaxFiles int64
     NameWidth int64
     Query string
@@ -22,6 +23,7 @@ func (self *Drive) List(args ListFilesArgs) (err error) {
     }
 
     PrintFileList(PrintFileListArgs{
+        Out: args.Out,
         Files: fileList.Files,
         NameWidth: int(args.NameWidth),
         SkipHeader: args.SkipHeader,
@@ -32,6 +34,7 @@ func (self *Drive) List(args ListFilesArgs) (err error) {
 }
 
 type PrintFileListArgs struct {
+    Out io.Writer
     Files []*drive.File
     NameWidth int
     SkipHeader bool
@@ -40,7 +43,7 @@ type PrintFileListArgs struct {
 
 func PrintFileList(args PrintFileListArgs) {
     w := new(tabwriter.Writer)
-    w.Init(os.Stdout, 0, 0, 3, ' ', 0)
+    w.Init(args.Out, 0, 0, 3, ' ', 0)
 
     if !args.SkipHeader {
         fmt.Fprintln(w, "Id\tName\tSize\tCreated")
