@@ -5,19 +5,15 @@ import (
     "google.golang.org/api/drive/v3"
 )
 
-type Client interface {
-    Service() *drive.Service
-    Http() *http.Client
-}
-
 type Drive struct {
     service *drive.Service
-    http *http.Client
 }
 
-func NewDrive(client Client) *Drive {
-    return &Drive{
-        service: client.Service(),
-        http: client.Http(),
+func New(client *http.Client) (*Drive, error) {
+    service, err := drive.New(client)
+    if err != nil {
+        return nil, err
     }
+
+    return &Drive{service}, nil
 }

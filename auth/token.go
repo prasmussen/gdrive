@@ -1,4 +1,4 @@
-package client
+package auth
 
 import (
     "golang.org/x/oauth2"

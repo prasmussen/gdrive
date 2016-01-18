@@ -5,7 +5,7 @@ import (
 	"os"
 	"strings"
     "./cli"
-	"./client"
+	"./auth"
 	"./drive"
 )
 
@@ -155,17 +155,17 @@ func printCommandHelp(ctx cli.Context) {
 func newDrive(args cli.Arguments) *drive.Drive {
     configDir := args.String("configDir")
     tokenPath := ConfigFilePath(configDir, TokenFilename)
-    oauth, err := client.NewOauthClient(ClientId, ClientSecret, tokenPath, authCodePrompt)
+    oauth, err := auth.NewOauthClient(ClientId, ClientSecret, tokenPath, authCodePrompt)
     if err != nil {
         ExitF("Failed getting oauth client: %s", err.Error())
     }
 
-    client, err := client.NewClient(oauth)
+    client, err := drive.New(oauth)
     if err != nil {
         ExitF("Failed getting drive: %s", err.Error())
     }
 
-    return drive.NewDrive(client)
+    return client
 }
 
 func authCodePrompt(url string) func() string {
