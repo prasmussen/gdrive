@@ -7,7 +7,7 @@ import (
 
 type Parser interface {
     Match([]string) ([]string, bool)
-    Capture([]string) ([]string, map[string]string)
+    Capture([]string) ([]string, map[string]interface{})
 }
 
 type CompleteParser struct {
@@ -28,12 +28,12 @@ func (self CompleteParser) Match(values []string) ([]string, bool) {
     return remainingValues, len(remainingValues) == 0
 }
 
-func (self CompleteParser) Capture(values []string) ([]string, map[string]string) {
+func (self CompleteParser) Capture(values []string) ([]string, map[string]interface{}) {
     remainingValues := values
-    data := map[string]string{}
+    data := map[string]interface{}{}
 
     for _, parser := range self.parsers {
-        var captured map[string]string
+        var captured map[string]interface{}
         remainingValues, captured = parser.Capture(remainingValues)
         for key, value := range captured {
             data[key] = value
@@ -64,7 +64,7 @@ func (self EqualParser) Match(values []string) ([]string, bool) {
     return values, false
 }
 
-func (self EqualParser) Capture(values []string) ([]string, map[string]string) {
+func (self EqualParser) Capture(values []string) ([]string, map[string]interface{}) {
     remainingValues, _ := self.Match(values)
     return remainingValues, nil
 }
@@ -90,9 +90,9 @@ func (self CaptureGroupParser) key() string {
     return self.value[1:len(self.value) - 1]
 }
 
-func (self CaptureGroupParser) Capture(values []string) ([]string, map[string]string) {
+func (self CaptureGroupParser) Capture(values []string) ([]string, map[string]interface{}) {
     if remainingValues, ok := self.Match(values); ok {
-        return remainingValues, map[string]string{self.key(): values[0]}
+        return remainingValues, map[string]interface{}{self.key(): values[0]}
     }
 
     return values, nil
@@ -140,12 +140,12 @@ func (self BoolFlagParser) Match(values []string) ([]string, bool) {
     }
 }
 
-func (self BoolFlagParser) Capture(values []string) ([]string, map[string]string) {
+func (self BoolFlagParser) Capture(values []string) ([]string, map[string]interface{}) {
     remainingValues, ok := self.Match(values)
     if !ok && !self.omitValue {
-        return remainingValues, map[string]string{self.key: fmt.Sprintf("%t", self.defaultValue)}
+        return remainingValues, map[string]interface{}{self.key: self.defaultValue}
     }
-    return remainingValues, map[string]string{self.key: fmt.Sprintf("%t", ok)}
+    return remainingValues, map[string]interface{}{self.key: ok}
 }
 
 func (self BoolFlagParser) String() string {
@@ -170,13 +170,13 @@ func (self StringFlagParser) Match(values []string) ([]string, bool) {
     return values[2:], true
 }
 
-func (self StringFlagParser) Capture(values []string) ([]string, map[string]string) {
+func (self StringFlagParser) Capture(values []string) ([]string, map[string]interface{}) {
     remainingValues, ok := self.Match(values)
     if ok {
-        return remainingValues, map[string]string{self.key: values[1]}
+        return remainingValues, map[string]interface{}{self.key: values[1]}
     }
 
-    return values, map[string]string{self.key: self.defaultValue}
+    return values, map[string]interface{}{self.key: self.defaultValue}
 }
 
 func (self StringFlagParser) String() string {
@@ -206,13 +206,14 @@ func (self IntFlagParser) Match(values []string) ([]string, bool) {
     return values[2:], true
 }
 
-func (self IntFlagParser) Capture(values []string) ([]string, map[string]string) {
+func (self IntFlagParser) Capture(values []string) ([]string, map[string]interface{}) {
     remainingValues, ok := self.Match(values)
     if ok {
-        return remainingValues, map[string]string{self.key: values[1]}
+        n, _ := strconv.ParseInt(values[1], 10, 64)
+        return remainingValues, map[string]interface{}{self.key: n}
     }
 
-    return values, map[string]string{self.key: fmt.Sprintf("%d", self.defaultValue)}
+    return values, map[string]interface{}{self.key: self.defaultValue}
 }
 
 func (self IntFlagParser) String() string {
@@ -244,12 +245,12 @@ func (self FlagParser) Match(values []string) ([]string, bool) {
     return remainingValues, true
 }
 
-func (self FlagParser) Capture(values []string) ([]string, map[string]string) {
-    data := map[string]string{}
+func (self FlagParser) Capture(values []string) ([]string, map[string]interface{}) {
+    data := map[string]interface{}{}
     remainingValues := values
 
     for _, parser := range self.parsers {
-        var captured map[string]string
+        var captured map[string]interface{}
         remainingValues, captured = parser.Capture(remainingValues)
         for key, value := range captured {
             // Skip value if it already exists and new value is an empty string
@@ -286,7 +287,7 @@ func (self ShortCircuitParser) Match(values []string) ([]string, bool) {
     return remainingValues, false
 }
 
-func (self ShortCircuitParser) Capture(values []string) ([]string, map[string]string) {
+func (self ShortCircuitParser) Capture(values []string) ([]string, map[string]interface{}) {
     if len(self.parsers) == 0 {
         return values, nil
     }

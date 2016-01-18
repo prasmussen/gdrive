@@ -1,10 +1,5 @@
 package cli
 
-// TODO
-// Default values? Default string values? Parser must always return a value
-// Support invalid flag combinations?
-
-
 type Flag interface {
     GetPatterns() []string
     GetName() string

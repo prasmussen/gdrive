@@ -1,8 +1,5 @@
 package cli
 
-import (
-    "strconv"
-)
 
 type Context struct {
     args Arguments
@@ -21,21 +18,16 @@ func (self Context) FilterHandlers(prefix string) []*Handler {
     return filterHandlers(self.handlers, prefix)
 }
 
-type Arguments map[string]string
+type Arguments map[string]interface{}
 
 func (self Arguments) String(key string) string {
-    value, _ := self[key]
-    return value
+    return self[key].(string)
 }
 
 func (self Arguments) Int64(key string) int64 {
-    value, _ := self[key]
-    n, _ := strconv.ParseInt(value, 10, 64)
-    return n
+    return self[key].(int64)
 }
 
 func (self Arguments) Bool(key string) bool {
-    value, _ := self[key]
-    b, _ := strconv.ParseBool(value)
-    return b
+    return self[key].(bool)
 }
