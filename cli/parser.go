@@ -221,6 +221,52 @@ func (self IntFlagParser) String() string {
 }
 
 
+type StringSliceFlagParser struct {
+    pattern string
+    key string
+    defaultValue []string
+}
+
+func (self StringSliceFlagParser) Match(values []string) ([]string, bool) {
+    if len(values) < 2 {
+        return values, false
+    }
+
+    var remainingValues []string
+
+    for i := 0; i < len(values); i++ {
+        if values[i] == self.pattern && i + 1 < len(values) {
+            i++
+            continue
+        }
+        remainingValues = append(remainingValues, values[i])
+    }
+
+    return remainingValues, len(values) != len(remainingValues)
+}
+
+func (self StringSliceFlagParser) Capture(values []string) ([]string, map[string]interface{}) {
+    remainingValues, ok := self.Match(values)
+    if !ok {
+        return values, map[string]interface{}{self.key: self.defaultValue}
+    }
+
+    var captured []string
+
+    for i := 0; i < len(values); i++ {
+        if values[i] == self.pattern && i + 1 < len(values) {
+            captured = append(captured, values[i + 1])
+        }
+    }
+
+    return remainingValues, map[string]interface{}{self.key: captured}
+}
+
+func (self StringSliceFlagParser) String() string {
+    return fmt.Sprintf("StringSliceFlagParser '%s'", self.pattern)
+}
+
+
 type FlagParser struct {
     parsers []Parser
 }

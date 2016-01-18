@@ -31,3 +31,7 @@ func (self Arguments) Int64(key string) int64 {
 func (self Arguments) Bool(key string) bool {
     return self[key].(bool)
 }
+
+func (self Arguments) StringSlice(key string) []string {
+    return self[key].([]string)
+}

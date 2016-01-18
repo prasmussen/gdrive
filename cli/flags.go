@@ -27,7 +27,7 @@ type BoolFlag struct {
 }
 
 func (self BoolFlag) GetName() string {
-    return self.Name    
+    return self.Name
 }
 
 func (self BoolFlag) GetPatterns() []string {
@@ -64,7 +64,7 @@ type StringFlag struct {
 }
 
 func (self StringFlag) GetName() string {
-    return self.Name    
+    return self.Name
 }
 
 func (self StringFlag) GetPatterns() []string {
@@ -99,7 +99,7 @@ type IntFlag struct {
 }
 
 func (self IntFlag) GetName() string {
-    return self.Name    
+    return self.Name
 }
 
 func (self IntFlag) GetPatterns() []string {
@@ -114,6 +114,41 @@ func (self IntFlag) GetParser() Parser {
     var parsers []Parser
     for _, p := range self.Patterns {
         parsers = append(parsers, IntFlagParser{
+            pattern: p,
+            key: self.Name,
+            defaultValue: self.DefaultValue,
+        })
+    }
+
+    if len(parsers) == 1 {
+        return parsers[0]
+    }
+    return ShortCircuitParser{parsers}
+}
+
+type StringSliceFlag struct {
+    Patterns []string
+    Name string
+    Description string
+    DefaultValue []string
+}
+
+func (self StringSliceFlag) GetName() string {
+    return self.Name
+}
+
+func (self StringSliceFlag) GetPatterns() []string {
+    return self.Patterns
+}
+
+func (self StringSliceFlag) GetDescription() string {
+    return self.Description
+}
+
+func (self StringSliceFlag) GetParser() Parser {
+    var parsers []Parser
+    for _, p := range self.Patterns {
+        parsers = append(parsers, StringSliceFlagParser{
             pattern: p,
             key: self.Name,
             defaultValue: self.DefaultValue,
