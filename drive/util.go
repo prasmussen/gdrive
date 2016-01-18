@@ -9,14 +9,9 @@ import (
     "time"
 )
 
-type kv [2]string
-
-func (self kv) key() string {
-    return self[0]
-}
-
-func (self kv) value() string {
-    return self[1]
+type kv struct {
+    key string
+    value string
 }
 
 func formatList(a []string) string {

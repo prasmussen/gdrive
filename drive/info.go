@@ -50,8 +50,8 @@ func PrintFileInfo(args PrintFileInfoArgs) {
     }
 
     for _, item := range items {
-        if item.value() != "" {
-            fmt.Fprintf(args.Out, "%s: %s\n", item.key(), item.value())
+        if item.value != "" {
+            fmt.Fprintf(args.Out, "%s: %s\n", item.key, item.value)
         }
     }
 }
