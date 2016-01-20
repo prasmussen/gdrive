@@ -45,7 +45,7 @@ func uploadHandler(ctx cli.Context) {
         Out: os.Stdout,
         Path: args.String("path"),
         Name: args.String("name"),
-        Parent: args.String("parent"),
+        Parents: args.StringSlice("parent"),
         Mime: args.String("mime"),
         Recursive: args.Bool("recursive"),
         Stdin: args.Bool("stdin"),
@@ -69,7 +69,7 @@ func mkdirHandler(ctx cli.Context) {
     err := newDrive(args).Mkdir(drive.MkdirArgs{
         Out: os.Stdout,
         Name: args.String("name"),
-        Parent: args.String("parent"),
+        Parents: args.StringSlice("parent"),
         Share: args.Bool("share"),
     })
     checkErr(err)

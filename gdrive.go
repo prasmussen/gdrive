@@ -109,10 +109,10 @@ func main() {
                         Description: "Upload directory recursively",
                         OmitValue: true,
                     },
-                    cli.StringFlag{
+                    cli.StringSliceFlag{
                         Name: "parent",
                         Patterns: []string{"-p", "--parent"},
-                        Description: "Parent id, used to upload file to a specific directory",
+                        Description: "Parent id, used to upload file to a specific directory, can be specified multiple times to give many parents",
                     },
                     cli.StringFlag{
                         Name: "name",
@@ -168,10 +168,10 @@ func main() {
             Flags: cli.Flags{
                 "global options": globalFlags,
                 "options": []cli.Flag{
-                    cli.StringFlag{
+                    cli.StringSliceFlag{
                         Name: "parent",
                         Patterns: []string{"-p", "--parent"},
-                        Description: "Parent id of created directory",
+                        Description: "Parent id of created directory, can be specified multiple times to give many parents",
                     },
                     cli.BoolFlag{
                         Name: "share",

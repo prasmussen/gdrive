@@ -14,7 +14,7 @@ type UploadFileArgs struct {
     Out io.Writer
     Path string
     Name string
-    Parent string
+    Parents []string
     Mime string
     Recursive bool
     Stdin bool
@@ -53,10 +53,8 @@ func (self *Drive) Upload(args UploadFileArgs) (err error) {
         dstFile.MimeType = args.Mime
     }
 
-    // Set parent folder if provided
-    if args.Parent != "" {
-        dstFile.Parents = []string{args.Parent}
-    }
+    // Set parent folders
+    dstFile.Parents = args.Parents
 
     f, err := self.service.Files.Create(dstFile).ResumableMedia(context.Background(), srcFile, srcFileInfo.Size(), dstFile.MimeType).Do()
     if err != nil {

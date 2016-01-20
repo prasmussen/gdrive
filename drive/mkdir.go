@@ -11,17 +11,15 @@ const DirectoryMimeType = "application/vnd.google-apps.folder"
 type MkdirArgs struct {
     Out io.Writer
     Name string
-    Parent string
+    Parents []string
     Share bool
 }
 
 func (self *Drive) Mkdir(args MkdirArgs) (err error) {
     dstFile := &drive.File{Name: args.Name, MimeType: DirectoryMimeType}
 
-    // Set parent folder if provided
-    if args.Parent != "" {
-        dstFile.Parents = []string{args.Parent}
-    }
+    // Set parent folders
+    dstFile.Parents = args.Parents
 
     // Create folder
     f, err := self.service.Files.Create(dstFile).Do()
