@@ -10,44 +10,6 @@ type Parser interface {
     Capture([]string) ([]string, map[string]interface{})
 }
 
-type CompleteParser struct {
-    parsers []Parser
-}
-
-func (self CompleteParser) Match(values []string) ([]string, bool) {
-    remainingValues := values
-
-    for _, parser := range self.parsers {
-        var ok bool
-        remainingValues, ok = parser.Match(remainingValues)
-        if !ok {
-            return remainingValues, false
-        }
-    }
-
-    return remainingValues, len(remainingValues) == 0
-}
-
-func (self CompleteParser) Capture(values []string) ([]string, map[string]interface{}) {
-    remainingValues := values
-    data := map[string]interface{}{}
-
-    for _, parser := range self.parsers {
-        var captured map[string]interface{}
-        remainingValues, captured = parser.Capture(remainingValues)
-        for key, value := range captured {
-            data[key] = value
-        }
-    }
-
-    return remainingValues, data
-}
-
-func (self CompleteParser) String() string {
-    return fmt.Sprintf("CompleteParser %v", self.parsers)
-}
-
-
 type EqualParser struct {
     value string
 }
@@ -113,39 +75,35 @@ type BoolFlagParser struct {
 
 func (self BoolFlagParser) Match(values []string) ([]string, bool) {
     if self.omitValue {
-        if len(values) == 0 {
-            return values, false
-        }
-
-        if self.pattern == values[0] {
-            return values[1:], true
-        }
-
-        return values, false
-    } else {
-        if len(values) < 2 {
-            return values, false
-        }
-
-        if self.pattern != values[0] {
-            return values, false
-        }
-
-        // Check that value is a valid boolean
-        if _, err := strconv.ParseBool(values[1]); err != nil {
-            return values, false
-        }
-
-        return values[2:], true
+        return flagKeyMatch(self.pattern, values, 0)
     }
+
+    remaining, value, ok := flagKeyValueMatch(self.pattern, values, 0)
+    if !ok {
+        return remaining, false
+    }
+
+    // Check that value is a valid boolean
+    if _, err := strconv.ParseBool(value); err != nil {
+        return remaining, false
+    }
+
+    return remaining, true
 }
 
 func (self BoolFlagParser) Capture(values []string) ([]string, map[string]interface{}) {
-    remainingValues, ok := self.Match(values)
-    if !ok && !self.omitValue {
-        return remainingValues, map[string]interface{}{self.key: self.defaultValue}
+    if self.omitValue {
+        remaining, ok := flagKeyMatch(self.pattern, values, 0)
+        return remaining, map[string]interface{}{self.key: ok}
     }
-    return remainingValues, map[string]interface{}{self.key: ok}
+
+    remaining, value, ok := flagKeyValueMatch(self.pattern, values, 0)
+    if !ok {
+        return remaining, map[string]interface{}{self.key: self.defaultValue}
+    }
+
+    b, _ := strconv.ParseBool(value)
+    return remaining, map[string]interface{}{self.key: b}
 }
 
 func (self BoolFlagParser) String() string {
@@ -159,24 +117,17 @@ type StringFlagParser struct {
 }
 
 func (self StringFlagParser) Match(values []string) ([]string, bool) {
-    if len(values) < 2 {
-        return values, false
-    }
-
-    if self.pattern != values[0] {
-        return values, false
-    }
-
-    return values[2:], true
+    remaining, _, ok := flagKeyValueMatch(self.pattern, values, 0)
+    return remaining, ok
 }
 
 func (self StringFlagParser) Capture(values []string) ([]string, map[string]interface{}) {
-    remainingValues, ok := self.Match(values)
-    if ok {
-        return remainingValues, map[string]interface{}{self.key: values[1]}
+    remaining, value, ok := flagKeyValueMatch(self.pattern, values, 0)
+    if !ok {
+        return remaining, map[string]interface{}{self.key: self.defaultValue}
     }
 
-    return values, map[string]interface{}{self.key: self.defaultValue}
+    return remaining, map[string]interface{}{self.key: value}
 }
 
 func (self StringFlagParser) String() string {
@@ -190,30 +141,27 @@ type IntFlagParser struct {
 }
 
 func (self IntFlagParser) Match(values []string) ([]string, bool) {
-    if len(values) < 2 {
-        return values, false
-    }
-
-    if self.pattern != values[0] {
-        return values, false
+    remaining, value, ok := flagKeyValueMatch(self.pattern, values, 0)
+    if !ok {
+        return remaining, false
     }
 
     // Check that value is a valid integer
-    if _, err := strconv.ParseInt(values[1], 10, 64); err != nil {
-        return values, false
+    if _, err := strconv.ParseInt(value, 10, 64); err != nil {
+        return remaining, false
     }
 
-    return values[2:], true
+    return remaining, true
 }
 
 func (self IntFlagParser) Capture(values []string) ([]string, map[string]interface{}) {
-    remainingValues, ok := self.Match(values)
-    if ok {
-        n, _ := strconv.ParseInt(values[1], 10, 64)
-        return remainingValues, map[string]interface{}{self.key: n}
+    remaining, value, ok := flagKeyValueMatch(self.pattern, values, 0)
+    if !ok {
+        return remaining, map[string]interface{}{self.key: self.defaultValue}
     }
 
-    return values, map[string]interface{}{self.key: self.defaultValue}
+    n, _ := strconv.ParseInt(value, 10, 64)
+    return remaining, map[string]interface{}{self.key: n}
 }
 
 func (self IntFlagParser) String() string {
@@ -273,41 +221,26 @@ type FlagParser struct {
 
 func (self FlagParser) Match(values []string) ([]string, bool) {
     remainingValues := values
-    var oneOrMoreMatches bool
 
     for _, parser := range self.parsers {
-        var ok bool
-        remainingValues, ok = parser.Match(remainingValues)
-        if ok {
-            oneOrMoreMatches = true
-        }
+        remainingValues, _ = parser.Match(remainingValues)
     }
-
-    // Recurse while we have one or more matches
-    if oneOrMoreMatches {
-        return self.Match(remainingValues)
-    }
-
     return remainingValues, true
 }
 
 func (self FlagParser) Capture(values []string) ([]string, map[string]interface{}) {
-    data := map[string]interface{}{}
+    captured := map[string]interface{}{}
     remainingValues := values
 
     for _, parser := range self.parsers {
-        var captured map[string]interface{}
-        remainingValues, captured = parser.Capture(remainingValues)
-        for key, value := range captured {
-            // Skip value if it already exists and new value is an empty string
-            if _, exists := data[key]; exists && value == "" {
-                continue
-            }
-
-            data[key] = value
+        var data map[string]interface{}
+        remainingValues, data = parser.Capture(remainingValues)
+        for key, value := range data {
+            captured[key] = value
         }
     }
-    return remainingValues, data
+
+    return remainingValues, captured
 }
 
 func (self FlagParser) String() string {
@@ -351,4 +284,68 @@ func (self ShortCircuitParser) Capture(values []string) ([]string, map[string]in
 
 func (self ShortCircuitParser) String() string {
     return fmt.Sprintf("ShortCircuitParser %v", self.parsers)
+}
+
+type CompleteParser struct {
+    parsers []Parser
+}
+
+func (self CompleteParser) Match(values []string) ([]string, bool) {
+    remainingValues := values
+
+    for _, parser := range self.parsers {
+        var ok bool
+        remainingValues, ok = parser.Match(remainingValues)
+        if !ok {
+            return remainingValues, false
+        }
+    }
+
+    return remainingValues, len(remainingValues) == 0
+}
+
+func (self CompleteParser) Capture(values []string) ([]string, map[string]interface{}) {
+    remainingValues := values
+    data := map[string]interface{}{}
+
+    for _, parser := range self.parsers {
+        var captured map[string]interface{}
+        remainingValues, captured = parser.Capture(remainingValues)
+        for key, value := range captured {
+            data[key] = value
+        }
+    }
+
+    return remainingValues, data
+}
+
+func (self CompleteParser) String() string {
+    return fmt.Sprintf("CompleteParser %v", self.parsers)
+}
+
+func flagKeyValueMatch(key string, values []string, index int) ([]string, string, bool) {
+    if index > len(values) - 2 {
+        return values, "", false
+    }
+
+    if values[index] == key {
+        value := values[index + 1]
+        remaining := append(values[:index], values[index + 2:]...)
+        return remaining, value, true
+    }
+
+    return flagKeyValueMatch(key, values, index + 1)
+}
+
+func flagKeyMatch(key string, values []string, index int) ([]string, bool) {
+    if index > len(values) - 1 {
+        return values, false
+    }
+
+    if values[index] == key {
+        remaining := append(values[:index], values[index + 1:]...)
+        return remaining, true
+    }
+
+    return flagKeyMatch(key, values, index + 1)
 }
