@@ -291,7 +291,7 @@ type CompleteParser struct {
 }
 
 func (self CompleteParser) Match(values []string) ([]string, bool) {
-    remainingValues := values
+    remainingValues := copySlice(values)
 
     for _, parser := range self.parsers {
         var ok bool
@@ -305,7 +305,7 @@ func (self CompleteParser) Match(values []string) ([]string, bool) {
 }
 
 func (self CompleteParser) Capture(values []string) ([]string, map[string]interface{}) {
-    remainingValues := values
+    remainingValues := copySlice(values)
     data := map[string]interface{}{}
 
     for _, parser := range self.parsers {
@@ -348,4 +348,10 @@ func flagKeyMatch(key string, values []string, index int) ([]string, bool) {
     }
 
     return flagKeyMatch(key, values, index + 1)
+}
+
+func copySlice(a []string) []string {
+    b := make([]string, len(a))
+    copy(b, a)
+    return b
 }
