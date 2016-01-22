@@ -162,6 +162,33 @@ func main() {
             },
         },
         &cli.Handler{
+            Pattern: "[global options] export [options] <id>",
+            Description: "Export a google document",
+            Callback: exportHandler,
+            Flags: cli.Flags{
+                "global options": globalFlags,
+                "options": []cli.Flag{
+                    cli.BoolFlag{
+                        Name: "force",
+                        Patterns: []string{"-f", "--force"},
+                        Description: "Overwrite existing file",
+                        OmitValue: true,
+                    },
+                    cli.StringFlag{
+                        Name: "mime",
+                        Patterns: []string{"--mime"},
+                        Description: "Mime type of exported file",
+                    },
+                    cli.BoolFlag{
+                        Name: "printMimes",
+                        Patterns: []string{"--print-mimes"},
+                        Description: "Print available mime types for given file",
+                        OmitValue: true,
+                    },
+                },
+            },
+        },
+        &cli.Handler{
             Pattern: "[global options] mkdir [options] <name>",
             Description: "Create directory",
             Callback: mkdirHandler,

@@ -64,6 +64,18 @@ func infoHandler(ctx cli.Context) {
     checkErr(err)
 }
 
+func exportHandler(ctx cli.Context) {
+    args := ctx.Args()
+    err := newDrive(args).Export(drive.ExportArgs{
+        Out: os.Stdout,
+        Id: args.String("id"),
+        Mime: args.String("mime"),
+        PrintMimes: args.Bool("printMimes"),
+        Force: args.Bool("force"),
+    })
+    checkErr(err)
+}
+
 func mkdirHandler(ctx cli.Context) {
     args := ctx.Args()
     err := newDrive(args).Mkdir(drive.MkdirArgs{
