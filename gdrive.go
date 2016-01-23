@@ -372,6 +372,14 @@ func main() {
             },
         },
         &cli.Handler{
+            Pattern: "[global options] delete revision <fileId> <revisionId>",
+            Description: "Delete file revision",
+            Callback: deleteRevisionHandler,
+            Flags: cli.Flags{
+                "global options": globalFlags,
+            },
+        },
+        &cli.Handler{
             Pattern: "[global options] about [options]",
             Description: "Google drive metadata, quota usage, import/export formats",
             Callback: aboutHandler,

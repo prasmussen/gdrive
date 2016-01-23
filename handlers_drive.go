@@ -160,6 +160,16 @@ func deleteHandler(ctx cli.Context) {
     checkErr(err)
 }
 
+func deleteRevisionHandler(ctx cli.Context) {
+    args := ctx.Args()
+    err := newDrive(args).DeleteRevision(drive.DeleteRevisionArgs{
+        Out: os.Stdout,
+        FileId: args.String("fileId"),
+        RevisionId: args.String("revisionId"),
+    })
+    checkErr(err)
+}
+
 func aboutHandler(ctx cli.Context) {
     args := ctx.Args()
     err := newDrive(args).About(drive.AboutArgs{
