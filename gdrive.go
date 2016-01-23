@@ -392,7 +392,7 @@ func main() {
         },
         &cli.Handler{
             Pattern: "[global options] about [options]",
-            Description: "Google drive metadata, quota usage, import/export formats",
+            Description: "Google drive metadata, quota usage",
             Callback: aboutHandler,
             Flags: cli.Flags{
                 "global options": globalFlags,
@@ -403,19 +403,23 @@ func main() {
                         Description: "Show size in bytes",
                         OmitValue: true,
                     },
-                    cli.BoolFlag{
-                        Name: "exportFormats",
-                        Patterns: []string{"--export"},
-                        Description: "Show supported export formats",
-                        OmitValue: true,
-                    },
-                    cli.BoolFlag{
-                        Name: "importFormats",
-                        Patterns: []string{"--import"},
-                        Description: "Show supported import formats",
-                        OmitValue: true,
-                    },
                 },
+            },
+        },
+        &cli.Handler{
+            Pattern: "[global options] about import",
+            Description: "Show supported import formats",
+            Callback: aboutImportHandler,
+            Flags: cli.Flags{
+                "global options": globalFlags,
+            },
+        },
+        &cli.Handler{
+            Pattern: "[global options] about export",
+            Description: "Show supported export formats",
+            Callback: aboutExportHandler,
+            Flags: cli.Flags{
+                "global options": globalFlags,
             },
         },
         &cli.Handler{

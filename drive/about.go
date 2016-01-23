@@ -9,24 +9,12 @@ import (
 type AboutArgs struct {
     Out io.Writer
     SizeInBytes bool
-    ImportFormats bool
-    ExportFormats bool
 }
 
 func (self *Drive) About(args AboutArgs) (err error) {
-    about, err := self.service.About.Get().Fields("exportFormats", "importFormats", "maxImportSizes", "maxUploadSize", "storageQuota", "user").Do()
+    about, err := self.service.About.Get().Fields("maxImportSizes", "maxUploadSize", "storageQuota", "user").Do()
     if err != nil {
         return fmt.Errorf("Failed to get about: %s", err)
-    }
-
-    if args.ExportFormats {
-        printSupportedFormats(args.Out, about.ExportFormats)
-        return
-    }
-
-    if args.ImportFormats {
-        printSupportedFormats(args.Out, about.ImportFormats)
-        return
     }
 
     user := about.User
@@ -40,7 +28,33 @@ func (self *Drive) About(args AboutArgs) (err error) {
     return
 }
 
-func printSupportedFormats(out io.Writer, formats map[string][]string) {
+type AboutImportArgs struct {
+    Out io.Writer
+}
+
+func (self *Drive) AboutImport(args AboutImportArgs) (err error) {
+    about, err := self.service.About.Get().Fields("importFormats").Do()
+    if err != nil {
+        return fmt.Errorf("Failed to get about: %s", err)
+    }
+    printAboutFormats(args.Out, about.ImportFormats)
+    return
+}
+
+type AboutExportArgs struct {
+    Out io.Writer
+}
+
+func (self *Drive) AboutExport(args AboutExportArgs) (err error) {
+    about, err := self.service.About.Get().Fields("exportFormats").Do()
+    if err != nil {
+        return fmt.Errorf("Failed to get about: %s", err)
+    }
+    printAboutFormats(args.Out, about.ExportFormats)
+    return
+}
+
+func printAboutFormats(out io.Writer, formats map[string][]string) {
     w := new(tabwriter.Writer)
     w.Init(out, 0, 0, 3, ' ', 0)
 

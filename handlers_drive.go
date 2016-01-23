@@ -179,8 +179,22 @@ func aboutHandler(ctx cli.Context) {
     err := newDrive(args).About(drive.AboutArgs{
         Out: os.Stdout,
         SizeInBytes: args.Bool("sizeInBytes"),
-        ImportFormats: args.Bool("importFormats"),
-        ExportFormats: args.Bool("exportFormats"),
+    })
+    checkErr(err)
+}
+
+func aboutImportHandler(ctx cli.Context) {
+    args := ctx.Args()
+    err := newDrive(args).AboutImport(drive.AboutImportArgs{
+        Out: os.Stdout,
+    })
+    checkErr(err)
+}
+
+func aboutExportHandler(ctx cli.Context) {
+    args := ctx.Args()
+    err := newDrive(args).AboutExport(drive.AboutExportArgs{
+        Out: os.Stdout,
     })
     checkErr(err)
 }
