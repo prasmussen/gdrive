@@ -14,10 +14,6 @@ func (self Context) Handlers() []*Handler {
     return self.handlers
 }
 
-func (self Context) FilterHandlers(prefix string) []*Handler {
-    return filterHandlers(self.handlers, prefix)
-}
-
 type Arguments map[string]interface{}
 
 func (self Arguments) String(key string) string {

@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"os"
-	"strings"
     "./cli"
 	"./auth"
 	"./drive"
@@ -140,40 +139,6 @@ func aboutHandler(ctx cli.Context) {
         ExportFormats: args.Bool("exportFormats"),
     })
     checkErr(err)
-}
-
-func printVersion(ctx cli.Context) {
-    fmt.Printf("%s v%s\n", Name, Version)
-}
-
-func printHelp(ctx cli.Context) {
-    fmt.Printf("%s usage:\n\n", Name)
-
-    for _, h := range ctx.Handlers() {
-        fmt.Printf("%s %s  (%s)\n", Name, h.Pattern, h.Description)
-    }
-}
-
-func printCommandHelp(ctx cli.Context) {
-    handlers := ctx.FilterHandlers(ctx.Args().String("subcommand"))
-
-    if len(handlers) == 0 {
-        ExitF("Subcommand not found")
-    }
-
-    if len(handlers) > 1 {
-        ExitF("More than one matching subcommand, be more specific")
-    }
-
-    handler := handlers[0]
-
-    fmt.Printf("%s %s  (%s)\n", Name, handler.Pattern, handler.Description)
-    for name, flags := range handler.Flags {
-        fmt.Printf("\n%s:\n", name)
-        for _, flag := range flags {
-            fmt.Printf("  %s  (%s)\n", strings.Join(flag.GetPatterns(), ", "), flag.GetDescription())
-        }
-    }
 }
 
 func newDrive(args cli.Arguments) *drive.Drive {

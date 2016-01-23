@@ -339,9 +339,14 @@ func main() {
             Callback: printHelp,
         },
         &cli.Handler{
-            Pattern: "help <subcommand>",
-            Description: "Print subcommand help",
+            Pattern: "help <command>",
+            Description: "Print command help",
             Callback: printCommandHelp,
+        },
+        &cli.Handler{
+            Pattern: "help <command> <subcommand>",
+            Description: "Print subcommand help",
+            Callback: printSubCommandHelp,
         },
     }
 

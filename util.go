@@ -22,6 +22,28 @@ func Homedir() string {
 	return os.Getenv("HOME")
 }
 
+func equal(a, b []string) bool {
+    if a == nil && b == nil {
+        return true;
+    }
+
+    if a == nil || b == nil {
+        return false;
+    }
+
+    if len(a) != len(b) {
+        return false
+    }
+
+    for i := range a {
+        if a[i] != b[i] {
+            return false
+        }
+    }
+
+    return true
+}
+
 func ExitF(format string, a ...interface{}) {
 	fmt.Fprintf(os.Stderr, format, a...)
 	fmt.Println("")

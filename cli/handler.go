@@ -20,7 +20,7 @@ type Handler struct {
 func (self *Handler) getParser() Parser {
     var parsers []Parser
 
-    for _, pattern := range splitPattern(self.Pattern) {
+    for _, pattern := range self.SplitPattern() {
         if isOptional(pattern) {
             name := optionalName(pattern)
             parser := getFlagParser(self.Flags[name])
@@ -33,6 +33,18 @@ func (self *Handler) getParser() Parser {
     }
 
     return CompleteParser{parsers}
+}
+
+// Split on spaces but ignore spaces inside <...> and [...]
+func (self *Handler) SplitPattern() []string {
+    re := regexp.MustCompile(`(<[^>]+>|\[[^\]]+]|\S+)`)
+    matches := []string{}
+
+    for _, value := range re.FindAllStringSubmatch(self.Pattern, -1) {
+        matches = append(matches, value[1])
+    }
+
+    return matches
 }
 
 func SetHandlers(h []*Handler) {
@@ -74,32 +86,6 @@ func Handle(args []string) bool {
     return true
 }
 
-func filterHandlers(handlers []*Handler, prefix string) []*Handler {
-    matches := []*Handler{}
-
-    for _, h := range handlers {
-        pattern := strings.Join(stripOptionals(splitPattern(h.Pattern)), " ")
-        if strings.HasPrefix(pattern, prefix) {
-            matches = append(matches, h)
-        }
-    }
-
-    return matches
-}
-
-
-// Split on spaces but ignore spaces inside <...> and [...]
-func splitPattern(pattern string) []string {
-    re := regexp.MustCompile(`(<[^>]+>|\[[^\]]+]|\S+)`)
-    matches := []string{}
-
-    for _, value := range re.FindAllStringSubmatch(pattern, -1) {
-        matches = append(matches, value[1]) 
-    }
-
-    return matches
-}
-
 func isCaptureGroup(arg string) bool {
     return strings.HasPrefix(arg, "<") && strings.HasSuffix(arg, ">")
 }
@@ -110,16 +96,4 @@ func isOptional(arg string) bool {
 
 func optionalName(s string) string {
     return s[1:len(s) - 1]
-}
-
-// Strip optional groups from pattern
-func stripOptionals(pattern []string) []string {
-    newArgs := []string{}
-
-    for _, arg := range pattern {
-        if !isOptional(arg) {
-            newArgs = append(newArgs, arg)
-        }
-    }
-    return newArgs
 }
