@@ -38,6 +38,19 @@ func downloadHandler(ctx cli.Context) {
     checkErr(err)
 }
 
+func downloadRevisionHandler(ctx cli.Context) {
+    args := ctx.Args()
+    err := newDrive(args).DownloadRevision(drive.DownloadRevisionArgs{
+        Out: os.Stdout,
+        FileId: args.String("fileId"),
+        RevisionId: args.String("revisionId"),
+        Force: args.Bool("force"),
+        Stdout: args.Bool("stdout"),
+        NoProgress: args.Bool("noProgress"),
+    })
+    checkErr(err)
+}
+
 func uploadHandler(ctx cli.Context) {
     args := ctx.Args()
     err := newDrive(args).Upload(drive.UploadFileArgs{

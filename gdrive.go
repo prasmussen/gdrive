@@ -125,6 +125,34 @@ func main() {
             },
         },
         &cli.Handler{
+            Pattern: "[global options] download revision [options] <fileId> <revisionId>",
+            Description: "Download revision",
+            Callback: downloadRevisionHandler,
+            Flags: cli.Flags{
+                "global options": globalFlags,
+                "options": []cli.Flag{
+                    cli.BoolFlag{
+                        Name: "force",
+                        Patterns: []string{"-f", "--force"},
+                        Description: "Overwrite existing file",
+                        OmitValue: true,
+                    },
+                    cli.BoolFlag{
+                        Name: "noProgress",
+                        Patterns: []string{"--no-progress"},
+                        Description: "Hide progress",
+                        OmitValue: true,
+                    },
+                    cli.BoolFlag{
+                        Name: "stdout",
+                        Patterns: []string{"--stdout"},
+                        Description: "Write file content to stdout",
+                        OmitValue: true,
+                    },
+                },
+            },
+        },
+        &cli.Handler{
             Pattern: "[global options] upload [options] <path>",
             Description: "Upload file or directory",
             Callback: uploadHandler,
