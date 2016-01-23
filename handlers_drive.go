@@ -62,6 +62,7 @@ func uploadHandler(ctx cli.Context) {
         Recursive: args.Bool("recursive"),
         Share: args.Bool("share"),
         NoProgress: args.Bool("noProgress"),
+        ChunkSize: args.Int64("chunksize"),
     })
     checkErr(err)
 }
