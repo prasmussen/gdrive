@@ -20,17 +20,15 @@ func printHelp(ctx cli.Context) {
 
 func printCommandHelp(ctx cli.Context) {
     args := ctx.Args()
-    prefix := []string{args.String("command")}
-    printCommandPrefixHelp(prefix, ctx)
+    printCommandPrefixHelp(ctx, args.String("command"))
 }
 
 func printSubCommandHelp(ctx cli.Context) {
     args := ctx.Args()
-    prefix := []string{args.String("command"), args.String("subcommand")}
-    printCommandPrefixHelp(prefix, ctx)
+    printCommandPrefixHelp(ctx, args.String("command"), args.String("subcommand"))
 }
 
-func printCommandPrefixHelp(prefix []string, ctx cli.Context) {
+func printCommandPrefixHelp(ctx cli.Context, prefix ...string) {
     handler := getHandler(ctx.Handlers(), prefix)
 
     if handler == nil {
