@@ -11,6 +11,7 @@ const Version = "2.0.0"
 
 const DefaultMaxFiles = 30
 const DefaultNameWidth = 40
+const DefaultUploadChunkSize = 8 * 1024 * 1024
 const DefaultQuery = "trashed = false and 'me' in owners"
 const DefaultShareRole = "reader"
 const DefaultShareType = "anyone"
@@ -181,11 +182,37 @@ func main() {
                         Description: "Hide progress",
                         OmitValue: true,
                     },
+                    cli.StringFlag{
+                        Name: "mime",
+                        Patterns: []string{"--mime"},
+                        Description: "Force mime type",
+                    },
                     cli.BoolFlag{
-                        Name: "stdin",
-                        Patterns: []string{"--stdin"},
-                        Description: "Use stdin as file content",
+                        Name: "share",
+                        Patterns: []string{"--share"},
+                        Description: "Share file",
                         OmitValue: true,
+                    },
+                },
+            },
+        },
+        &cli.Handler{
+            Pattern: "[global options] upload stdin [options] <name>",
+            Description: "Upload file from stdin",
+            Callback: uploadStdinHandler,
+            Flags: cli.Flags{
+                "global options": globalFlags,
+                "options": []cli.Flag{
+                    cli.StringSliceFlag{
+                        Name: "parent",
+                        Patterns: []string{"-p", "--parent"},
+                        Description: "Parent id, used to upload file to a specific directory, can be specified multiple times to give many parents",
+                    },
+                    cli.IntFlag{
+                        Name: "chunksize",
+                        Patterns: []string{"--chunksize"},
+                        Description: fmt.Sprintf("Set chunk size in bytes, default: %d", DefaultUploadChunkSize),
+                        DefaultValue: DefaultUploadChunkSize,
                     },
                     cli.StringFlag{
                         Name: "mime",

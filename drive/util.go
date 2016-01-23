@@ -105,3 +105,7 @@ func fileExists(path string) bool {
     }
     return false
 }
+
+func intMax() int64 {
+    return 1 << (strconv.IntSize - 1) - 1
+}

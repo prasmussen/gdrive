@@ -60,9 +60,22 @@ func uploadHandler(ctx cli.Context) {
         Parents: args.StringSlice("parent"),
         Mime: args.String("mime"),
         Recursive: args.Bool("recursive"),
-        Stdin: args.Bool("stdin"),
         Share: args.Bool("share"),
         NoProgress: args.Bool("noProgress"),
+    })
+    checkErr(err)
+}
+
+func uploadStdinHandler(ctx cli.Context) {
+    args := ctx.Args()
+    err := newDrive(args).UploadStream(drive.UploadStreamArgs{
+        Out: os.Stdout,
+        In: os.Stdin,
+        Name: args.String("name"),
+        Parents: args.StringSlice("parent"),
+        Mime: args.String("mime"),
+        Share: args.Bool("share"),
+        ChunkSize: args.Int64("chunksize"),
     })
     checkErr(err)
 }
