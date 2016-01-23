@@ -13,7 +13,7 @@ type FileInfoArgs struct {
 }
 
 func (self *Drive) Info(args FileInfoArgs) (err error) {
-    f, err := self.service.Files.Get(args.Id).Fields("id", "name", "size", "createdTime", "modifiedTime", "md5Checksum", "mimeType", "parents", "shared", "description").Do()
+    f, err := self.service.Files.Get(args.Id).Fields("id", "name", "size", "createdTime", "modifiedTime", "md5Checksum", "mimeType", "parents", "shared", "description", "webContentLink", "webViewLink").Do()
     if err != nil {
         return fmt.Errorf("Failed to get file: %s", err)
     }
@@ -47,6 +47,8 @@ func PrintFileInfo(args PrintFileInfoArgs) {
         kv{"Md5sum", f.Md5Checksum},
         kv{"Shared", formatBool(f.Shared)},
         kv{"Parents", formatList(f.Parents)},
+        kv{"ViewUrl", f.WebViewLink},
+        kv{"DownloadUrl", f.WebContentLink},
     }
 
     for _, item := range items {

@@ -375,22 +375,6 @@ func main() {
             },
         },
         &cli.Handler{
-            Pattern: "[global options] url [options] <id>",
-            Description: "Get url to file or directory",
-            Callback: urlHandler,
-            Flags: cli.Flags{
-                "global options": globalFlags,
-                "options": []cli.Flag{
-                    cli.BoolFlag{
-                        Name: "download",
-                        Patterns: []string{"--download"},
-                        Description: "Download url",
-                        OmitValue: true,
-                    },
-                },
-            },
-        },
-        &cli.Handler{
             Pattern: "[global options] delete <id>",
             Description: "Delete file or directory",
             Callback: deleteHandler,
