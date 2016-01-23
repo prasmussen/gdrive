@@ -76,6 +76,18 @@ func exportHandler(ctx cli.Context) {
     checkErr(err)
 }
 
+func listRevisionsHandler(ctx cli.Context) {
+    args := ctx.Args()
+    err := newDrive(args).ListRevisions(drive.ListRevisionsArgs{
+        Out: os.Stdout,
+        Id: args.String("id"),
+        NameWidth: args.Int64("nameWidth"),
+        SizeInBytes: args.Bool("sizeInBytes"),
+        SkipHeader: args.Bool("skipHeader"),
+    })
+    checkErr(err)
+}
+
 func mkdirHandler(ctx cli.Context) {
     args := ctx.Args()
     err := newDrive(args).Mkdir(drive.MkdirArgs{

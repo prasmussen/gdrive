@@ -69,6 +69,34 @@ func main() {
             },
         },
         &cli.Handler{
+            Pattern: "[global options] list revisions [options] <id>",
+            Description: "List file revisions",
+            Callback: listRevisionsHandler,
+            Flags: cli.Flags{
+                "global options": globalFlags,
+                "options": []cli.Flag{
+                    cli.IntFlag{
+                        Name: "nameWidth",
+                        Patterns: []string{"--name-width"},
+                        Description: fmt.Sprintf("Width of name column, default: %d, minimum: 9, use 0 for full width", DefaultNameWidth),
+                        DefaultValue: DefaultNameWidth,
+                    },
+                    cli.BoolFlag{
+                        Name: "skipHeader",
+                        Patterns: []string{"--no-header"},
+                        Description: "Dont print the header",
+                        OmitValue: true,
+                    },
+                    cli.BoolFlag{
+                        Name: "sizeInBytes",
+                        Patterns: []string{"--bytes"},
+                        Description: "Size in bytes",
+                        OmitValue: true,
+                    },
+                },
+            },
+        },
+        &cli.Handler{
             Pattern: "[global options] download [options] <id>",
             Description: "Download file or directory",
             Callback: downloadHandler,
