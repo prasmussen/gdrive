@@ -67,6 +67,22 @@ func uploadHandler(ctx cli.Context) {
     checkErr(err)
 }
 
+func updateHandler(ctx cli.Context) {
+    args := ctx.Args()
+    err := newDrive(args).Update(drive.UpdateArgs{
+        Out: os.Stdout,
+        Id: args.String("id"),
+        Path: args.String("path"),
+        Name: args.String("name"),
+        Parents: args.StringSlice("parent"),
+        Mime: args.String("mime"),
+        Stdin: args.Bool("stdin"),
+        Share: args.Bool("share"),
+        NoProgress: args.Bool("noProgress"),
+    })
+    checkErr(err)
+}
+
 func infoHandler(ctx cli.Context) {
     args := ctx.Args()
     err := newDrive(args).Info(drive.FileInfoArgs{

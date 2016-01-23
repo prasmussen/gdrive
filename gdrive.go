@@ -202,6 +202,49 @@ func main() {
             },
         },
         &cli.Handler{
+            Pattern: "[global options] update [options] <id> <path>",
+            Description: "Update file, this creates a new revision of the file",
+            Callback: updateHandler,
+            Flags: cli.Flags{
+                "global options": globalFlags,
+                "options": []cli.Flag{
+                    cli.StringSliceFlag{
+                        Name: "parent",
+                        Patterns: []string{"-p", "--parent"},
+                        Description: "Parent id, used to upload file to a specific directory, can be specified multiple times to give many parents",
+                    },
+                    cli.StringFlag{
+                        Name: "name",
+                        Patterns: []string{"--name"},
+                        Description: "Filename",
+                    },
+                    cli.BoolFlag{
+                        Name: "noProgress",
+                        Patterns: []string{"--no-progress"},
+                        Description: "Hide progress",
+                        OmitValue: true,
+                    },
+                    cli.BoolFlag{
+                        Name: "stdin",
+                        Patterns: []string{"--stdin"},
+                        Description: "Use stdin as file content",
+                        OmitValue: true,
+                    },
+                    cli.StringFlag{
+                        Name: "mime",
+                        Patterns: []string{"--mime"},
+                        Description: "Force mime type",
+                    },
+                    cli.BoolFlag{
+                        Name: "share",
+                        Patterns: []string{"--share"},
+                        Description: "Share file",
+                        OmitValue: true,
+                    },
+                },
+            },
+        },
+        &cli.Handler{
             Pattern: "[global options] info [options] <id>",
             Description: "Show file info",
             Callback: infoHandler,
