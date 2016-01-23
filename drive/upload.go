@@ -19,6 +19,7 @@ type UploadFileArgs struct {
     Recursive bool
     Stdin bool
     Share bool
+    NoProgress bool
 }
 
 func (self *Drive) Upload(args UploadFileArgs) (err error) {

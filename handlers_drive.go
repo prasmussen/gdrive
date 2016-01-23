@@ -33,7 +33,7 @@ func downloadHandler(ctx cli.Context) {
         Id: args.String("id"),
         Force: args.Bool("force"),
         Stdout: args.Bool("stdout"),
-        NoProgress: args.Bool("noprogress"),
+        NoProgress: args.Bool("noProgress"),
     })
     checkErr(err)
 }
@@ -49,6 +49,7 @@ func uploadHandler(ctx cli.Context) {
         Recursive: args.Bool("recursive"),
         Stdin: args.Bool("stdin"),
         Share: args.Bool("share"),
+        NoProgress: args.Bool("noProgress"),
     })
     checkErr(err)
 }
