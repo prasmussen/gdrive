@@ -330,7 +330,7 @@ func flagKeyValueMatch(key string, values []string, index int) ([]string, string
 
     if values[index] == key {
         value := values[index + 1]
-        remaining := append(values[:index], values[index + 2:]...)
+        remaining := append(copySlice(values[:index]), values[index + 2:]...)
         return remaining, value, true
     }
 
@@ -343,7 +343,7 @@ func flagKeyMatch(key string, values []string, index int) ([]string, bool) {
     }
 
     if values[index] == key {
-        remaining := append(values[:index], values[index + 1:]...)
+        remaining := append(copySlice(values[:index]), values[index + 1:]...)
         return remaining, true
     }
 
