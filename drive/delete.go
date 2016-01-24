@@ -18,7 +18,7 @@ func (self *Drive) Delete(args DeleteArgs) (err error) {
 
     err = self.service.Files.Delete(args.Id).Do()
     if err != nil {
-        return fmt.Errorf("Failed to delete file", err)
+        return fmt.Errorf("Failed to delete file: %s", err)
     }
 
     fmt.Fprintf(args.Out, "Removed file '%s'\n", f.Name)
