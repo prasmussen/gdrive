@@ -110,6 +110,17 @@ func main() {
                         Description: "Overwrite existing file",
                         OmitValue: true,
                     },
+                    cli.StringFlag{
+                        Name: "path",
+                        Patterns: []string{"--path"},
+                        Description: "Download path",
+                    },
+                    cli.BoolFlag{
+                        Name: "recursive",
+                        Patterns: []string{"-r", "--recursive"},
+                        Description: "Download directory recursively, documents will be skipped",
+                        OmitValue: true,
+                    },
                     cli.BoolFlag{
                         Name: "noProgress",
                         Patterns: []string{"--no-progress"},

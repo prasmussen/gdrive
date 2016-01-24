@@ -30,10 +30,12 @@ func listHandler(ctx cli.Context) {
 
 func downloadHandler(ctx cli.Context) {
     args := ctx.Args()
-    err := newDrive(args).Download(drive.DownloadFileArgs{
+    err := newDrive(args).Download(drive.DownloadArgs{
         Out: os.Stdout,
         Id: args.String("id"),
         Force: args.Bool("force"),
+        Path: args.String("path"),
+        Recursive: args.Bool("recursive"),
         Stdout: args.Bool("stdout"),
         Progress: progressWriter(args.Bool("noProgress")),
     })

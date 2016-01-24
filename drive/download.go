@@ -4,25 +4,46 @@ import (
     "fmt"
     "io"
     "os"
+    "time"
+    "path/filepath"
+    "google.golang.org/api/drive/v3"
 )
 
-type DownloadFileArgs struct {
+type DownloadArgs struct {
     Out io.Writer
     Progress io.Writer
     Id string
+    Path string
     Force bool
+    Recursive bool
     Stdout bool
 }
 
-func (self *Drive) Download(args DownloadFileArgs) (err error) {
-    getFile := self.service.Files.Get(args.Id)
+func (self *Drive) Download(args DownloadArgs) error {
+    return self.download(args)
+}
 
-    f, err := getFile.Do()
+func (self *Drive) download(args DownloadArgs) error {
+    f, err := self.service.Files.Get(args.Id).Fields("id", "name", "size", "mimeType", "md5Checksum").Do()
     if err != nil {
         return fmt.Errorf("Failed to get file: %s", err)
     }
 
-    res, err := getFile.Download()
+    if isDir(f) && !args.Recursive {
+        return fmt.Errorf("'%s' is a directory, use --recursive to download directories", f.Name)
+    } else if isDir(f) && args.Recursive {
+        return self.downloadDirectory(f, args)
+    } else if isBinary(f) {
+        return self.downloadBinary(f, args)
+    } else if !args.Recursive {
+        return fmt.Errorf("'%s' is a google document and must be exported, see the export command", f.Name)
+    }
+
+    return nil
+}
+
+func (self *Drive) downloadBinary(f *drive.File, args DownloadArgs) error {
+    res, err := self.service.Files.Get(f.Id).Download()
     if err != nil {
         return fmt.Errorf("Failed to download file: %s", err)
     }
@@ -39,13 +60,20 @@ func (self *Drive) Download(args DownloadFileArgs) (err error) {
         return err
     }
 
+    filename := filepath.Join(args.Path, f.Name)
+
     // Check if file exists
-    if !args.Force && fileExists(f.Name) {
-        return fmt.Errorf("File '%s' already exists, use --force to overwrite", f.Name)
+    if !args.Force && fileExists(filename) {
+        return fmt.Errorf("File '%s' already exists, use --force to overwrite", filename)
+    }
+
+    // Ensure any parent directories exists
+    if err = mkdir(filename); err != nil {
+        return err
     }
 
     // Create new file
-    outFile, err := os.Create(f.Name)
+    outFile, err := os.Create(filename)
     if err != nil {
         return fmt.Errorf("Unable to create new file: %s", err)
     }
@@ -53,16 +81,59 @@ func (self *Drive) Download(args DownloadFileArgs) (err error) {
     // Close file on function exit
     defer outFile.Close()
 
+    fmt.Fprintf(args.Out, "\nDownloading %s...\n", f.Name)
+    started := time.Now()
+
     // Save file to disk
     bytes, err := io.Copy(outFile, srcReader)
     if err != nil {
         return fmt.Errorf("Failed saving file: %s", err)
     }
 
-    fmt.Fprintf(args.Out, "Downloaded '%s' at %s, total %d\n", f.Name, "x/s", bytes)
+    // Calculate average download rate
+    rate := calcRate(f.Size, started, time.Now())
+
+    fmt.Fprintf(args.Out, "Downloaded '%s' at %s/s, total %s\n", filename, formatSize(rate, false), formatSize(bytes, false))
 
     //if deleteSourceFile {
     //    self.Delete(args.Id)
     //}
-    return
+    return nil
+}
+
+func (self *Drive) downloadDirectory(parent *drive.File, args DownloadArgs) error {
+    query := fmt.Sprintf("'%s' in parents", parent.Id)
+    fileList, err := self.service.Files.List().Q(query).Fields("files(id,name)").Do()
+    if err != nil {
+        return fmt.Errorf("Failed listing files: %s", err)
+    }
+
+    // Update download path
+    path := filepath.Join(args.Path, parent.Name)
+
+    for _, f := range fileList.Files {
+        err = self.download(DownloadArgs{
+            Out: args.Out,
+            Id: f.Id,
+            Progress: args.Progress,
+            Force: args.Force,
+            Path: path,
+            Recursive: args.Recursive,
+            Stdout: false,
+        })
+
+        if err != nil {
+            return err
+        }
+    }
+
+    return nil
+}
+
+func isDir(f *drive.File) bool {
+    return f.MimeType == DirectoryMimeType
+}
+
+func isBinary(f *drive.File) bool {
+    return f.Md5Checksum != ""
 }

@@ -3,6 +3,7 @@ package drive
 import (
     "os"
     "fmt"
+    "path/filepath"
     "strings"
     "strconv"
     "unicode/utf8"
@@ -120,6 +121,14 @@ func fileExists(path string) bool {
         return true
     }
     return false
+}
+
+func mkdir(path string) error {
+    dir := filepath.Dir(path)
+    if fileExists(dir) {
+        return nil
+    }
+    return os.MkdirAll(dir, 0775)
 }
 
 func intMax() int64 {
