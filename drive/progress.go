@@ -62,10 +62,8 @@ func (self *Progress) Read(p []byte) (int, error) {
     // Draw progress every x seconds
     if self.updated.Add(MaxDrawInterval).Before(now) || isLast {
         self.draw(isLast)
+        self.updated = now
     }
-
-    // Update last draw time
-    self.updated = now
 
     // Mark as done if error occurs
     self.done = isLast
