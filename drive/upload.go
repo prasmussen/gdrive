@@ -21,7 +21,6 @@ type UploadArgs struct {
     Recursive bool
     Share bool
     ChunkSize int64
-    SizeInBytes bool
 }
 
 func (self *Drive) Upload(args UploadArgs) error {
@@ -136,7 +135,7 @@ func (self *Drive) uploadFile(args UploadArgs) error {
     rate := calcRate(f.Size, started, time.Now())
 
     fmt.Fprintf(args.Out, "[file] id: %s, md5: %s, name: %s\n", f.Id, f.Md5Checksum, f.Name)
-    fmt.Fprintf(args.Out, "Uploaded '%s' at %s/s, total %s\n", f.Name, formatSize(rate, args.SizeInBytes), formatSize(f.Size, args.SizeInBytes))
+    fmt.Fprintf(args.Out, "Uploaded '%s' at %s/s, total %s\n", f.Name, formatSize(rate, false), formatSize(f.Size, false))
     return nil
 }
 

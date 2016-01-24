@@ -64,7 +64,6 @@ func uploadHandler(ctx cli.Context) {
         Mime: args.String("mime"),
         Recursive: args.Bool("recursive"),
         Share: args.Bool("share"),
-        SizeInBytes: args.Bool("sizeInBytes"),
         ChunkSize: args.Int64("chunksize"),
     })
     checkErr(err)
