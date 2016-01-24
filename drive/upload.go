@@ -5,12 +5,13 @@ import (
     "mime"
     "os"
     "io"
+    "time"
     "path/filepath"
     "google.golang.org/api/googleapi"
     "google.golang.org/api/drive/v3"
 )
 
-type UploadFileArgs struct {
+type UploadArgs struct {
     Out io.Writer
     Progress io.Writer
     Path string
@@ -20,21 +21,81 @@ type UploadFileArgs struct {
     Recursive bool
     Share bool
     ChunkSize int64
+    SizeInBytes bool
 }
 
-func (self *Drive) Upload(args UploadFileArgs) (err error) {
+func (self *Drive) Upload(args UploadArgs) error {
     if args.ChunkSize > intMax() - 1 {
         return fmt.Errorf("Chunk size is to big, max chunk size for this computer is %d", intMax() - 1)
     }
 
-    srcFile, err := os.Open(args.Path)
+    return self.upload(args)
+}
+
+func (self *Drive) upload(args UploadArgs) error {
+    f, err := os.Open(args.Path)
     if err != nil {
         return fmt.Errorf("Failed to open file: %s", err)
     }
 
-    srcFileInfo, err := srcFile.Stat()
+    info, err := f.Stat()
     if err != nil {
-        return fmt.Errorf("Failed to read file metadata: %s", err)
+        return fmt.Errorf("Failed getting file metadata: %s", err)
+    }
+
+    if info.IsDir() && !args.Recursive {
+        return fmt.Errorf("'%s' is a directory, use --recursive to upload directories", info.Name())
+    } else if info.IsDir() {
+        args.Name = ""
+        return self.uploadDirectory(args)
+    } else {
+        return self.uploadFile(args)
+    }
+}
+
+func (self *Drive) uploadDirectory(args UploadArgs) error {
+    srcFile, srcFileInfo, err := openFile(args.Path)
+    if err != nil {
+        return err
+    }
+
+    // Make directory on drive
+    f, err := self.mkdir(MkdirArgs{
+        Out: args.Out,
+        Name: srcFileInfo.Name(),
+        Parents: args.Parents,
+        Share: args.Share,
+    })
+    if err != nil {
+        return err
+    }
+
+    // Read files from directory
+    names, err := srcFile.Readdirnames(0)
+    if err != nil && err != io.EOF {
+        return fmt.Errorf("Failed reading directory: %s", err)
+    }
+
+    for _, name := range names {
+        // Copy args and set new path and parents
+        newArgs := args
+        newArgs.Path = filepath.Join(args.Path, name)
+        newArgs.Parents = []string{f.Id}
+
+        // Upload
+        err = self.upload(newArgs)
+        if err != nil {
+            return err
+        }
+    }
+
+    return nil
+}
+
+func (self *Drive) uploadFile(args UploadArgs) error {
+    srcFile, srcFileInfo, err := openFile(args.Path)
+    if err != nil {
+        return err
     }
 
     // Instantiate empty drive file
@@ -63,16 +124,20 @@ func (self *Drive) Upload(args UploadFileArgs) (err error) {
     // Wrap file in progress reader
     srcReader := getProgressReader(srcFile, args.Progress, srcFileInfo.Size())
 
-    f, err := self.service.Files.Create(dstFile).Media(srcReader, chunkSize).Do()
+    fmt.Fprintf(args.Out, "\nUploading %s...\n", args.Path)
+    started := time.Now()
+
+    f, err := self.service.Files.Create(dstFile).Fields("id", "name", "size", "md5Checksum").Media(srcReader, chunkSize).Do()
     if err != nil {
         return fmt.Errorf("Failed to upload file: %s", err)
     }
 
-    fmt.Fprintf(args.Out, "Uploaded '%s' at %s, total %d\n", f.Name, "x/s", f.Size)
-    //if args.Share {
-    //    self.Share(TODO)
-    //}
-    return
+    // Calculate average upload rate
+    rate := calcRate(f.Size, started, time.Now())
+
+    fmt.Fprintf(args.Out, "[file] id: %s, md5: %s, name: %s\n", f.Id, f.Md5Checksum, f.Name)
+    fmt.Fprintf(args.Out, "Uploaded '%s' at %s/s, total %s\n", f.Name, formatSize(rate, args.SizeInBytes), formatSize(f.Size, args.SizeInBytes))
+    return nil
 }
 
 type UploadStreamArgs struct {

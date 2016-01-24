@@ -15,22 +15,32 @@ type MkdirArgs struct {
     Share bool
 }
 
-func (self *Drive) Mkdir(args MkdirArgs) (err error) {
+func (self *Drive) Mkdir(args MkdirArgs) error {
+    f, err := self.mkdir(args)
+    if err != nil {
+        return err
+    }
+    fmt.Printf("Directory '%s' created\n", f.Name)
+    return nil
+}
+
+func (self *Drive) mkdir(args MkdirArgs) (*drive.File, error) {
     dstFile := &drive.File{Name: args.Name, MimeType: DirectoryMimeType}
 
     // Set parent folders
     dstFile.Parents = args.Parents
 
-    // Create folder
+    // Create directory
     f, err := self.service.Files.Create(dstFile).Do()
     if err != nil {
-        return fmt.Errorf("Failed to create folder: %s", err)
+        return nil, fmt.Errorf("Failed to create directory: %s", err)
     }
 
-    PrintFileInfo(PrintFileInfoArgs{Out: args.Out, File: f})
+    fmt.Fprintf(args.Out, "\n[directory] id: %s, name: %s\n", f.Id, f.Name)
 
     //if args.Share {
-    //    self.Share(TODO)
+    //    self.share(TODO)
     //}
-    return
+
+    return f, nil
 }

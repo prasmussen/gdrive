@@ -193,6 +193,12 @@ func main() {
                         Description: "Share file",
                         OmitValue: true,
                     },
+                    cli.BoolFlag{
+                        Name: "sizeInBytes",
+                        Patterns: []string{"--bytes"},
+                        Description: "Show size in bytes",
+                        OmitValue: true,
+                    },
                     cli.IntFlag{
                         Name: "chunksize",
                         Patterns: []string{"--chunksize"},
