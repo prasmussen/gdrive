@@ -108,20 +108,16 @@ func (self *Drive) downloadDirectory(parent *drive.File, args DownloadArgs) erro
         return fmt.Errorf("Failed listing files: %s", err)
     }
 
-    // Update download path
-    path := filepath.Join(args.Path, parent.Name)
+    newPath := filepath.Join(args.Path, parent.Name)
 
     for _, f := range fileList.Files {
-        err = self.download(DownloadArgs{
-            Out: args.Out,
-            Id: f.Id,
-            Progress: args.Progress,
-            Force: args.Force,
-            Path: path,
-            Recursive: args.Recursive,
-            Stdout: false,
-        })
+        // Copy args and update changed fields
+        newArgs := args
+        newArgs.Path = newPath
+        newArgs.Id = f.Id
+        newArgs.Stdout = false
 
+        err = self.download(newArgs)
         if err != nil {
             return err
         }
