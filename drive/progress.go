@@ -8,7 +8,7 @@ import (
 )
 
 const MaxDrawInterval = time.Second * 1
-const MaxRateInterval = time.Second * 5
+const MaxRateInterval = time.Second * 3
 
 func getProgressReader(r io.Reader, w io.Writer, size int64) io.Reader {
     // Don't wrap reader if output is discarded or size is too small
@@ -61,7 +61,7 @@ func (self *Progress) Read(p []byte) (int, error) {
 
     // Draw progress every x seconds
     if self.updated.Add(MaxDrawInterval).Before(now) || isLast {
-        self.Draw(isLast)
+        self.draw(isLast)
     }
 
     // Update last draw time
@@ -73,16 +73,15 @@ func (self *Progress) Read(p []byte) (int, error) {
     return n, err
 }
 
-func (self *Progress) Draw(isLast bool) {
+func (self *Progress) draw(isLast bool) {
     if self.done {
         return
     }
 
-    // Clear line
-    fmt.Fprintf(self.Writer, "\r%50s", "")
+    self.clear()
 
     // Print progress
-    fmt.Fprintf(self.Writer, "\r%s/%s", formatSize(self.progress, false), formatSize(self.Size, false))
+    fmt.Fprintf(self.Writer, "%s/%s", formatSize(self.progress, false), formatSize(self.Size, false))
 
     // Print rate
     if self.rate > 0 {
@@ -90,6 +89,10 @@ func (self *Progress) Draw(isLast bool) {
     }
 
     if isLast {
-        fmt.Fprintf(self.Writer, "\n")
+        self.clear()
     }
+}
+
+func (self *Progress) clear() {
+    fmt.Fprintf(self.Writer, "\r%50s\r", "")
 }
