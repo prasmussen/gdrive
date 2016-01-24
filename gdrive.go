@@ -274,6 +274,12 @@ func main() {
                         Description: "Share file",
                         OmitValue: true,
                     },
+                    cli.IntFlag{
+                        Name: "chunksize",
+                        Patterns: []string{"--chunksize"},
+                        Description: fmt.Sprintf("Set chunk size in bytes, default: %d", DefaultUploadChunkSize),
+                        DefaultValue: DefaultUploadChunkSize,
+                    },
                 },
             },
         },

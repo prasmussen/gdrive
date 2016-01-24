@@ -8,10 +8,10 @@ import (
 
 type DownloadRevisionArgs struct {
     Out io.Writer
+    Progress io.Writer
     FileId string
     RevisionId string
     Force bool
-    NoProgress bool
     Stdout bool
 }
 
@@ -35,9 +35,12 @@ func (self *Drive) DownloadRevision(args DownloadRevisionArgs) (err error) {
     // Close body on function exit
     defer res.Body.Close()
 
+    // Wrap response body in progress reader
+    srcReader := getProgressReader(res.Body, args.Progress, res.ContentLength)
+
     if args.Stdout {
         // Write file content to stdout
-        _, err := io.Copy(os.Stdout, res.Body)
+        _, err := io.Copy(args.Out, srcReader)
         return err
     }
 
@@ -56,7 +59,7 @@ func (self *Drive) DownloadRevision(args DownloadRevisionArgs) (err error) {
     defer outFile.Close()
 
     // Save file to disk
-    bytes, err := io.Copy(outFile, res.Body)
+    bytes, err := io.Copy(outFile, srcReader)
     if err != nil {
         return fmt.Errorf("Failed saving file: %s", err)
     }

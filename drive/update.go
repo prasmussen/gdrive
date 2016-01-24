@@ -6,12 +6,13 @@ import (
     "os"
     "io"
     "path/filepath"
+    "google.golang.org/api/googleapi"
     "google.golang.org/api/drive/v3"
-    "golang.org/x/net/context"
 )
 
 type UpdateArgs struct {
     Out io.Writer
+    Progress io.Writer
     Id string
     Path string
     Name string
@@ -20,7 +21,7 @@ type UpdateArgs struct {
     Recursive bool
     Stdin bool
     Share bool
-    NoProgress bool
+    ChunkSize int64
 }
 
 func (self *Drive) Update(args UpdateArgs) (err error) {
@@ -58,7 +59,13 @@ func (self *Drive) Update(args UpdateArgs) (err error) {
     // Set parent folders
     dstFile.Parents = args.Parents
 
-    f, err := self.service.Files.Update(args.Id, dstFile).ResumableMedia(context.Background(), srcFile, srcFileInfo.Size(), dstFile.MimeType).Do()
+    // Chunk size option
+    chunkSize := googleapi.ChunkSize(int(args.ChunkSize))
+
+    // Wrap file in progress reader
+    srcReader := getProgressReader(srcFile, args.Progress, srcFileInfo.Size())
+
+    f, err := self.service.Files.Update(args.Id, dstFile).Media(srcReader, chunkSize).Do()
     if err != nil {
         return fmt.Errorf("Failed to upload file: %s", err)
     }

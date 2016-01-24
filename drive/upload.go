@@ -12,13 +12,13 @@ import (
 
 type UploadFileArgs struct {
     Out io.Writer
+    Progress io.Writer
     Path string
     Name string
     Parents []string
     Mime string
     Recursive bool
     Share bool
-    NoProgress bool
     ChunkSize int64
 }
 
@@ -60,7 +60,10 @@ func (self *Drive) Upload(args UploadFileArgs) (err error) {
     // Chunk size option
     chunkSize := googleapi.ChunkSize(int(args.ChunkSize))
 
-    f, err := self.service.Files.Create(dstFile).Media(srcFile, chunkSize).Do()
+    // Wrap file in progress reader
+    srcReader := getProgressReader(srcFile, args.Progress, srcFileInfo.Size())
+
+    f, err := self.service.Files.Create(dstFile).Media(srcReader, chunkSize).Do()
     if err != nil {
         return fmt.Errorf("Failed to upload file: %s", err)
     }

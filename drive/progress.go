@@ -2,9 +2,22 @@ package drive
 
 import (
     "io"
+    "io/ioutil"
     "fmt"
     "time"
 )
+
+func getProgressReader(r io.Reader, w io.Writer, size int64) io.Reader {
+    if w == ioutil.Discard || size < 1024 * 1024 {
+        return r
+    }
+
+    return &Progress{
+        Reader: r,
+        Writer: w,
+        Size: size,
+    }
+}
 
 type Progress struct {
     Writer io.Writer

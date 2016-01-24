@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"os"
+	"io"
+	"io/ioutil"
     "./cli"
 	"./auth"
 	"./drive"
@@ -33,7 +35,7 @@ func downloadHandler(ctx cli.Context) {
         Id: args.String("id"),
         Force: args.Bool("force"),
         Stdout: args.Bool("stdout"),
-        NoProgress: args.Bool("noProgress"),
+        Progress: progressWriter(args.Bool("noProgress")),
     })
     checkErr(err)
 }
@@ -46,7 +48,7 @@ func downloadRevisionHandler(ctx cli.Context) {
         RevisionId: args.String("revisionId"),
         Force: args.Bool("force"),
         Stdout: args.Bool("stdout"),
-        NoProgress: args.Bool("noProgress"),
+        Progress: progressWriter(args.Bool("noProgress")),
     })
     checkErr(err)
 }
@@ -55,13 +57,13 @@ func uploadHandler(ctx cli.Context) {
     args := ctx.Args()
     err := newDrive(args).Upload(drive.UploadFileArgs{
         Out: os.Stdout,
+        Progress: progressWriter(args.Bool("noProgress")),
         Path: args.String("path"),
         Name: args.String("name"),
         Parents: args.StringSlice("parent"),
         Mime: args.String("mime"),
         Recursive: args.Bool("recursive"),
         Share: args.Bool("share"),
-        NoProgress: args.Bool("noProgress"),
         ChunkSize: args.Int64("chunksize"),
     })
     checkErr(err)
@@ -92,7 +94,8 @@ func updateHandler(ctx cli.Context) {
         Mime: args.String("mime"),
         Stdin: args.Bool("stdin"),
         Share: args.Bool("share"),
-        NoProgress: args.Bool("noProgress"),
+        Progress: progressWriter(args.Bool("noProgress")),
+        ChunkSize: args.Int64("chunksize"),
     })
     checkErr(err)
 }
@@ -229,4 +232,11 @@ func authCodePrompt(url string) func() string {
         }
         return code
     }
+}
+
+func progressWriter(discard bool) io.Writer {
+    if discard {
+        return ioutil.Discard
+    }
+    return os.Stderr
 }
