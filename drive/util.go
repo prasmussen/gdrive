@@ -150,8 +150,10 @@ func (self *Progress) Read(p []byte) (int, error) {
     newProgress := self.progress + int64(n)
     self.progress = newProgress
 
+    // Initialize rate state
     if self.rateUpdated.IsZero() {
         self.rateUpdated = now
+        self.rateProgress = newProgress
     }
 
     // Update rate every 3 seconds
