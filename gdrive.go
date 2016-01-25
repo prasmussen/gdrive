@@ -311,6 +311,33 @@ func main() {
             },
         },
         &cli.Handler{
+            Pattern: "[global] import [options] <path>",
+            Description: "Upload and convert file to a google document, see 'about import' for available conversions",
+            Callback: importHandler,
+            Flags: cli.Flags{
+                "global": globalFlags,
+                "options": []cli.Flag{
+                    cli.StringSliceFlag{
+                        Name: "parent",
+                        Patterns: []string{"-p", "--parent"},
+                        Description: "Parent id, used to upload file to a specific directory, can be specified multiple times to give many parents",
+                    },
+                    cli.BoolFlag{
+                        Name: "noProgress",
+                        Patterns: []string{"--no-progress"},
+                        Description: "Hide progress",
+                        OmitValue: true,
+                    },
+                    cli.BoolFlag{
+                        Name: "share",
+                        Patterns: []string{"--share"},
+                        Description: "Share file",
+                        OmitValue: true,
+                    },
+                },
+            },
+        },
+        &cli.Handler{
             Pattern: "[global] export [options] <id>",
             Description: "Export a google document",
             Callback: exportHandler,

@@ -48,7 +48,8 @@ func (self *Drive) upload(args UploadArgs) error {
         args.Name = ""
         return self.uploadDirectory(args)
     } else {
-        return self.uploadFile(args)
+        _, err := self.uploadFile(args)
+        return err
     }
 }
 
@@ -91,10 +92,10 @@ func (self *Drive) uploadDirectory(args UploadArgs) error {
     return nil
 }
 
-func (self *Drive) uploadFile(args UploadArgs) error {
+func (self *Drive) uploadFile(args UploadArgs) (*drive.File, error) {
     srcFile, srcFileInfo, err := openFile(args.Path)
     if err != nil {
-        return err
+        return nil, err
     }
 
     // Instantiate empty drive file
@@ -128,7 +129,7 @@ func (self *Drive) uploadFile(args UploadArgs) error {
 
     f, err := self.service.Files.Create(dstFile).Fields("id", "name", "size", "md5Checksum").Media(srcReader, chunkSize).Do()
     if err != nil {
-        return fmt.Errorf("Failed to upload file: %s", err)
+        return nil, fmt.Errorf("Failed to upload file: %s", err)
     }
 
     // Calculate average upload rate
@@ -136,7 +137,7 @@ func (self *Drive) uploadFile(args UploadArgs) error {
 
     fmt.Fprintf(args.Out, "[file] id: %s, md5: %s, name: %s\n", f.Id, f.Md5Checksum, f.Name)
     fmt.Fprintf(args.Out, "Uploaded '%s' at %s/s, total %s\n", f.Name, formatSize(rate, false), formatSize(f.Size, false))
-    return nil
+    return f, nil
 }
 
 type UploadStreamArgs struct {

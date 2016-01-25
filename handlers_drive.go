@@ -112,6 +112,18 @@ func infoHandler(ctx cli.Context) {
     checkErr(err)
 }
 
+func importHandler(ctx cli.Context) {
+    args := ctx.Args()
+    err := newDrive(args).Import(drive.ImportArgs{
+        Out: os.Stdout,
+        Path: args.String("path"),
+        Parents: args.StringSlice("parent"),
+        Share: args.Bool("share"),
+        Progress: progressWriter(args.Bool("noProgress")),
+    })
+    checkErr(err)
+}
+
 func exportHandler(ctx cli.Context) {
     args := ctx.Args()
     err := newDrive(args).Export(drive.ExportArgs{
