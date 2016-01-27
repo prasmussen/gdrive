@@ -17,7 +17,7 @@ type ListFilesArgs struct {
 }
 
 func (self *Drive) List(args ListFilesArgs) (err error) {
-    fileList, err := self.service.Files.List().PageSize(args.MaxFiles).Q(args.Query).Fields("nextPageToken", "files(id,name,size,createdTime)").Do()
+    fileList, err := self.service.Files.List().PageSize(args.MaxFiles).Q(args.Query).Fields("files(id,name,md5Checksum,mimeType,size,createdTime)").Do()
     if err != nil {
         return fmt.Errorf("Failed listing files: %s", err)
     }
@@ -46,17 +46,27 @@ func PrintFileList(args PrintFileListArgs) {
     w.Init(args.Out, 0, 0, 3, ' ', 0)
 
     if !args.SkipHeader {
-        fmt.Fprintln(w, "Id\tName\tSize\tCreated")
+        fmt.Fprintln(w, "Id\tName\tType\tSize\tCreated")
     }
 
     for _, f := range args.Files {
-        fmt.Fprintf(w, "%s\t%s\t%s\t%s\n",
+        fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\n",
             f.Id,
             truncateString(f.Name, args.NameWidth),
+            filetype(f),
             formatSize(f.Size, args.SizeInBytes),
             formatDatetime(f.CreatedTime),
         )
     }
 
     w.Flush()
+}
+
+func filetype(f *drive.File) string {
+    if isDir(f) {
+        return "dir"
+    } else if isBinary(f) {
+        return "bin"
+    }
+    return "doc"
 }
