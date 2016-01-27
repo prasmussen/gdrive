@@ -12,12 +12,13 @@ type ListFilesArgs struct {
     MaxFiles int64
     NameWidth int64
     Query string
+    SortOrder string
     SkipHeader bool
     SizeInBytes bool
 }
 
 func (self *Drive) List(args ListFilesArgs) (err error) {
-    fileList, err := self.service.Files.List().PageSize(args.MaxFiles).Q(args.Query).Fields("files(id,name,md5Checksum,mimeType,size,createdTime)").Do()
+    fileList, err := self.service.Files.List().PageSize(args.MaxFiles).Q(args.Query).OrderBy(args.SortOrder).Fields("files(id,name,md5Checksum,mimeType,size,createdTime)").Do()
     if err != nil {
         return fmt.Errorf("Failed listing files: %s", err)
     }

@@ -22,6 +22,7 @@ func listHandler(ctx cli.Context) {
         MaxFiles: args.Int64("maxFiles"),
         NameWidth: args.Int64("nameWidth"),
         Query: args.String("query"),
+        SortOrder: args.String("sortOrder"),
         SkipHeader: args.Bool("skipHeader"),
         SizeInBytes: args.Bool("sizeInBytes"),
     })

@@ -48,6 +48,11 @@ func main() {
                         Description: fmt.Sprintf(`Default query: "%s". See https://developers.google.com/drive/search-parameters`, DefaultQuery),
                         DefaultValue: DefaultQuery,
                     },
+                    cli.StringFlag{
+                        Name: "sortOrder",
+                        Patterns: []string{"--order"},
+                        Description: "Sort order. See https://godoc.org/google.golang.org/api/drive/v3#FilesListCall.OrderBy",
+                    },
                     cli.IntFlag{
                         Name: "nameWidth",
                         Patterns: []string{"--name-width"},
