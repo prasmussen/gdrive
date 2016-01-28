@@ -29,6 +29,19 @@ func listHandler(ctx cli.Context) {
     checkErr(err)
 }
 
+func listChangesHandler(ctx cli.Context) {
+    args := ctx.Args()
+    err := newDrive(args).ListChanges(drive.ListChangesArgs{
+        Out: os.Stdout,
+        PageToken: args.String("pageToken"),
+        MaxChanges: args.Int64("maxChanges"),
+        Now: args.Bool("now"),
+        NameWidth: args.Int64("nameWidth"),
+        SkipHeader: args.Bool("skipHeader"),
+    })
+    checkErr(err)
+}
+
 func downloadHandler(ctx cli.Context) {
     args := ctx.Args()
     err := newDrive(args).Download(drive.DownloadArgs{

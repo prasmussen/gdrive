@@ -10,6 +10,7 @@ const Name = "gdrive"
 const Version = "2.0.0"
 
 const DefaultMaxFiles = 30
+const DefaultMaxChanges = 100
 const DefaultNameWidth = 40
 const DefaultUploadChunkSize = 8 * 1024 * 1024
 const DefaultQuery = "trashed = false and 'me' in owners"
@@ -69,6 +70,46 @@ func main() {
                         Name: "sizeInBytes",
                         Patterns: []string{"--bytes"},
                         Description: "Size in bytes",
+                        OmitValue: true,
+                    },
+                },
+            },
+        },
+        &cli.Handler{
+            Pattern: "[global] list changes [options]",
+            Description: "List file changes",
+            Callback: listChangesHandler,
+            Flags: cli.Flags{
+                "global": globalFlags,
+                "options": []cli.Flag{
+                    cli.IntFlag{
+                        Name: "maxChanges",
+                        Patterns: []string{"-m", "--max"},
+                        Description: fmt.Sprintf("Max changes to list, default: %d", DefaultMaxChanges),
+                        DefaultValue: DefaultMaxChanges,
+                    },
+                    cli.StringFlag{
+                        Name: "pageToken",
+                        Patterns: []string{"--since"},
+                        Description: fmt.Sprintf("Page token to start listing changes from"),
+                        DefaultValue: "1",
+                    },
+                    cli.BoolFlag{
+                        Name: "now",
+                        Patterns: []string{"--now"},
+                        Description: fmt.Sprintf("Get latest page token"),
+                        OmitValue: true,
+                    },
+                    cli.IntFlag{
+                        Name: "nameWidth",
+                        Patterns: []string{"--name-width"},
+                        Description: fmt.Sprintf("Width of name column, default: %d, minimum: 9, use 0 for full width", DefaultNameWidth),
+                        DefaultValue: DefaultNameWidth,
+                    },
+                    cli.BoolFlag{
+                        Name: "skipHeader",
+                        Patterns: []string{"--no-header"},
+                        Description: "Dont print the header",
                         OmitValue: true,
                     },
                 },
