@@ -9,6 +9,8 @@ import (
     "unicode/utf8"
     "math"
     "time"
+    "crypto/md5"
+    "io"
 )
 
 type kv struct {
@@ -133,4 +135,25 @@ func mkdir(path string) error {
 
 func intMax() int64 {
     return 1 << (strconv.IntSize - 1) - 1
+}
+
+func md5sum(path string) string {
+    h := md5.New()
+    f, err := os.Open(path)
+    if err != nil {
+        return ""
+    }
+    defer f.Close()
+
+    io.Copy(h, f)
+    return fmt.Sprintf("%x", h.Sum(nil))
+}
+
+func pathLength(path string) int {
+    return strings.Count(path, string(os.PathSeparator))
+}
+
+func parentFilePath(path string) string {
+    dir, _ := filepath.Split(path)
+    return filepath.Dir(dir)
 }

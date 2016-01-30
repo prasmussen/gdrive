@@ -99,6 +99,19 @@ func uploadStdinHandler(ctx cli.Context) {
     checkErr(err)
 }
 
+func uploadSyncHandler(ctx cli.Context) {
+    args := ctx.Args()
+    err := newDrive(args).UploadSync(drive.UploadSyncArgs{
+        Out: os.Stdout,
+        Progress: progressWriter(args.Bool("noProgress")),
+        Path: args.String("path"),
+        Parent: args.String("parent"),
+        DeleteRemote: args.Bool("deleteRemote"),
+        ChunkSize: args.Int64("chunksize"),
+    })
+    checkErr(err)
+}
+
 func updateHandler(ctx cli.Context) {
     args := ctx.Args()
     err := newDrive(args).Update(drive.UpdateArgs{

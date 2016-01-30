@@ -292,6 +292,39 @@ func main() {
             },
         },
         &cli.Handler{
+            Pattern: "[global] upload sync [options] <path>",
+            Description: "Sync local directory to drive",
+            Callback: uploadSyncHandler,
+            Flags: cli.Flags{
+                "global": globalFlags,
+                "options": []cli.Flag{
+                    cli.StringFlag{
+                        Name: "parent",
+                        Patterns: []string{"-p", "--parent"},
+                        Description: "Parent id",
+                    },
+                    cli.BoolFlag{
+                        Name: "noProgress",
+                        Patterns: []string{"--no-progress"},
+                        Description: "Hide progress",
+                        OmitValue: true,
+                    },
+                    cli.BoolFlag{
+                        Name: "deleteRemote",
+                        Patterns: []string{"--delete-remote"},
+                        Description: "Delete extraneous files from drive",
+                        OmitValue: true,
+                    },
+                    cli.IntFlag{
+                        Name: "chunksize",
+                        Patterns: []string{"--chunksize"},
+                        Description: fmt.Sprintf("Set chunk size in bytes, default: %d", DefaultUploadChunkSize),
+                        DefaultValue: DefaultUploadChunkSize,
+                    },
+                },
+            },
+        },
+        &cli.Handler{
             Pattern: "[global] update [options] <id> <path>",
             Description: "Update file, this creates a new revision of the file",
             Callback: updateHandler,
