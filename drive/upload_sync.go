@@ -36,23 +36,10 @@ func (self *Drive) UploadSync(args UploadSyncArgs) error {
         fmt.Fprintln(args.Out, "Found existing root directory, let's see whats changed")
     }
 
-    // TODO: do concurrently
-    fmt.Println("preparing local")
-    localFiles, err := prepareLocalFiles(args.Path)
+    // Collect information about local and remote files
+    files, err := self.prepareSyncFiles(args.Path, rootDir)
     if err != nil {
         return err
-    }
-
-    fmt.Println("preparing remote")
-    remoteFiles, err := self.prepareRemoteFiles(rootDir)
-    if err != nil {
-        return err
-    }
-
-    files := &syncFiles{
-        root: &remoteFile{file: rootDir},
-        local: localFiles,
-        remote: remoteFiles,
     }
 
     // Create missing directories
@@ -74,6 +61,37 @@ func (self *Drive) UploadSync(args UploadSyncArgs) error {
     }
 
     return nil
+}
+
+func (self *Drive) prepareSyncFiles(localPath string, root *drive.File) (*syncFiles, error) {
+    localCh := make(chan struct{files []*localFile; err error})
+    remoteCh := make(chan struct{files []*remoteFile; err error})
+
+    go func() {
+        files, err := prepareLocalFiles(localPath)
+        localCh <- struct{files []*localFile; err error}{files, err}
+    }()
+
+    go func() {
+        files, err := self.prepareRemoteFiles(root)
+        remoteCh <- struct{files []*remoteFile; err error}{files, err}
+    }()
+
+    local := <-localCh
+    if local.err != nil {
+        return nil, local.err
+    }
+
+    remote := <-remoteCh
+    if remote.err != nil {
+        return nil, remote.err
+    }
+
+    return &syncFiles{
+        root: &remoteFile{file: root},
+        local: local.files,
+        remote: remote.files,
+    }, nil
 }
 
 func (self *Drive) getOrCreateSyncRootDir(args UploadSyncArgs) (*drive.File, bool, error) {
