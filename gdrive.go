@@ -310,8 +310,8 @@ func main() {
                         OmitValue: true,
                     },
                     cli.BoolFlag{
-                        Name: "deleteRemote",
-                        Patterns: []string{"--delete-remote"},
+                        Name: "deleteExtraneous",
+                        Patterns: []string{"--delete-extraneous"},
                         Description: "Delete extraneous files from drive",
                         OmitValue: true,
                     },

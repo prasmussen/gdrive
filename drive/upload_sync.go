@@ -17,7 +17,7 @@ type UploadSyncArgs struct {
     Progress io.Writer
     Path string
     Parent string
-    DeleteRemote bool
+    DeleteExtraneous bool
     ChunkSize int64
 }
 
@@ -65,6 +65,13 @@ func (self *Drive) UploadSync(args UploadSyncArgs) error {
         return err
     }
 
+    // Delete extraneous files on drive
+    if args.DeleteExtraneous {
+        err = self.deleteExtraneousRemoteFiles(files, args)
+        if err != nil {
+            return err
+        }
+    }
     fmt.Fprintf(args.Out, "Sync finished in %s\n", time.Since(started))
 
     return nil
@@ -237,6 +244,25 @@ func (self *Drive) updateChangedFiles(files *syncFiles, args UploadSyncArgs) err
     return nil
 }
 
+func (self *Drive) deleteExtraneousRemoteFiles(files *syncFiles, args UploadSyncArgs) error {
+    extraneousFiles := files.filterExtraneousRemoteFiles()
+    extraneousCount := len(extraneousFiles)
+
+    if extraneousCount > 0 {
+        fmt.Fprintf(args.Out, "\n%d extraneous file(s) on drive\n", extraneousCount)
+    }
+
+    for i, rf := range extraneousFiles {
+        fmt.Fprintf(args.Out, "[%04d/%04d] Deleting %s\n", i + 1, extraneousCount, filepath.Join(files.root.file.Name, rf.relPath))
+        err := self.deleteRemoteFile(rf, args)
+        if err != nil {
+            return err
+        }
+    }
+
+    return nil
+}
+
 func (self *Drive) uploadMissingFile(rootId string, lf *localFile, args UploadSyncArgs) error {
     srcFile, err := os.Open(lf.absPath)
     if err != nil {
@@ -282,6 +308,15 @@ func (self *Drive) updateChangedFile(cf *changedFile, args UploadSyncArgs) error
     _, err = self.service.Files.Update(cf.remote.file.Id, dstFile).Media(srcReader, chunkSize).Do()
     if err != nil {
         return fmt.Errorf("Failed to update file: %s", err)
+    }
+
+    return nil
+}
+
+func (self *Drive) deleteRemoteFile(rf *remoteFile, args UploadSyncArgs) error {
+    err := self.service.Files.Delete(rf.file.Id).Do()
+    if err != nil {
+        return fmt.Errorf("Failed to delete file: %s", err)
     }
 
     return nil
@@ -488,8 +523,25 @@ func (self *syncFiles) filterChangedLocalFiles() []*changedFile {
     return files
 }
 
+func (self *syncFiles) filterExtraneousRemoteFiles() []*remoteFile {
+    var files []*remoteFile
+
+    for _, rf := range self.remote {
+        if !self.existsLocal(rf) {
+            files = append(files, rf)
+        }
+    }
+
+    return files
+}
+
 func (self *syncFiles) existsRemote(lf *localFile) bool {
     _, found := self.findRemoteByPath(lf.relPath)
+    return found
+}
+
+func (self *syncFiles) existsLocal(rf *remoteFile) bool {
+    _, found := self.findLocalByPath(rf.relPath)
     return found
 }
 
@@ -501,6 +553,16 @@ func (self *syncFiles) findRemoteByPath(relPath string) (*remoteFile, bool) {
     for _, rf := range self.remote {
         if relPath == rf.relPath {
             return rf, true
+        }
+    }
+
+    return nil, false
+}
+
+func (self *syncFiles) findLocalByPath(relPath string) (*localFile, bool) {
+    for _, lf := range self.local {
+        if relPath == lf.relPath {
+            return lf, true
         }
     }
 
