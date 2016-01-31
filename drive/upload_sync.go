@@ -4,6 +4,7 @@ import (
     "fmt"
     "io"
     "os"
+    "time"
     "sort"
     "path/filepath"
     "github.com/gyuho/goraph/graph"
@@ -25,25 +26,29 @@ func (self *Drive) UploadSync(args UploadSyncArgs) error {
         return fmt.Errorf("Chunk size is to big, max chunk size for this computer is %d", intMax() - 1)
     }
 
-    rootDir, created, err := self.getOrCreateSyncRootDir(args)
+    fmt.Fprintln(args.Out, "Starting sync...")
+    started := time.Now()
+
+    // Create root directory if it does not exist
+    rootDir, createdRoot, err := self.getOrCreateSyncRootDir(args)
     if err != nil {
         return err
     }
 
-    if created {
-        fmt.Fprintln(args.Out, "Did not find any existing files, starting from scratch")
-    } else {
-        fmt.Fprintln(args.Out, "Found existing root directory, let's see whats changed")
+    if createdRoot {
+        fmt.Fprintln(args.Out, "No existing files found on drive, starting from scratch")
     }
 
-    // Collect information about local and remote files
+    fmt.Fprintln(args.Out, "Collecting local and remote file information...")
     files, err := self.prepareSyncFiles(args.Path, rootDir)
     if err != nil {
         return err
     }
 
+    fmt.Fprintf(args.Out, "Found %d local file(s) and %d remote file(s)\n", len(files.local), len(files.remote))
+
     // Create missing directories
-    files, err = self.createMissingRemoteDirs(files)
+    files, err = self.createMissingRemoteDirs(files, args)
     if err != nil {
         return err
     }
@@ -59,6 +64,8 @@ func (self *Drive) UploadSync(args UploadSyncArgs) error {
     if err != nil {
         return err
     }
+
+    fmt.Fprintf(args.Out, "Sync finished in %s\n", time.Since(started))
 
     return nil
 }
@@ -141,13 +148,18 @@ func (self *Drive) getOrCreateSyncRootDir(args UploadSyncArgs) (*drive.File, boo
     return f, true, nil
 }
 
-func (self *Drive) createMissingRemoteDirs(files *syncFiles) (*syncFiles, error) {
+func (self *Drive) createMissingRemoteDirs(files *syncFiles, args UploadSyncArgs) (*syncFiles, error) {
     missingDirs := files.filterMissingRemoteDirs()
+    missingCount := len(missingDirs)
+
+    if missingCount > 0 {
+        fmt.Fprintf(args.Out, "\n%d directories missing on drive\n", missingCount)
+    }
 
     // Sort directories so that the dirs with the shortest path comes first
     sort.Sort(byPathLength(missingDirs))
 
-    for _, lf := range missingDirs {
+    for i, lf := range missingDirs {
         parentPath := parentFilePath(lf.relPath)
         parent, ok := files.findRemoteByPath(parentPath)
         if !ok {
@@ -161,7 +173,7 @@ func (self *Drive) createMissingRemoteDirs(files *syncFiles) (*syncFiles, error)
             AppProperties: map[string]string{"syncRootId": files.root.file.Id},
         }
 
-        fmt.Printf("Creating directory: %s\n", filepath.Join(files.root.file.Name, lf.relPath))
+        fmt.Fprintf(args.Out, "[%04d/%04d] Creating directory: %s\n", i + 1, missingCount, filepath.Join(files.root.file.Name, lf.relPath))
 
         f, err := self.service.Files.Create(dstFile).Do()
         if err != nil {
@@ -178,7 +190,14 @@ func (self *Drive) createMissingRemoteDirs(files *syncFiles) (*syncFiles, error)
 }
 
 func (self *Drive) uploadMissingFiles(files *syncFiles, args UploadSyncArgs) error {
-    for _, lf := range files.filterMissingRemoteFiles() {
+    missingFiles := files.filterMissingRemoteFiles()
+    missingCount := len(missingFiles)
+
+    if missingCount > 0 {
+        fmt.Fprintf(args.Out, "\n%d file(s) missing on drive\n", missingCount)
+    }
+
+    for i, lf := range missingFiles {
         parentPath := parentFilePath(lf.relPath)
         parent, ok := files.findRemoteByPath(parentPath)
         if !ok {
@@ -189,7 +208,7 @@ func (self *Drive) uploadMissingFiles(files *syncFiles, args UploadSyncArgs) err
         newArgs.Path = lf.absPath
         newArgs.Parent = parent.file.Id
 
-        fmt.Printf("%s -> %s\n", lf.absPath, filepath.Join(files.root.file.Name, lf.relPath))
+        fmt.Fprintf(args.Out, "[%04d/%04d] Uploading %s -> %s\n", i + 1, missingCount, lf.absPath, filepath.Join(files.root.file.Name, lf.relPath))
         err := self.uploadMissingFile(files.root.file.Id, lf, newArgs)
         if err != nil {
             return err
@@ -200,10 +219,15 @@ func (self *Drive) uploadMissingFiles(files *syncFiles, args UploadSyncArgs) err
 }
 
 func (self *Drive) updateChangedFiles(files *syncFiles, args UploadSyncArgs) error {
-    for _, cf := range files.filterChangedLocalFiles() {
-        fmt.Println(cf.local.absPath)
+    changedFiles := files.filterChangedLocalFiles()
+    changedCount := len(changedFiles)
 
-        fmt.Printf("Updating %s -> %s\n", cf.local.absPath, filepath.Join(files.root.file.Name, cf.local.relPath))
+    if changedCount > 0 {
+        fmt.Fprintf(args.Out, "\n%d local file(s) has changed\n", changedCount)
+    }
+
+    for i, cf := range changedFiles {
+        fmt.Fprintf(args.Out, "[%04d/%04d] Updating %s -> %s\n", i + 1, changedCount, cf.local.absPath, filepath.Join(files.root.file.Name, cf.local.relPath))
         err := self.updateChangedFile(cf, args)
         if err != nil {
             return err
