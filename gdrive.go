@@ -292,17 +292,12 @@ func main() {
             },
         },
         &cli.Handler{
-            Pattern: "[global] upload sync [options] <path>",
+            Pattern: "[global] upload sync [options] <path> <id>",
             Description: "Sync local directory to drive",
             Callback: uploadSyncHandler,
             Flags: cli.Flags{
                 "global": globalFlags,
                 "options": []cli.Flag{
-                    cli.StringFlag{
-                        Name: "parent",
-                        Patterns: []string{"-p", "--parent"},
-                        Description: "Parent id",
-                    },
                     cli.BoolFlag{
                         Name: "noProgress",
                         Patterns: []string{"--no-progress"},

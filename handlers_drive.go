@@ -105,7 +105,7 @@ func uploadSyncHandler(ctx cli.Context) {
         Out: os.Stdout,
         Progress: progressWriter(args.Bool("noProgress")),
         Path: args.String("path"),
-        Parent: args.String("parent"),
+        RootId: args.String("id"),
         DeleteExtraneous: args.Bool("deleteExtraneous"),
         ChunkSize: args.Int64("chunksize"),
     })

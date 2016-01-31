@@ -16,7 +16,7 @@ type UploadSyncArgs struct {
     Out io.Writer
     Progress io.Writer
     Path string
-    Parent string
+    RootId string
     DeleteExtraneous bool
     ChunkSize int64
 }
@@ -30,13 +30,9 @@ func (self *Drive) UploadSync(args UploadSyncArgs) error {
     started := time.Now()
 
     // Create root directory if it does not exist
-    rootDir, createdRoot, err := self.getOrCreateSyncRootDir(args)
+    rootDir, err := self.prepareSyncRoot(args)
     if err != nil {
         return err
-    }
-
-    if createdRoot {
-        fmt.Fprintln(args.Out, "No existing files found on drive, starting from scratch")
     }
 
     fmt.Fprintln(args.Out, "Collecting local and remote file information...")
@@ -108,51 +104,46 @@ func (self *Drive) prepareSyncFiles(localPath string, root *drive.File) (*syncFi
     }, nil
 }
 
-func (self *Drive) getOrCreateSyncRootDir(args UploadSyncArgs) (*drive.File, bool, error) {
-    // Root dir name
-    name := filepath.Base(args.Path)
-
-    // Build root dir query
-    query := fmt.Sprintf("name = '%s' and appProperties has {key='isSyncRoot' and value='true'}", name)
-    if args.Parent != "" {
-        query += fmt.Sprintf(" and '%s' in parents", args.Parent)
-    }
-
-    // Find root dir
-    fileList, err := self.service.Files.List().Q(query).Fields("files(id,name,mimeType)").Do()
+func (self *Drive) prepareSyncRoot(args UploadSyncArgs) (*drive.File, error) {
+    fields := []googleapi.Field{"id", "name", "mimeType", "appProperties"}
+    f, err := self.service.Files.Get(args.RootId).Fields(fields...).Do()
     if err != nil {
-        return nil, false, fmt.Errorf("Failed listing files: %s", err)
+        return nil, fmt.Errorf("Failed to find root dir: %s", err)
     }
 
-    // More than one root dir found
-    if len(fileList.Files) > 1 {
-        return nil, false, fmt.Errorf("More than one root directories found, aborting...")
+    // Ensure file is a directory
+    if !isDir(f) {
+        return nil, fmt.Errorf("Provided root id is not a directory")
     }
 
-    // Root dir found, return
-    if len(fileList.Files) == 1 {
-        return fileList.Files[0], false, nil
+    // Return directory if syncRoot property is already set
+    if _, ok := f.AppProperties["isSyncRoot"]; ok {
+        return f, nil
     }
 
-    // Root dir not found, create new
+    // This is the first time this directory have been used for sync
+    // Check if the directory is empty
+    isEmpty, err := self.dirIsEmpty(f.Id)
+    if err != nil {
+        return nil, fmt.Errorf("Failed to check if root dir is empty: %s", err)
+    }
+
+    // Ensure that the directory is empty
+    if !isEmpty {
+        return nil, fmt.Errorf("Root directoy is not empty, the initial sync requires an empty directory")
+    }
+
+    // Update directory with syncRoot property
     dstFile := &drive.File{
-        Name: name,
-        MimeType: DirectoryMimeType,
         AppProperties: map[string]string{"isSyncRoot": "true"},
     }
 
-    // Add parent if provided
-    if args.Parent != "" {
-        dstFile.Parents = []string{args.Parent}
-    }
-
-    // Create directory
-    f, err := self.service.Files.Create(dstFile).Do()
+    f, err = self.service.Files.Update(f.Id, dstFile).Fields(fields...).Do()
     if err != nil {
-        return nil, false, fmt.Errorf("Failed to create directory: %s", err)
+        return nil, fmt.Errorf("Failed to update root directory: %s", err)
     }
 
-    return f, true, nil
+    return f, nil
 }
 
 func (self *Drive) createMissingRemoteDirs(files *syncFiles, args UploadSyncArgs) (*syncFiles, error) {
@@ -177,7 +168,7 @@ func (self *Drive) createMissingRemoteDirs(files *syncFiles, args UploadSyncArgs
             Name: lf.info.Name(),
             MimeType: DirectoryMimeType,
             Parents: []string{parent.file.Id},
-            AppProperties: map[string]string{"syncRootId": files.root.file.Id},
+            AppProperties: map[string]string{"syncRootId": args.RootId},
         }
 
         fmt.Fprintf(args.Out, "[%04d/%04d] Creating directory: %s\n", i + 1, missingCount, filepath.Join(files.root.file.Name, lf.relPath))
@@ -211,12 +202,8 @@ func (self *Drive) uploadMissingFiles(files *syncFiles, args UploadSyncArgs) err
             return fmt.Errorf("Could not find remote directory with path '%s', aborting...", parentPath)
         }
 
-        newArgs := args
-        newArgs.Path = lf.absPath
-        newArgs.Parent = parent.file.Id
-
         fmt.Fprintf(args.Out, "[%04d/%04d] Uploading %s -> %s\n", i + 1, missingCount, lf.absPath, filepath.Join(files.root.file.Name, lf.relPath))
-        err := self.uploadMissingFile(files.root.file.Id, lf, newArgs)
+        err := self.uploadMissingFile(parent.file.Id, lf, args)
         if err != nil {
             return err
         }
@@ -263,7 +250,7 @@ func (self *Drive) deleteExtraneousRemoteFiles(files *syncFiles, args UploadSync
     return nil
 }
 
-func (self *Drive) uploadMissingFile(rootId string, lf *localFile, args UploadSyncArgs) error {
+func (self *Drive) uploadMissingFile(parentId string, lf *localFile, args UploadSyncArgs) error {
     srcFile, err := os.Open(lf.absPath)
     if err != nil {
         return fmt.Errorf("Failed to open file: %s", err)
@@ -272,8 +259,8 @@ func (self *Drive) uploadMissingFile(rootId string, lf *localFile, args UploadSy
     // Instantiate drive file
     dstFile := &drive.File{
         Name: lf.info.Name(),
-        Parents: []string{args.Parent},
-        AppProperties: map[string]string{"syncRootId": rootId},
+        Parents: []string{parentId},
+        AppProperties: map[string]string{"syncRootId": args.RootId},
     }
 
     // Chunk size option
@@ -352,6 +339,16 @@ func (self *Drive) prepareRemoteFiles(rootDir *drive.File) ([]*remoteFile, error
     }
 
     return remoteFiles, nil
+}
+
+func (self *Drive) dirIsEmpty(id string) (bool, error) {
+    query := fmt.Sprintf("'%s' in parents", id)
+    fileList, err := self.service.Files.List().Q(query).Do()
+    if err != nil {
+        return false, fmt.Errorf("Empty dir check failed: ", err)
+    }
+
+    return len(fileList.Files) == 0, nil
 }
 
 func checkFiles(files []*drive.File) error {
