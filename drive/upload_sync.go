@@ -239,6 +239,9 @@ func (self *Drive) deleteExtraneousRemoteFiles(files *syncFiles, args UploadSync
         fmt.Fprintf(args.Out, "\n%d extraneous file(s) on drive\n", extraneousCount)
     }
 
+    // Sort files so that the files with the longest path comes first
+    sort.Sort(sort.Reverse(byRemotePathLength(extraneousFiles)))
+
     for i, rf := range extraneousFiles {
         fmt.Fprintf(args.Out, "[%04d/%04d] Deleting %s\n", i + 1, extraneousCount, filepath.Join(files.root.file.Name, rf.relPath))
         err := self.deleteRemoteFile(rf, args)
