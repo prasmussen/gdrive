@@ -129,7 +129,7 @@ func (self *Drive) createMissingRemoteDirs(files *syncFiles, args UploadSyncArgs
         parentPath := parentFilePath(lf.relPath)
         parent, ok := files.findRemoteByPath(parentPath)
         if !ok {
-            return nil, fmt.Errorf("Could not find remote directory with path '%s', aborting...", parentPath)
+            return nil, fmt.Errorf("Could not find remote directory with path '%s'", parentPath)
         }
 
         dstFile := &drive.File{
@@ -167,7 +167,7 @@ func (self *Drive) uploadMissingFiles(files *syncFiles, args UploadSyncArgs) err
         parentPath := parentFilePath(lf.relPath)
         parent, ok := files.findRemoteByPath(parentPath)
         if !ok {
-            return fmt.Errorf("Could not find remote directory with path '%s', aborting...", parentPath)
+            return fmt.Errorf("Could not find remote directory with path '%s'", parentPath)
         }
 
         fmt.Fprintf(args.Out, "[%04d/%04d] Uploading %s -> %s\n", i + 1, missingCount, lf.absPath, filepath.Join(files.root.file.Name, lf.relPath))

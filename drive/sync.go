@@ -100,7 +100,7 @@ func (self *Drive) prepareRemoteFiles(rootDir *drive.File) ([]*remoteFile, error
     for _, f := range fileList.Files {
         relPath, ok := relPaths[f.Id]
         if !ok {
-            return nil, fmt.Errorf("File %s does not have a valid parent, aborting...", f.Id)
+            return nil, fmt.Errorf("File %s does not have a valid parent", f.Id)
         }
         remoteFiles = append(remoteFiles, &remoteFile{
             relPath: relPath,
@@ -153,13 +153,13 @@ func checkFiles(files []*drive.File) error {
     for _, f := range files {
         // Ensure all files have exactly one parent
         if len(f.Parents) != 1 {
-            return fmt.Errorf("File %s does not have exacly one parent, aborting...", f.Id)
+            return fmt.Errorf("File %s does not have exacly one parent", f.Id)
         }
 
         // Ensure that there are no duplicate files
         uniqKey := f.Name + f.Parents[0]
         if dupeId, isDupe := uniq[uniqKey]; isDupe {
-            return fmt.Errorf("Found name collision between %s and %s, aborting", f.Id, dupeId)
+            return fmt.Errorf("Found name collision between %s and %s", f.Id, dupeId)
         }
         uniq[uniqKey] = f.Id
     }
