@@ -481,12 +481,36 @@ func (self *syncFiles) filterMissingRemoteDirs() []*localFile {
     return files
 }
 
+func (self *syncFiles) filterMissingLocalDirs() []*remoteFile {
+    var files []*remoteFile
+
+    for _, rf := range self.remote {
+        if isDir(rf.file) && !self.existsLocal(rf) {
+            files = append(files, rf)
+        }
+    }
+
+    return files
+}
+
 func (self *syncFiles) filterMissingRemoteFiles() []*localFile {
     var files []*localFile
 
     for _, f := range self.local {
         if !f.info.IsDir() && !self.existsRemote(f) {
             files = append(files, f)
+        }
+    }
+
+    return files
+}
+
+func (self *syncFiles) filterMissingLocalFiles() []*remoteFile {
+    var files []*remoteFile
+
+    for _, rf := range self.remote {
+        if !isDir(rf.file) && !self.existsLocal(rf) {
+            files = append(files, rf)
         }
     }
 
@@ -520,12 +544,51 @@ func (self *syncFiles) filterChangedLocalFiles() []*changedFile {
     return files
 }
 
+func (self *syncFiles) filterChangedRemoteFiles() []*changedFile {
+    var files []*changedFile
+
+    for _, rf := range self.remote {
+        // Skip directories
+        if isDir(rf.file) {
+            continue
+        }
+
+        // Skip local files that don't exist
+        lf, found := self.findLocalByPath(rf.relPath)
+        if !found {
+            continue
+        }
+
+        // Add files where remote md5 sum does not match local
+        if rf.file.Md5Checksum != md5sum(lf.absPath) {
+            files = append(files, &changedFile{
+                local: lf,
+                remote: rf,
+            })
+        }
+    }
+
+    return files
+}
+
 func (self *syncFiles) filterExtraneousRemoteFiles() []*remoteFile {
     var files []*remoteFile
 
     for _, rf := range self.remote {
         if !self.existsLocal(rf) {
             files = append(files, rf)
+        }
+    }
+
+    return files
+}
+
+func (self *syncFiles) filterExtraneousLocalFiles() []*localFile {
+    var files []*localFile
+
+    for _, lf := range self.local {
+        if !self.existsRemote(lf) {
+            files = append(files, lf)
         }
     }
 
@@ -577,5 +640,19 @@ func (self byPathLength) Swap(i, j int) {
 }
 
 func (self byPathLength) Less(i, j int) bool {
+    return pathLength(self[i].relPath) < pathLength(self[j].relPath)
+}
+
+type byRemotePathLength []*remoteFile
+
+func (self byRemotePathLength) Len() int {
+    return len(self)
+}
+
+func (self byRemotePathLength) Swap(i, j int) {
+    self[i], self[j] = self[j], self[i]
+}
+
+func (self byRemotePathLength) Less(i, j int) bool {
     return pathLength(self[i].relPath) < pathLength(self[j].relPath)
 }

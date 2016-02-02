@@ -183,6 +183,28 @@ func main() {
             },
         },
         &cli.Handler{
+            Pattern: "[global] download sync [options] <id> <path>",
+            Description: "Sync drive directory to local directory",
+            Callback: downloadSyncHandler,
+            Flags: cli.Flags{
+                "global": globalFlags,
+                "options": []cli.Flag{
+                    cli.BoolFlag{
+                        Name: "noProgress",
+                        Patterns: []string{"--no-progress"},
+                        Description: "Hide progress",
+                        OmitValue: true,
+                    },
+                    cli.BoolFlag{
+                        Name: "deleteExtraneous",
+                        Patterns: []string{"--delete-extraneous"},
+                        Description: "Delete extraneous local files",
+                        OmitValue: true,
+                    },
+                },
+            },
+        },
+        &cli.Handler{
             Pattern: "[global] download revision [options] <fileId> <revisionId>",
             Description: "Download revision",
             Callback: downloadRevisionHandler,

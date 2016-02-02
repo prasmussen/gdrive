@@ -56,6 +56,18 @@ func downloadHandler(ctx cli.Context) {
     checkErr(err)
 }
 
+func downloadSyncHandler(ctx cli.Context) {
+    args := ctx.Args()
+    err := newDrive(args).DownloadSync(drive.DownloadSyncArgs{
+        Out: os.Stdout,
+        Progress: progressWriter(args.Bool("noProgress")),
+        Path: args.String("path"),
+        RootId: args.String("id"),
+        DeleteExtraneous: args.Bool("deleteExtraneous"),
+    })
+    checkErr(err)
+}
+
 func downloadRevisionHandler(ctx cli.Context) {
     args := ctx.Args()
     err := newDrive(args).DownloadRevision(drive.DownloadRevisionArgs{
