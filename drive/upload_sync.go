@@ -227,6 +227,9 @@ func (self *Drive) uploadMissingFile(parentId string, lf *localFile, args Upload
         return fmt.Errorf("Failed to open file: %s", err)
     }
 
+    // Close file on function exit
+    defer srcFile.Close()
+
     // Instantiate drive file
     dstFile := &drive.File{
         Name: lf.info.Name(),
@@ -253,6 +256,9 @@ func (self *Drive) updateChangedFile(cf *changedFile, args UploadSyncArgs) error
     if err != nil {
         return fmt.Errorf("Failed to open file: %s", err)
     }
+
+    // Close file on function exit
+    defer srcFile.Close()
 
     // Instantiate drive file
     dstFile := &drive.File{}

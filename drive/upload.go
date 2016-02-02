@@ -59,6 +59,9 @@ func (self *Drive) uploadDirectory(args UploadArgs) error {
         return err
     }
 
+    // Close file on function exit
+    defer srcFile.Close()
+
     // Make directory on drive
     f, err := self.mkdir(MkdirArgs{
         Out: args.Out,
@@ -97,6 +100,9 @@ func (self *Drive) uploadFile(args UploadArgs) (*drive.File, error) {
     if err != nil {
         return nil, err
     }
+
+    // Close file on function exit
+    defer srcFile.Close()
 
     // Instantiate empty drive file
     dstFile := &drive.File{}
