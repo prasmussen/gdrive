@@ -192,9 +192,9 @@ type syncFiles struct {
 func (self *syncFiles) filterMissingRemoteDirs() []*localFile {
     var files []*localFile
 
-    for _, f := range self.local {
-        if f.info.IsDir() && !self.existsRemote(f) {
-            files = append(files, f)
+    for _, lf := range self.local {
+        if lf.info.IsDir() && !self.existsRemote(lf) {
+            files = append(files, lf)
         }
     }
 
@@ -216,9 +216,9 @@ func (self *syncFiles) filterMissingLocalDirs() []*remoteFile {
 func (self *syncFiles) filterMissingRemoteFiles() []*localFile {
     var files []*localFile
 
-    for _, f := range self.local {
-        if !f.info.IsDir() && !self.existsRemote(f) {
-            files = append(files, f)
+    for _, lf := range self.local {
+        if !lf.info.IsDir() && !self.existsRemote(lf) {
+            files = append(files, lf)
         }
     }
 
