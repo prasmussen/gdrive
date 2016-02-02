@@ -41,7 +41,7 @@ func (self *Drive) UploadSync(args UploadSyncArgs) error {
         return err
     }
 
-    fmt.Fprintf(args.Out, "Found %d local file(s) and %d remote file(s)\n", len(files.local), len(files.remote))
+    fmt.Fprintf(args.Out, "Found %d local files and %d remote files\n", len(files.local), len(files.remote))
 
     // Create missing directories
     files, err = self.createMissingRemoteDirs(files, args)
@@ -151,7 +151,7 @@ func (self *Drive) createMissingRemoteDirs(files *syncFiles, args UploadSyncArgs
     missingCount := len(missingDirs)
 
     if missingCount > 0 {
-        fmt.Fprintf(args.Out, "\n%d directories missing on drive\n", missingCount)
+        fmt.Fprintf(args.Out, "\n%d remote directories are missing\n", missingCount)
     }
 
     // Sort directories so that the dirs with the shortest path comes first
@@ -192,7 +192,7 @@ func (self *Drive) uploadMissingFiles(files *syncFiles, args UploadSyncArgs) err
     missingCount := len(missingFiles)
 
     if missingCount > 0 {
-        fmt.Fprintf(args.Out, "\n%d file(s) missing on drive\n", missingCount)
+        fmt.Fprintf(args.Out, "\n%d remote files are missing\n", missingCount)
     }
 
     for i, lf := range missingFiles {
@@ -217,7 +217,7 @@ func (self *Drive) updateChangedFiles(files *syncFiles, args UploadSyncArgs) err
     changedCount := len(changedFiles)
 
     if changedCount > 0 {
-        fmt.Fprintf(args.Out, "\n%d local file(s) has changed\n", changedCount)
+        fmt.Fprintf(args.Out, "\n%d local files has changed\n", changedCount)
     }
 
     for i, cf := range changedFiles {
@@ -236,7 +236,7 @@ func (self *Drive) deleteExtraneousRemoteFiles(files *syncFiles, args UploadSync
     extraneousCount := len(extraneousFiles)
 
     if extraneousCount > 0 {
-        fmt.Fprintf(args.Out, "\n%d extraneous file(s) on drive\n", extraneousCount)
+        fmt.Fprintf(args.Out, "\n%d remote files are extraneous\n", extraneousCount)
     }
 
     // Sort files so that the files with the longest path comes first

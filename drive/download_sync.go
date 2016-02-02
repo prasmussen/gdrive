@@ -35,7 +35,7 @@ func (self *Drive) DownloadSync(args DownloadSyncArgs) error {
         return err
     }
 
-    fmt.Fprintf(args.Out, "Found %d local file(s) and %d remote file(s)\n", len(files.local), len(files.remote))
+    fmt.Fprintf(args.Out, "Found %d local files and %d remote files\n", len(files.local), len(files.remote))
 
     // Create missing directories
     files, err = self.createMissingLocalDirs(files, args)
@@ -115,7 +115,7 @@ func (self *Drive) downloadMissingFiles(files *syncFiles, args DownloadSyncArgs)
     missingCount := len(missingFiles)
 
     if missingCount > 0 {
-        fmt.Fprintf(args.Out, "\n%d local file(s) are missing\n", missingCount)
+        fmt.Fprintf(args.Out, "\n%d local files are missing\n", missingCount)
     }
 
     for i, rf := range missingFiles {
@@ -139,7 +139,7 @@ func (self *Drive) downloadChangedFiles(files *syncFiles, args DownloadSyncArgs)
     changedCount := len(changedFiles)
 
     if changedCount > 0 {
-        fmt.Fprintf(args.Out, "\n%d remote file(s) has changed\n", changedCount)
+        fmt.Fprintf(args.Out, "\n%d remote files has changed\n", changedCount)
     }
 
     for i, cf := range changedFiles {
@@ -198,7 +198,7 @@ func (self *Drive) deleteExtraneousLocalFiles(files *syncFiles, args DownloadSyn
     extraneousCount := len(extraneousFiles)
 
     if extraneousCount > 0 {
-        fmt.Fprintf(args.Out, "\n%d local file(s) are extraneous\n", extraneousCount)
+        fmt.Fprintf(args.Out, "\n%d local files are extraneous\n", extraneousCount)
     }
 
     // Sort files so that the files with the longest path comes first
