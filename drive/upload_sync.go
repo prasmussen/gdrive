@@ -155,7 +155,7 @@ func (self *Drive) createMissingRemoteDirs(files *syncFiles, args UploadSyncArgs
     }
 
     // Sort directories so that the dirs with the shortest path comes first
-    sort.Sort(byPathLength(missingDirs))
+    sort.Sort(byLocalPathLength(missingDirs))
 
     for i, lf := range missingDirs {
         parentPath := parentFilePath(lf.relPath)
@@ -629,17 +629,17 @@ func (self *syncFiles) findLocalByPath(relPath string) (*localFile, bool) {
     return nil, false
 }
 
-type byPathLength []*localFile
+type byLocalPathLength []*localFile
 
-func (self byPathLength) Len() int {
+func (self byLocalPathLength) Len() int {
     return len(self)
 }
 
-func (self byPathLength) Swap(i, j int) {
+func (self byLocalPathLength) Swap(i, j int) {
     self[i], self[j] = self[j], self[i]
 }
 
-func (self byPathLength) Less(i, j int) bool {
+func (self byLocalPathLength) Less(i, j int) bool {
     return pathLength(self[i].relPath) < pathLength(self[j].relPath)
 }
 

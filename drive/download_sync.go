@@ -202,7 +202,7 @@ func (self *Drive) deleteExtraneousLocalFiles(files *syncFiles, args DownloadSyn
     }
 
     // Sort files so that the files with the longest path comes first
-    sort.Sort(sort.Reverse(byPathLength(extraneousFiles)))
+    sort.Sort(sort.Reverse(byLocalPathLength(extraneousFiles)))
 
     for i, lf := range extraneousFiles {
         fmt.Fprintf(args.Out, "[%04d/%04d] Deleting %s\n", i + 1, extraneousCount, lf.absPath)
