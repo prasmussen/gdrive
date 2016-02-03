@@ -39,7 +39,7 @@ func (self *Drive) DownloadSync(args DownloadSyncArgs) error {
     fmt.Fprintf(args.Out, "Found %d local files and %d remote files\n", len(files.local), len(files.remote))
 
     // Create missing directories
-    files, err = self.createMissingLocalDirs(files, args)
+    err = self.createMissingLocalDirs(files, args)
     if err != nil {
         return err
     }
@@ -88,7 +88,7 @@ func (self *Drive) getSyncRoot(rootId string) (*drive.File, error) {
     return f, nil
 }
 
-func (self *Drive) createMissingLocalDirs(files *syncFiles, args DownloadSyncArgs) (*syncFiles, error) {
+func (self *Drive) createMissingLocalDirs(files *syncFiles, args DownloadSyncArgs) error {
     missingDirs := files.filterMissingLocalDirs()
     missingCount := len(missingDirs)
 
@@ -102,7 +102,7 @@ func (self *Drive) createMissingLocalDirs(files *syncFiles, args DownloadSyncArg
     for i, rf := range missingDirs {
         path, err := filepath.Abs(filepath.Join(args.Path, rf.relPath))
         if err != nil {
-            return nil, fmt.Errorf("Failed to determine local absolute path: %s", err)
+            return fmt.Errorf("Failed to determine local absolute path: %s", err)
         }
         fmt.Fprintf(args.Out, "[%04d/%04d] Creating directory: %s\n", i + 1, missingCount, path)
 
@@ -113,7 +113,7 @@ func (self *Drive) createMissingLocalDirs(files *syncFiles, args DownloadSyncArg
         mkdir(path)
     }
 
-    return files, nil
+    return nil
 }
 
 func (self *Drive) downloadMissingFiles(files *syncFiles, args DownloadSyncArgs) error {
