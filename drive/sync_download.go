@@ -16,6 +16,7 @@ type DownloadSyncArgs struct {
     Progress io.Writer
     RootId string
     Path string
+    DryRun bool
     DeleteExtraneous bool
 }
 
@@ -104,6 +105,11 @@ func (self *Drive) createMissingLocalDirs(files *syncFiles, args DownloadSyncArg
             return nil, fmt.Errorf("Failed to determine local absolute path: %s", err)
         }
         fmt.Fprintf(args.Out, "[%04d/%04d] Creating directory: %s\n", i + 1, missingCount, path)
+
+        if args.DryRun {
+            continue
+        }
+
         mkdir(path)
     }
 
@@ -125,6 +131,11 @@ func (self *Drive) downloadMissingFiles(files *syncFiles, args DownloadSyncArgs)
             return fmt.Errorf("Failed to determine local absolute path: %s", err)
         }
         fmt.Fprintf(args.Out, "[%04d/%04d] Downloading %s -> %s\n", i + 1, missingCount, remotePath, localPath)
+
+        if args.DryRun {
+            continue
+        }
+
         err = self.downloadRemoteFile(rf.file.Id, localPath, args)
         if err != nil {
             return err
@@ -149,6 +160,11 @@ func (self *Drive) downloadChangedFiles(files *syncFiles, args DownloadSyncArgs)
             return fmt.Errorf("Failed to determine local absolute path: %s", err)
         }
         fmt.Fprintf(args.Out, "[%04d/%04d] Downloading %s -> %s\n", i + 1, changedCount, remotePath, localPath)
+
+        if args.DryRun {
+            continue
+        }
+
         err = self.downloadRemoteFile(cf.remote.file.Id, localPath, args)
         if err != nil {
             return err
@@ -206,6 +222,11 @@ func (self *Drive) deleteExtraneousLocalFiles(files *syncFiles, args DownloadSyn
 
     for i, lf := range extraneousFiles {
         fmt.Fprintf(args.Out, "[%04d/%04d] Deleting %s\n", i + 1, extraneousCount, lf.absPath)
+
+        if args.DryRun {
+            continue
+        }
+
         err := os.Remove(lf.absPath)
         if err != nil {
             return fmt.Errorf("Failed to delete local file: %s", err)

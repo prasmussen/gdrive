@@ -342,6 +342,12 @@ func main() {
                         OmitValue: true,
                     },
                     cli.BoolFlag{
+                        Name: "dryRun",
+                        Patterns: []string{"--dry-run"},
+                        Description: "Show what would have been transferred",
+                        OmitValue: true,
+                    },
+                    cli.BoolFlag{
                         Name: "deleteExtraneous",
                         Patterns: []string{"--delete-extraneous"},
                         Description: "Delete extraneous local files",
@@ -357,6 +363,12 @@ func main() {
             Flags: cli.Flags{
                 "global": globalFlags,
                 "options": []cli.Flag{
+                    cli.BoolFlag{
+                        Name: "dryRun",
+                        Patterns: []string{"--dry-run"},
+                        Description: "Show what would have been transferred",
+                        OmitValue: true,
+                    },
                     cli.BoolFlag{
                         Name: "noProgress",
                         Patterns: []string{"--no-progress"},

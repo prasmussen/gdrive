@@ -16,6 +16,7 @@ type UploadSyncArgs struct {
     Progress io.Writer
     Path string
     RootId string
+    DryRun bool
     DeleteExtraneous bool
     ChunkSize int64
 }
@@ -141,15 +142,22 @@ func (self *Drive) createMissingRemoteDirs(files *syncFiles, args UploadSyncArgs
 
         fmt.Fprintf(args.Out, "[%04d/%04d] Creating directory: %s\n", i + 1, missingCount, filepath.Join(files.root.file.Name, lf.relPath))
 
-        f, err := self.service.Files.Create(dstFile).Do()
-        if err != nil {
-            return nil, fmt.Errorf("Failed to create directory: %s", err)
-        }
+        if args.DryRun {
+            files.remote = append(files.remote, &remoteFile{
+                relPath: lf.relPath,
+                file: dstFile,
+            })
+        } else {
+            f, err := self.service.Files.Create(dstFile).Do()
+            if err != nil {
+                return nil, fmt.Errorf("Failed to create directory: %s", err)
+            }
 
-        files.remote = append(files.remote, &remoteFile{
-            relPath: lf.relPath,
-            file: f,
-        })
+            files.remote = append(files.remote, &remoteFile{
+                relPath: lf.relPath,
+                file: f,
+            })
+        }
     }
 
     return files, nil
@@ -171,6 +179,11 @@ func (self *Drive) uploadMissingFiles(files *syncFiles, args UploadSyncArgs) err
         }
 
         fmt.Fprintf(args.Out, "[%04d/%04d] Uploading %s -> %s\n", i + 1, missingCount, lf.absPath, filepath.Join(files.root.file.Name, lf.relPath))
+
+        if args.DryRun {
+            continue
+        }
+
         err := self.uploadMissingFile(parent.file.Id, lf, args)
         if err != nil {
             return err
@@ -190,6 +203,11 @@ func (self *Drive) updateChangedFiles(files *syncFiles, args UploadSyncArgs) err
 
     for i, cf := range changedFiles {
         fmt.Fprintf(args.Out, "[%04d/%04d] Updating %s -> %s\n", i + 1, changedCount, cf.local.absPath, filepath.Join(files.root.file.Name, cf.local.relPath))
+
+        if args.DryRun {
+            continue
+        }
+
         err := self.updateChangedFile(cf, args)
         if err != nil {
             return err
@@ -212,6 +230,11 @@ func (self *Drive) deleteExtraneousRemoteFiles(files *syncFiles, args UploadSync
 
     for i, rf := range extraneousFiles {
         fmt.Fprintf(args.Out, "[%04d/%04d] Deleting %s\n", i + 1, extraneousCount, filepath.Join(files.root.file.Name, rf.relPath))
+
+        if args.DryRun {
+            continue
+        }
+
         err := self.deleteRemoteFile(rf, args)
         if err != nil {
             return err

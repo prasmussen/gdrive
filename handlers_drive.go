@@ -63,6 +63,7 @@ func downloadSyncHandler(ctx cli.Context) {
         Progress: progressWriter(args.Bool("noProgress")),
         Path: args.String("path"),
         RootId: args.String("id"),
+        DryRun: args.Bool("dryRun"),
         DeleteExtraneous: args.Bool("deleteExtraneous"),
     })
     checkErr(err)
@@ -118,6 +119,7 @@ func uploadSyncHandler(ctx cli.Context) {
         Progress: progressWriter(args.Bool("noProgress")),
         Path: args.String("path"),
         RootId: args.String("id"),
+        DryRun: args.Bool("dryRun"),
         DeleteExtraneous: args.Bool("deleteExtraneous"),
         ChunkSize: args.Int64("chunksize"),
     })
