@@ -51,7 +51,7 @@ func prepareLocalFiles(root string) ([]*localFile, error) {
         return nil, err
     }
 
-    // Skip file if it is ignored by ignore file
+    // Prepare ignorer
     shouldIgnore, err := prepareIgnorer(filepath.Join(absRootPath, DefaultIgnoreFile))
     if err != nil {
         return nil, err
@@ -67,11 +67,13 @@ func prepareLocalFiles(root string) ([]*localFile, error) {
             return nil
         }
 
+        // Get relative path from root
         relPath, err := filepath.Rel(absRootPath, absPath)
         if err != nil {
             return err
         }
 
+        // Skip file if it is ignored by ignore file
         if shouldIgnore(relPath) {
             return nil
         }
