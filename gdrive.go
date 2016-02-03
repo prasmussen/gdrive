@@ -76,74 +76,6 @@ func main() {
             },
         },
         &cli.Handler{
-            Pattern: "[global] list changes [options]",
-            Description: "List file changes",
-            Callback: listChangesHandler,
-            Flags: cli.Flags{
-                "global": globalFlags,
-                "options": []cli.Flag{
-                    cli.IntFlag{
-                        Name: "maxChanges",
-                        Patterns: []string{"-m", "--max"},
-                        Description: fmt.Sprintf("Max changes to list, default: %d", DefaultMaxChanges),
-                        DefaultValue: DefaultMaxChanges,
-                    },
-                    cli.StringFlag{
-                        Name: "pageToken",
-                        Patterns: []string{"--since"},
-                        Description: fmt.Sprintf("Page token to start listing changes from"),
-                        DefaultValue: "1",
-                    },
-                    cli.BoolFlag{
-                        Name: "now",
-                        Patterns: []string{"--now"},
-                        Description: fmt.Sprintf("Get latest page token"),
-                        OmitValue: true,
-                    },
-                    cli.IntFlag{
-                        Name: "nameWidth",
-                        Patterns: []string{"--name-width"},
-                        Description: fmt.Sprintf("Width of name column, default: %d, minimum: 9, use 0 for full width", DefaultNameWidth),
-                        DefaultValue: DefaultNameWidth,
-                    },
-                    cli.BoolFlag{
-                        Name: "skipHeader",
-                        Patterns: []string{"--no-header"},
-                        Description: "Dont print the header",
-                        OmitValue: true,
-                    },
-                },
-            },
-        },
-        &cli.Handler{
-            Pattern: "[global] list revisions [options] <id>",
-            Description: "List file revisions",
-            Callback: listRevisionsHandler,
-            Flags: cli.Flags{
-                "global": globalFlags,
-                "options": []cli.Flag{
-                    cli.IntFlag{
-                        Name: "nameWidth",
-                        Patterns: []string{"--name-width"},
-                        Description: fmt.Sprintf("Width of name column, default: %d, minimum: 9, use 0 for full width", DefaultNameWidth),
-                        DefaultValue: DefaultNameWidth,
-                    },
-                    cli.BoolFlag{
-                        Name: "skipHeader",
-                        Patterns: []string{"--no-header"},
-                        Description: "Dont print the header",
-                        OmitValue: true,
-                    },
-                    cli.BoolFlag{
-                        Name: "sizeInBytes",
-                        Patterns: []string{"--bytes"},
-                        Description: "Size in bytes",
-                        OmitValue: true,
-                    },
-                },
-            },
-        },
-        &cli.Handler{
             Pattern: "[global] download [options] <id>",
             Description: "Download file or directory",
             Callback: downloadHandler,
@@ -166,56 +98,6 @@ func main() {
                         Name: "path",
                         Patterns: []string{"--path"},
                         Description: "Download path",
-                    },
-                    cli.BoolFlag{
-                        Name: "noProgress",
-                        Patterns: []string{"--no-progress"},
-                        Description: "Hide progress",
-                        OmitValue: true,
-                    },
-                    cli.BoolFlag{
-                        Name: "stdout",
-                        Patterns: []string{"--stdout"},
-                        Description: "Write file content to stdout",
-                        OmitValue: true,
-                    },
-                },
-            },
-        },
-        &cli.Handler{
-            Pattern: "[global] download sync [options] <id> <path>",
-            Description: "Sync drive directory to local directory",
-            Callback: downloadSyncHandler,
-            Flags: cli.Flags{
-                "global": globalFlags,
-                "options": []cli.Flag{
-                    cli.BoolFlag{
-                        Name: "noProgress",
-                        Patterns: []string{"--no-progress"},
-                        Description: "Hide progress",
-                        OmitValue: true,
-                    },
-                    cli.BoolFlag{
-                        Name: "deleteExtraneous",
-                        Patterns: []string{"--delete-extraneous"},
-                        Description: "Delete extraneous local files",
-                        OmitValue: true,
-                    },
-                },
-            },
-        },
-        &cli.Handler{
-            Pattern: "[global] download revision [options] <fileId> <revisionId>",
-            Description: "Download revision",
-            Callback: downloadRevisionHandler,
-            Flags: cli.Flags{
-                "global": globalFlags,
-                "options": []cli.Flag{
-                    cli.BoolFlag{
-                        Name: "force",
-                        Patterns: []string{"-f", "--force"},
-                        Description: "Overwrite existing file",
-                        OmitValue: true,
                     },
                     cli.BoolFlag{
                         Name: "noProgress",
@@ -282,7 +164,7 @@ func main() {
             },
         },
         &cli.Handler{
-            Pattern: "[global] upload stdin [options] <name>",
+            Pattern: "[global] upload - [options] <name>",
             Description: "Upload file from stdin",
             Callback: uploadStdinHandler,
             Flags: cli.Flags{
@@ -309,34 +191,6 @@ func main() {
                         Patterns: []string{"--share"},
                         Description: "Share file",
                         OmitValue: true,
-                    },
-                },
-            },
-        },
-        &cli.Handler{
-            Pattern: "[global] upload sync [options] <path> <id>",
-            Description: "Sync local directory to drive",
-            Callback: uploadSyncHandler,
-            Flags: cli.Flags{
-                "global": globalFlags,
-                "options": []cli.Flag{
-                    cli.BoolFlag{
-                        Name: "noProgress",
-                        Patterns: []string{"--no-progress"},
-                        Description: "Hide progress",
-                        OmitValue: true,
-                    },
-                    cli.BoolFlag{
-                        Name: "deleteExtraneous",
-                        Patterns: []string{"--delete-extraneous"},
-                        Description: "Delete extraneous remote files",
-                        OmitValue: true,
-                    },
-                    cli.IntFlag{
-                        Name: "chunksize",
-                        Patterns: []string{"--chunksize"},
-                        Description: fmt.Sprintf("Set chunk size in bytes, default: %d", DefaultUploadChunkSize),
-                        DefaultValue: DefaultUploadChunkSize,
                     },
                 },
             },
@@ -401,60 +255,6 @@ func main() {
                         Name: "sizeInBytes",
                         Patterns: []string{"--bytes"},
                         Description: "Show size in bytes",
-                        OmitValue: true,
-                    },
-                },
-            },
-        },
-        &cli.Handler{
-            Pattern: "[global] import [options] <path>",
-            Description: "Upload and convert file to a google document, see 'about import' for available conversions",
-            Callback: importHandler,
-            Flags: cli.Flags{
-                "global": globalFlags,
-                "options": []cli.Flag{
-                    cli.StringSliceFlag{
-                        Name: "parent",
-                        Patterns: []string{"-p", "--parent"},
-                        Description: "Parent id, used to upload file to a specific directory, can be specified multiple times to give many parents",
-                    },
-                    cli.BoolFlag{
-                        Name: "noProgress",
-                        Patterns: []string{"--no-progress"},
-                        Description: "Hide progress",
-                        OmitValue: true,
-                    },
-                    cli.BoolFlag{
-                        Name: "share",
-                        Patterns: []string{"--share"},
-                        Description: "Share file",
-                        OmitValue: true,
-                    },
-                },
-            },
-        },
-        &cli.Handler{
-            Pattern: "[global] export [options] <id>",
-            Description: "Export a google document",
-            Callback: exportHandler,
-            Flags: cli.Flags{
-                "global": globalFlags,
-                "options": []cli.Flag{
-                    cli.BoolFlag{
-                        Name: "force",
-                        Patterns: []string{"-f", "--force"},
-                        Description: "Overwrite existing file",
-                        OmitValue: true,
-                    },
-                    cli.StringFlag{
-                        Name: "mime",
-                        Patterns: []string{"--mime"},
-                        Description: "Mime type of exported file",
-                    },
-                    cli.BoolFlag{
-                        Name: "printMimes",
-                        Patterns: []string{"--print-mimes"},
-                        Description: "Print available mime types for given file",
                         OmitValue: true,
                     },
                 },
@@ -529,11 +329,211 @@ func main() {
             },
         },
         &cli.Handler{
-            Pattern: "[global] delete revision <fileId> <revisionId>",
+            Pattern: "[global] sync download [options] <id> <path>",
+            Description: "Sync drive directory to local directory",
+            Callback: downloadSyncHandler,
+            Flags: cli.Flags{
+                "global": globalFlags,
+                "options": []cli.Flag{
+                    cli.BoolFlag{
+                        Name: "noProgress",
+                        Patterns: []string{"--no-progress"},
+                        Description: "Hide progress",
+                        OmitValue: true,
+                    },
+                    cli.BoolFlag{
+                        Name: "deleteExtraneous",
+                        Patterns: []string{"--delete-extraneous"},
+                        Description: "Delete extraneous local files",
+                        OmitValue: true,
+                    },
+                },
+            },
+        },
+        &cli.Handler{
+            Pattern: "[global] sync upload [options] <path> <id>",
+            Description: "Sync local directory to drive",
+            Callback: uploadSyncHandler,
+            Flags: cli.Flags{
+                "global": globalFlags,
+                "options": []cli.Flag{
+                    cli.BoolFlag{
+                        Name: "noProgress",
+                        Patterns: []string{"--no-progress"},
+                        Description: "Hide progress",
+                        OmitValue: true,
+                    },
+                    cli.BoolFlag{
+                        Name: "deleteExtraneous",
+                        Patterns: []string{"--delete-extraneous"},
+                        Description: "Delete extraneous remote files",
+                        OmitValue: true,
+                    },
+                    cli.IntFlag{
+                        Name: "chunksize",
+                        Patterns: []string{"--chunksize"},
+                        Description: fmt.Sprintf("Set chunk size in bytes, default: %d", DefaultUploadChunkSize),
+                        DefaultValue: DefaultUploadChunkSize,
+                    },
+                },
+            },
+        },
+        &cli.Handler{
+            Pattern: "[global] changes [options]",
+            Description: "List file changes",
+            Callback: listChangesHandler,
+            Flags: cli.Flags{
+                "global": globalFlags,
+                "options": []cli.Flag{
+                    cli.IntFlag{
+                        Name: "maxChanges",
+                        Patterns: []string{"-m", "--max"},
+                        Description: fmt.Sprintf("Max changes to list, default: %d", DefaultMaxChanges),
+                        DefaultValue: DefaultMaxChanges,
+                    },
+                    cli.StringFlag{
+                        Name: "pageToken",
+                        Patterns: []string{"--since"},
+                        Description: fmt.Sprintf("Page token to start listing changes from"),
+                        DefaultValue: "1",
+                    },
+                    cli.BoolFlag{
+                        Name: "now",
+                        Patterns: []string{"--now"},
+                        Description: fmt.Sprintf("Get latest page token"),
+                        OmitValue: true,
+                    },
+                    cli.IntFlag{
+                        Name: "nameWidth",
+                        Patterns: []string{"--name-width"},
+                        Description: fmt.Sprintf("Width of name column, default: %d, minimum: 9, use 0 for full width", DefaultNameWidth),
+                        DefaultValue: DefaultNameWidth,
+                    },
+                    cli.BoolFlag{
+                        Name: "skipHeader",
+                        Patterns: []string{"--no-header"},
+                        Description: "Dont print the header",
+                        OmitValue: true,
+                    },
+                },
+            },
+        },
+        &cli.Handler{
+            Pattern: "[global] revision list [options] <id>",
+            Description: "List file revisions",
+            Callback: listRevisionsHandler,
+            Flags: cli.Flags{
+                "global": globalFlags,
+                "options": []cli.Flag{
+                    cli.IntFlag{
+                        Name: "nameWidth",
+                        Patterns: []string{"--name-width"},
+                        Description: fmt.Sprintf("Width of name column, default: %d, minimum: 9, use 0 for full width", DefaultNameWidth),
+                        DefaultValue: DefaultNameWidth,
+                    },
+                    cli.BoolFlag{
+                        Name: "skipHeader",
+                        Patterns: []string{"--no-header"},
+                        Description: "Dont print the header",
+                        OmitValue: true,
+                    },
+                    cli.BoolFlag{
+                        Name: "sizeInBytes",
+                        Patterns: []string{"--bytes"},
+                        Description: "Size in bytes",
+                        OmitValue: true,
+                    },
+                },
+            },
+        },
+        &cli.Handler{
+            Pattern: "[global] revision download [options] <fileId> <revisionId>",
+            Description: "Download revision",
+            Callback: downloadRevisionHandler,
+            Flags: cli.Flags{
+                "global": globalFlags,
+                "options": []cli.Flag{
+                    cli.BoolFlag{
+                        Name: "force",
+                        Patterns: []string{"-f", "--force"},
+                        Description: "Overwrite existing file",
+                        OmitValue: true,
+                    },
+                    cli.BoolFlag{
+                        Name: "noProgress",
+                        Patterns: []string{"--no-progress"},
+                        Description: "Hide progress",
+                        OmitValue: true,
+                    },
+                    cli.BoolFlag{
+                        Name: "stdout",
+                        Patterns: []string{"--stdout"},
+                        Description: "Write file content to stdout",
+                        OmitValue: true,
+                    },
+                },
+            },
+        },
+        &cli.Handler{
+            Pattern: "[global] revision delete <fileId> <revisionId>",
             Description: "Delete file revision",
             Callback: deleteRevisionHandler,
             Flags: cli.Flags{
                 "global": globalFlags,
+            },
+        },
+        &cli.Handler{
+            Pattern: "[global] import [options] <path>",
+            Description: "Upload and convert file to a google document, see 'about import' for available conversions",
+            Callback: importHandler,
+            Flags: cli.Flags{
+                "global": globalFlags,
+                "options": []cli.Flag{
+                    cli.StringSliceFlag{
+                        Name: "parent",
+                        Patterns: []string{"-p", "--parent"},
+                        Description: "Parent id, used to upload file to a specific directory, can be specified multiple times to give many parents",
+                    },
+                    cli.BoolFlag{
+                        Name: "noProgress",
+                        Patterns: []string{"--no-progress"},
+                        Description: "Hide progress",
+                        OmitValue: true,
+                    },
+                    cli.BoolFlag{
+                        Name: "share",
+                        Patterns: []string{"--share"},
+                        Description: "Share file",
+                        OmitValue: true,
+                    },
+                },
+            },
+        },
+        &cli.Handler{
+            Pattern: "[global] export [options] <id>",
+            Description: "Export a google document",
+            Callback: exportHandler,
+            Flags: cli.Flags{
+                "global": globalFlags,
+                "options": []cli.Flag{
+                    cli.BoolFlag{
+                        Name: "force",
+                        Patterns: []string{"-f", "--force"},
+                        Description: "Overwrite existing file",
+                        OmitValue: true,
+                    },
+                    cli.StringFlag{
+                        Name: "mime",
+                        Patterns: []string{"--mime"},
+                        Description: "Mime type of exported file",
+                    },
+                    cli.BoolFlag{
+                        Name: "printMimes",
+                        Patterns: []string{"--print-mimes"},
+                        Description: "Print available mime types for given file",
+                        OmitValue: true,
+                    },
+                },
             },
         },
         &cli.Handler{
