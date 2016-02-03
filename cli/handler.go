@@ -1,7 +1,6 @@
 package cli
 
 import (
-    "fmt"
     "regexp"
     "strings"
 )
@@ -77,7 +76,6 @@ func Handle(args []string) bool {
     }
 
     _, data := h.getParser().Capture(args)
-    fmt.Println(data)
     ctx := Context{
         args: data,
         handlers: handlers,
