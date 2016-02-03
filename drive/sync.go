@@ -5,8 +5,11 @@ import (
     "os"
     "path/filepath"
     "github.com/gyuho/goraph/graph"
+    "github.com/sabhiram/go-git-ignore"
     "google.golang.org/api/drive/v3"
 )
+
+const DefaultIgnoreFile = ".gdriveignore"
 
 func (self *Drive) prepareSyncFiles(localPath string, root *drive.File) (*syncFiles, error) {
     localCh := make(chan struct{files []*localFile; err error})
@@ -48,6 +51,12 @@ func prepareLocalFiles(root string) ([]*localFile, error) {
         return nil, err
     }
 
+    // Skip file if it is ignored by ignore file
+    shouldIgnore, err := prepareIgnorer(filepath.Join(absRootPath, DefaultIgnoreFile))
+    if err != nil {
+        return nil, err
+    }
+
     err = filepath.Walk(absRootPath, func(absPath string, info os.FileInfo, err error) error {
         if err != nil {
             return err
@@ -61,6 +70,10 @@ func prepareLocalFiles(root string) ([]*localFile, error) {
         relPath, err := filepath.Rel(absRootPath, absPath)
         if err != nil {
             return err
+        }
+
+        if shouldIgnore(relPath) {
+            return nil
         }
 
         files = append(files, &localFile{
@@ -375,4 +388,23 @@ func (self byRemotePathLength) Swap(i, j int) {
 
 func (self byRemotePathLength) Less(i, j int) bool {
     return pathLength(self[i].relPath) < pathLength(self[j].relPath)
+}
+
+type ignoreFunc func(string) bool
+
+func prepareIgnorer(path string) (ignoreFunc, error) {
+    acceptAll := func(string) bool {
+        return false
+    }
+
+    if !fileExists(path) {
+        return acceptAll, nil
+    }
+
+    ignorer, err := ignore.CompileIgnoreFile(path)
+    if err != nil {
+        return acceptAll, fmt.Errorf("Failed to prepare ignorer: %s", err)
+    }
+
+    return ignorer.MatchesPath, nil
 }
