@@ -225,6 +225,7 @@ func deleteHandler(ctx cli.Context) {
     err := newDrive(args).Delete(drive.DeleteArgs{
         Out: os.Stdout,
         Id: args.String("id"),
+        Recursive: args.Bool("recursive"),
     })
     checkErr(err)
 }

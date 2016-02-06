@@ -8,12 +8,17 @@ import (
 type DeleteArgs struct {
     Out io.Writer
     Id string
+    Recursive bool
 }
 
-func (self *Drive) Delete(args DeleteArgs) (err error) {
-    f, err := self.service.Files.Get(args.Id).Fields("name").Do()
+func (self *Drive) Delete(args DeleteArgs) error {
+    f, err := self.service.Files.Get(args.Id).Fields("name", "mimeType").Do()
     if err != nil {
         return fmt.Errorf("Failed to get file: %s", err)
+    }
+
+    if isDir(f) && !args.Recursive {
+        return fmt.Errorf("'%s' is a directory, use the 'recursive' flag to delete directories", f.Name)
     }
 
     err = self.service.Files.Delete(args.Id).Do()
@@ -21,6 +26,6 @@ func (self *Drive) Delete(args DeleteArgs) (err error) {
         return fmt.Errorf("Failed to delete file: %s", err)
     }
 
-    fmt.Fprintf(args.Out, "Removed file '%s'\n", f.Name)
-    return
+    fmt.Fprintf(args.Out, "Deleted '%s'\n", f.Name)
+    return nil
 }

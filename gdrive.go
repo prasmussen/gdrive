@@ -321,11 +321,19 @@ func main() {
             },
         },
         &cli.Handler{
-            Pattern: "[global] delete <id>",
+            Pattern: "[global] delete [options] <id>",
             Description: "Delete file or directory",
             Callback: deleteHandler,
             Flags: cli.Flags{
                 "global": globalFlags,
+                "options": []cli.Flag{
+                    cli.BoolFlag{
+                        Name: "recursive",
+                        Patterns: []string{"-r", "--recursive"},
+                        Description: "Delete directory and all it's content",
+                        OmitValue: true,
+                    },
+                },
             },
         },
         &cli.Handler{
