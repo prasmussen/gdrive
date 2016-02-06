@@ -3,6 +3,7 @@ package auth
 import (
     "golang.org/x/oauth2"
     "encoding/json"
+    "os"
     "io/ioutil"
 )
 
@@ -53,5 +54,15 @@ func SaveToken(path string, token *oauth2.Token) error {
     if err = mkdir(path); err != nil {
         return err
     }
-    return ioutil.WriteFile(path, data, 0600)
+
+    // Write to temp file first
+    tmpFile := path + ".tmp"
+    err = ioutil.WriteFile(tmpFile, data, 0600)
+    if err != nil {
+        os.Remove(tmpFile)
+        return err
+    }
+
+    // Move file to correct path
+    return os.Rename(tmpFile, path)
 }
