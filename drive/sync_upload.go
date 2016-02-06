@@ -185,7 +185,7 @@ func (self *Drive) uploadMissingFiles(files *syncFiles, args UploadSyncArgs) err
             continue
         }
 
-        err := self.uploadMissingFile(parent.file.Id, lf, args)
+        err := self.uploadMissingFile(parent.file.Id, lf, args, 0)
         if err != nil {
             return err
         }
@@ -245,7 +245,7 @@ func (self *Drive) deleteExtraneousRemoteFiles(files *syncFiles, args UploadSync
     return nil
 }
 
-func (self *Drive) uploadMissingFile(parentId string, lf *LocalFile, args UploadSyncArgs) error {
+func (self *Drive) uploadMissingFile(parentId string, lf *LocalFile, args UploadSyncArgs, try int) error {
     srcFile, err := os.Open(lf.absPath)
     if err != nil {
         return fmt.Errorf("Failed to open file: %s", err)
@@ -269,7 +269,13 @@ func (self *Drive) uploadMissingFile(parentId string, lf *LocalFile, args Upload
 
     _, err = self.service.Files.Create(dstFile).Fields("id", "name", "size", "md5Checksum").Media(srcReader, chunkSize).Do()
     if err != nil {
-        return fmt.Errorf("Failed to upload file: %s", err)
+        if isBackendError(err) && try < MaxBackendErrorRetries {
+            exponentialBackoffSleep(try)
+            try++
+            self.uploadMissingFile(parentId, lf, args, try)
+        } else {
+            return fmt.Errorf("Failed to upload file: %s", err)
+        }
     }
 
     return nil
