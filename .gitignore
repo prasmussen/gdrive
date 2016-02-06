@@ -6,5 +6,4 @@ _release/bin
 *.un~
 Session.vim
 .netrwhist
-drive_old
-foo.txt
+gdrive
