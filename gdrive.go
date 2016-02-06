@@ -337,6 +337,22 @@ func main() {
             },
         },
         &cli.Handler{
+            Pattern: "[global] sync list [options]",
+            Description: "List all syncable directories on drive",
+            Callback: listSyncHandler,
+            FlagGroups: cli.FlagGroups{
+                cli.NewFlagGroup("global", globalFlags...),
+                cli.NewFlagGroup("options",
+                    cli.BoolFlag{
+                        Name: "skipHeader",
+                        Patterns: []string{"--no-header"},
+                        Description: "Dont print the header",
+                        OmitValue: true,
+                    },
+                ),
+            },
+        },
+        &cli.Handler{
             Pattern: "[global] sync download [options] <id> <path>",
             Description: "Sync drive directory to local directory",
             Callback: downloadSyncHandler,

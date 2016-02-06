@@ -230,6 +230,15 @@ func deleteHandler(ctx cli.Context) {
     checkErr(err)
 }
 
+func listSyncHandler(ctx cli.Context) {
+    args := ctx.Args()
+    err := newDrive(args).ListSync(drive.ListSyncArgs{
+        Out: os.Stdout,
+        SkipHeader: args.Bool("skipHeader"),
+    })
+    checkErr(err)
+}
+
 func deleteRevisionHandler(ctx cli.Context) {
     args := ctx.Args()
     err := newDrive(args).DeleteRevision(drive.DeleteRevisionArgs{
