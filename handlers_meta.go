@@ -36,9 +36,9 @@ func printCommandPrefixHelp(ctx cli.Context, prefix ...string) {
     }
 
     fmt.Printf("%s %s  (%s)\n", Name, handler.Pattern, handler.Description)
-    for name, flags := range handler.Flags {
-        fmt.Printf("\n%s:\n", name)
-        for _, flag := range flags {
+    for _, group := range handler.FlagGroups {
+        fmt.Printf("\n%s:\n", group.Name)
+        for _, flag := range group.Flags {
             boolFlag, isBool := flag.(cli.BoolFlag)
             if isBool && boolFlag.OmitValue {
                 fmt.Printf("  %s  (%s)\n", strings.Join(flag.GetPatterns(), ", "), flag.GetDescription())

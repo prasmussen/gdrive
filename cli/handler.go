@@ -5,13 +5,35 @@ import (
     "strings"
 )
 
-type Flags map[string][]Flag
+func NewFlagGroup(name string, flags...Flag) FlagGroup {
+    return FlagGroup{
+        Name: name,
+        Flags: flags,
+    }
+}
+
+type FlagGroup struct {
+    Name string
+    Flags []Flag
+}
+
+type FlagGroups []FlagGroup
+
+func (groups FlagGroups) getFlags(name string) []Flag {
+    for _, group := range groups {
+        if group.Name == name {
+            return group.Flags
+        }
+    }
+
+    return nil
+}
 
 var handlers []*Handler
 
 type Handler struct {
     Pattern string
-    Flags Flags
+    FlagGroups FlagGroups
     Callback func(Context)
     Description string
 }
@@ -22,7 +44,7 @@ func (self *Handler) getParser() Parser {
     for _, pattern := range self.SplitPattern() {
         if isOptional(pattern) {
             name := optionalName(pattern)
-            parser := getFlagParser(self.Flags[name])
+            parser := getFlagParser(self.FlagGroups.getFlags(name))
             parsers = append(parsers, parser)
         } else if isCaptureGroup(pattern) {
             parsers = append(parsers, CaptureGroupParser{pattern})
@@ -50,10 +72,10 @@ func SetHandlers(h []*Handler) {
     handlers = h
 }
 
-func AddHandler(pattern string, flags Flags, callback func(Context), desc string) {
+func AddHandler(pattern string, groups FlagGroups, callback func(Context), desc string) {
     handlers = append(handlers, &Handler{
         Pattern: pattern,
-        Flags: flags,
+        FlagGroups: groups,
         Callback: callback,
         Description: desc,
     })

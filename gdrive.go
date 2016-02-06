@@ -34,9 +34,9 @@ func main() {
             Pattern: "[global] list [options]",
             Description: "List files",
             Callback: listHandler,
-            Flags: cli.Flags{
-                "global": globalFlags,
-                "options": []cli.Flag{
+            FlagGroups: cli.FlagGroups{
+                cli.NewFlagGroup("global", globalFlags...),
+                cli.NewFlagGroup("options",
                     cli.IntFlag{
                         Name: "maxFiles",
                         Patterns: []string{"-m", "--max"},
@@ -72,16 +72,16 @@ func main() {
                         Description: "Size in bytes",
                         OmitValue: true,
                     },
-                },
+                ),
             },
         },
         &cli.Handler{
             Pattern: "[global] download [options] <id>",
             Description: "Download file or directory",
             Callback: downloadHandler,
-            Flags: cli.Flags{
-                "global": globalFlags,
-                "options": []cli.Flag{
+            FlagGroups: cli.FlagGroups{
+                cli.NewFlagGroup("global", globalFlags...),
+                cli.NewFlagGroup("options",
                     cli.BoolFlag{
                         Name: "force",
                         Patterns: []string{"-f", "--force"},
@@ -111,16 +111,16 @@ func main() {
                         Description: "Write file content to stdout",
                         OmitValue: true,
                     },
-                },
+                ),
             },
         },
         &cli.Handler{
             Pattern: "[global] upload [options] <path>",
             Description: "Upload file or directory",
             Callback: uploadHandler,
-            Flags: cli.Flags{
-                "global": globalFlags,
-                "options": []cli.Flag{
+            FlagGroups: cli.FlagGroups{
+                cli.NewFlagGroup("global", globalFlags...),
+                cli.NewFlagGroup("options",
                     cli.BoolFlag{
                         Name: "recursive",
                         Patterns: []string{"-r", "--recursive"},
@@ -160,16 +160,16 @@ func main() {
                         Description: fmt.Sprintf("Set chunk size in bytes, default: %d", DefaultUploadChunkSize),
                         DefaultValue: DefaultUploadChunkSize,
                     },
-                },
+                ),
             },
         },
         &cli.Handler{
             Pattern: "[global] upload - [options] <name>",
             Description: "Upload file from stdin",
             Callback: uploadStdinHandler,
-            Flags: cli.Flags{
-                "global": globalFlags,
-                "options": []cli.Flag{
+            FlagGroups: cli.FlagGroups{
+                cli.NewFlagGroup("global", globalFlags...),
+                cli.NewFlagGroup("options",
                     cli.StringSliceFlag{
                         Name: "parent",
                         Patterns: []string{"-p", "--parent"},
@@ -192,16 +192,16 @@ func main() {
                         Description: "Share file",
                         OmitValue: true,
                     },
-                },
+                ),
             },
         },
         &cli.Handler{
             Pattern: "[global] update [options] <id> <path>",
             Description: "Update file, this creates a new revision of the file",
             Callback: updateHandler,
-            Flags: cli.Flags{
-                "global": globalFlags,
-                "options": []cli.Flag{
+            FlagGroups: cli.FlagGroups{
+                cli.NewFlagGroup("global", globalFlags...),
+                cli.NewFlagGroup("options",
                     cli.StringSliceFlag{
                         Name: "parent",
                         Patterns: []string{"-p", "--parent"},
@@ -241,32 +241,32 @@ func main() {
                         Description: fmt.Sprintf("Set chunk size in bytes, default: %d", DefaultUploadChunkSize),
                         DefaultValue: DefaultUploadChunkSize,
                     },
-                },
+                ),
             },
         },
         &cli.Handler{
             Pattern: "[global] info [options] <id>",
             Description: "Show file info",
             Callback: infoHandler,
-            Flags: cli.Flags{
-                "global": globalFlags,
-                "options": []cli.Flag{
+            FlagGroups: cli.FlagGroups{
+                cli.NewFlagGroup("global", globalFlags...),
+                cli.NewFlagGroup("options",
                     cli.BoolFlag{
                         Name: "sizeInBytes",
                         Patterns: []string{"--bytes"},
                         Description: "Show size in bytes",
                         OmitValue: true,
                     },
-                },
+                ),
             },
         },
         &cli.Handler{
             Pattern: "[global] mkdir [options] <name>",
             Description: "Create directory",
             Callback: mkdirHandler,
-            Flags: cli.Flags{
-                "global": globalFlags,
-                "options": []cli.Flag{
+            FlagGroups: cli.FlagGroups{
+                cli.NewFlagGroup("global", globalFlags...),
+                cli.NewFlagGroup("options",
                     cli.StringSliceFlag{
                         Name: "parent",
                         Patterns: []string{"-p", "--parent"},
@@ -278,16 +278,16 @@ func main() {
                         Description: "Share created directory",
                         OmitValue: true,
                     },
-                },
+                ),
             },
         },
         &cli.Handler{
             Pattern: "[global] share [options] <id>",
             Description: "Share file or directory",
             Callback: shareHandler,
-            Flags: cli.Flags{
-                "global": globalFlags,
-                "options": []cli.Flag{
+            FlagGroups: cli.FlagGroups{
+                cli.NewFlagGroup("global", globalFlags...),
+                cli.NewFlagGroup("options",
                     cli.BoolFlag{
                         Name: "discoverable",
                         Patterns: []string{"--discoverable"},
@@ -317,32 +317,32 @@ func main() {
                         Description: "Delete all sharing permissions",
                         OmitValue: true,
                     },
-                },
+                ),
             },
         },
         &cli.Handler{
             Pattern: "[global] delete [options] <id>",
             Description: "Delete file or directory",
             Callback: deleteHandler,
-            Flags: cli.Flags{
-                "global": globalFlags,
-                "options": []cli.Flag{
+            FlagGroups: cli.FlagGroups{
+                cli.NewFlagGroup("global", globalFlags...),
+                cli.NewFlagGroup("options",
                     cli.BoolFlag{
                         Name: "recursive",
                         Patterns: []string{"-r", "--recursive"},
                         Description: "Delete directory and all it's content",
                         OmitValue: true,
                     },
-                },
+                ),
             },
         },
         &cli.Handler{
             Pattern: "[global] sync download [options] <id> <path>",
             Description: "Sync drive directory to local directory",
             Callback: downloadSyncHandler,
-            Flags: cli.Flags{
-                "global": globalFlags,
-                "options": []cli.Flag{
+            FlagGroups: cli.FlagGroups{
+                cli.NewFlagGroup("global", globalFlags...),
+                cli.NewFlagGroup("options",
                     cli.BoolFlag{
                         Name: "noProgress",
                         Patterns: []string{"--no-progress"},
@@ -361,16 +361,16 @@ func main() {
                         Description: "Delete extraneous local files",
                         OmitValue: true,
                     },
-                },
+                ),
             },
         },
         &cli.Handler{
             Pattern: "[global] sync upload [options] <path> <id>",
             Description: "Sync local directory to drive",
             Callback: uploadSyncHandler,
-            Flags: cli.Flags{
-                "global": globalFlags,
-                "options": []cli.Flag{
+            FlagGroups: cli.FlagGroups{
+                cli.NewFlagGroup("global", globalFlags...),
+                cli.NewFlagGroup("options",
                     cli.BoolFlag{
                         Name: "dryRun",
                         Patterns: []string{"--dry-run"},
@@ -395,16 +395,16 @@ func main() {
                         Description: fmt.Sprintf("Set chunk size in bytes, default: %d", DefaultUploadChunkSize),
                         DefaultValue: DefaultUploadChunkSize,
                     },
-                },
+                ),
             },
         },
         &cli.Handler{
             Pattern: "[global] changes [options]",
             Description: "List file changes",
             Callback: listChangesHandler,
-            Flags: cli.Flags{
-                "global": globalFlags,
-                "options": []cli.Flag{
+            FlagGroups: cli.FlagGroups{
+                cli.NewFlagGroup("global", globalFlags...),
+                cli.NewFlagGroup("options",
                     cli.IntFlag{
                         Name: "maxChanges",
                         Patterns: []string{"-m", "--max"},
@@ -435,16 +435,16 @@ func main() {
                         Description: "Dont print the header",
                         OmitValue: true,
                     },
-                },
+                ),
             },
         },
         &cli.Handler{
             Pattern: "[global] revision list [options] <id>",
             Description: "List file revisions",
             Callback: listRevisionsHandler,
-            Flags: cli.Flags{
-                "global": globalFlags,
-                "options": []cli.Flag{
+            FlagGroups: cli.FlagGroups{
+                cli.NewFlagGroup("global", globalFlags...),
+                cli.NewFlagGroup("options",
                     cli.IntFlag{
                         Name: "nameWidth",
                         Patterns: []string{"--name-width"},
@@ -463,16 +463,16 @@ func main() {
                         Description: "Size in bytes",
                         OmitValue: true,
                     },
-                },
+                ),
             },
         },
         &cli.Handler{
             Pattern: "[global] revision download [options] <fileId> <revisionId>",
             Description: "Download revision",
             Callback: downloadRevisionHandler,
-            Flags: cli.Flags{
-                "global": globalFlags,
-                "options": []cli.Flag{
+            FlagGroups: cli.FlagGroups{
+                cli.NewFlagGroup("global", globalFlags...),
+                cli.NewFlagGroup("options",
                     cli.BoolFlag{
                         Name: "force",
                         Patterns: []string{"-f", "--force"},
@@ -491,24 +491,24 @@ func main() {
                         Description: "Write file content to stdout",
                         OmitValue: true,
                     },
-                },
+                ),
             },
         },
         &cli.Handler{
             Pattern: "[global] revision delete <fileId> <revisionId>",
             Description: "Delete file revision",
             Callback: deleteRevisionHandler,
-            Flags: cli.Flags{
-                "global": globalFlags,
+            FlagGroups: cli.FlagGroups{
+                cli.NewFlagGroup("global", globalFlags...),
             },
         },
         &cli.Handler{
             Pattern: "[global] import [options] <path>",
             Description: "Upload and convert file to a google document, see 'about import' for available conversions",
             Callback: importHandler,
-            Flags: cli.Flags{
-                "global": globalFlags,
-                "options": []cli.Flag{
+            FlagGroups: cli.FlagGroups{
+                cli.NewFlagGroup("global", globalFlags...),
+                cli.NewFlagGroup("options",
                     cli.StringSliceFlag{
                         Name: "parent",
                         Patterns: []string{"-p", "--parent"},
@@ -526,16 +526,16 @@ func main() {
                         Description: "Share file",
                         OmitValue: true,
                     },
-                },
+                ),
             },
         },
         &cli.Handler{
             Pattern: "[global] export [options] <id>",
             Description: "Export a google document",
             Callback: exportHandler,
-            Flags: cli.Flags{
-                "global": globalFlags,
-                "options": []cli.Flag{
+            FlagGroups: cli.FlagGroups{
+                cli.NewFlagGroup("global", globalFlags...),
+                cli.NewFlagGroup("options",
                     cli.BoolFlag{
                         Name: "force",
                         Patterns: []string{"-f", "--force"},
@@ -553,39 +553,39 @@ func main() {
                         Description: "Print available mime types for given file",
                         OmitValue: true,
                     },
-                },
+                ),
             },
         },
         &cli.Handler{
             Pattern: "[global] about [options]",
             Description: "Google drive metadata, quota usage",
             Callback: aboutHandler,
-            Flags: cli.Flags{
-                "global": globalFlags,
-                "options": []cli.Flag{
+            FlagGroups: cli.FlagGroups{
+                cli.NewFlagGroup("global", globalFlags...),
+                cli.NewFlagGroup("options",
                     cli.BoolFlag{
                         Name: "sizeInBytes",
                         Patterns: []string{"--bytes"},
                         Description: "Show size in bytes",
                         OmitValue: true,
                     },
-                },
+                ),
             },
         },
         &cli.Handler{
             Pattern: "[global] about import",
             Description: "Show supported import formats",
             Callback: aboutImportHandler,
-            Flags: cli.Flags{
-                "global": globalFlags,
+            FlagGroups: cli.FlagGroups{
+                cli.NewFlagGroup("global", globalFlags...),
             },
         },
         &cli.Handler{
             Pattern: "[global] about export",
             Description: "Show supported export formats",
             Callback: aboutExportHandler,
-            Flags: cli.Flags{
-                "global": globalFlags,
+            FlagGroups: cli.FlagGroups{
+                cli.NewFlagGroup("global", globalFlags...),
             },
         },
         &cli.Handler{
