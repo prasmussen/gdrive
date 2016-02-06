@@ -42,10 +42,10 @@ func (self *Handler) getParser() Parser {
     var parsers []Parser
 
     for _, pattern := range self.SplitPattern() {
-        if isOptional(pattern) {
-            name := optionalName(pattern)
-            parser := getFlagParser(self.FlagGroups.getFlags(name))
-            parsers = append(parsers, parser)
+        if isFlagGroup(pattern) {
+            groupName := flagGroupName(pattern)
+            flags := self.FlagGroups.getFlags(groupName)
+            parsers = append(parsers, getFlagParser(flags))
         } else if isCaptureGroup(pattern) {
             parsers = append(parsers, CaptureGroupParser{pattern})
         } else {
@@ -110,10 +110,10 @@ func isCaptureGroup(arg string) bool {
     return strings.HasPrefix(arg, "<") && strings.HasSuffix(arg, ">")
 }
 
-func isOptional(arg string) bool {
+func isFlagGroup(arg string) bool {
     return strings.HasPrefix(arg, "[") && strings.HasSuffix(arg, "]")
 }
 
-func optionalName(s string) string {
+func flagGroupName(s string) string {
     return s[1:len(s) - 1]
 }
