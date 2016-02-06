@@ -69,6 +69,11 @@ func prepareLocalFiles(root string) ([]*localFile, error) {
             return nil
         }
 
+        // Skip files that are not a directory or regular file
+        if !info.IsDir() && !info.Mode().IsRegular() {
+            return nil
+        }
+
         // Get relative path from root
         relPath, err := filepath.Rel(absRootPath, absPath)
         if err != nil {
