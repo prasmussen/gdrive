@@ -65,6 +65,7 @@ func downloadSyncHandler(ctx cli.Context) {
         RootId: args.String("id"),
         DryRun: args.Bool("dryRun"),
         DeleteExtraneous: args.Bool("deleteExtraneous"),
+        Comparer: Md5Comparer{},
     })
     checkErr(err)
 }
@@ -122,6 +123,7 @@ func uploadSyncHandler(ctx cli.Context) {
         DryRun: args.Bool("dryRun"),
         DeleteExtraneous: args.Bool("deleteExtraneous"),
         ChunkSize: args.Int64("chunksize"),
+        Comparer: Md5Comparer{},
     })
     checkErr(err)
 }

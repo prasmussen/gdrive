@@ -1,6 +1,7 @@
 package drive
 
 import (
+    "time"
     "fmt"
     "os"
     "path/filepath"
@@ -13,18 +14,18 @@ import (
 
 const DefaultIgnoreFile = ".gdriveignore"
 
-func (self *Drive) prepareSyncFiles(localPath string, root *drive.File) (*syncFiles, error) {
-    localCh := make(chan struct{files []*localFile; err error})
-    remoteCh := make(chan struct{files []*remoteFile; err error})
+func (self *Drive) prepareSyncFiles(localPath string, root *drive.File, cmp FileComparer) (*syncFiles, error) {
+    localCh := make(chan struct{files []*LocalFile; err error})
+    remoteCh := make(chan struct{files []*RemoteFile; err error})
 
     go func() {
         files, err := prepareLocalFiles(localPath)
-        localCh <- struct{files []*localFile; err error}{files, err}
+        localCh <- struct{files []*LocalFile; err error}{files, err}
     }()
 
     go func() {
         files, err := self.prepareRemoteFiles(root)
-        remoteCh <- struct{files []*remoteFile; err error}{files, err}
+        remoteCh <- struct{files []*RemoteFile; err error}{files, err}
     }()
 
     local := <-localCh
@@ -38,14 +39,15 @@ func (self *Drive) prepareSyncFiles(localPath string, root *drive.File) (*syncFi
     }
 
     return &syncFiles{
-        root: &remoteFile{file: root},
+        root: &RemoteFile{file: root},
         local: local.files,
         remote: remote.files,
+        compare: cmp,
     }, nil
 }
 
-func prepareLocalFiles(root string) ([]*localFile, error) {
-    var files []*localFile
+func prepareLocalFiles(root string) ([]*LocalFile, error) {
+    var files []*LocalFile
 
     // Get absolute root path
     absRootPath, err := filepath.Abs(root)
@@ -85,7 +87,7 @@ func prepareLocalFiles(root string) ([]*localFile, error) {
             return nil
         }
 
-        files = append(files, &localFile{
+        files = append(files, &LocalFile{
             absPath: absPath,
             relPath: relPath,
             info: info,
@@ -112,7 +114,7 @@ func (self *Drive) listAllFiles(q string, fields []googleapi.Field) ([]*drive.Fi
     return files, err
 }
 
-func (self *Drive) prepareRemoteFiles(rootDir *drive.File) ([]*remoteFile, error) {
+func (self *Drive) prepareRemoteFiles(rootDir *drive.File) ([]*RemoteFile, error) {
     // Find all files which has rootDir as root
     query := fmt.Sprintf("appProperties has {key='syncRootId' and value='%s'}", rootDir.Id)
     fields := []googleapi.Field{"nextPageToken", "files(id,name,parents,md5Checksum,mimeType)"}
@@ -130,13 +132,13 @@ func (self *Drive) prepareRemoteFiles(rootDir *drive.File) ([]*remoteFile, error
         return nil, err
     }
 
-    var remoteFiles []*remoteFile
+    var remoteFiles []*RemoteFile
     for _, f := range files {
         relPath, ok := relPaths[f.Id]
         if !ok {
             return nil, fmt.Errorf("File %s does not have a valid parent", f.Id)
         }
-        remoteFiles = append(remoteFiles, &remoteFile{
+        remoteFiles = append(remoteFiles, &RemoteFile{
             relPath: relPath,
             file: f,
         })
@@ -230,30 +232,60 @@ func checkFiles(files []*drive.File) error {
     return nil
 }
 
-type localFile struct {
+type LocalFile struct {
     absPath string
     relPath string
     info os.FileInfo
 }
 
-type remoteFile struct {
+type RemoteFile struct {
     relPath string
     file *drive.File
 }
 
 type changedFile struct {
-    local *localFile
-    remote *remoteFile
+    local *LocalFile
+    remote *RemoteFile
 }
 
 type syncFiles struct {
-    root *remoteFile
-    local []*localFile
-    remote []*remoteFile
+    root *RemoteFile
+    local []*LocalFile
+    remote []*RemoteFile
+    compare FileComparer
 }
 
-func (self *syncFiles) filterMissingRemoteDirs() []*localFile {
-    var files []*localFile
+type FileComparer interface {
+    Changed(*LocalFile, *RemoteFile) bool
+}
+
+func (self LocalFile) AbsPath() string {
+    return self.absPath
+}
+
+func (self LocalFile) Size() int64 {
+    return self.info.Size()
+}
+
+func (self LocalFile) Modified() time.Time {
+    return self.info.ModTime()
+}
+
+func (self RemoteFile) Md5() string {
+    return self.file.Md5Checksum
+}
+
+func (self RemoteFile) Size() int64 {
+    return self.file.Size
+}
+
+func (self RemoteFile) Modified() time.Time {
+    t, _ := time.Parse(time.RFC3339, self.file.ModifiedTime)
+    return t
+}
+
+func (self *syncFiles) filterMissingRemoteDirs() []*LocalFile {
+    var files []*LocalFile
 
     for _, lf := range self.local {
         if lf.info.IsDir() && !self.existsRemote(lf) {
@@ -264,8 +296,8 @@ func (self *syncFiles) filterMissingRemoteDirs() []*localFile {
     return files
 }
 
-func (self *syncFiles) filterMissingLocalDirs() []*remoteFile {
-    var files []*remoteFile
+func (self *syncFiles) filterMissingLocalDirs() []*RemoteFile {
+    var files []*RemoteFile
 
     for _, rf := range self.remote {
         if isDir(rf.file) && !self.existsLocal(rf) {
@@ -276,8 +308,8 @@ func (self *syncFiles) filterMissingLocalDirs() []*remoteFile {
     return files
 }
 
-func (self *syncFiles) filterMissingRemoteFiles() []*localFile {
-    var files []*localFile
+func (self *syncFiles) filterMissingRemoteFiles() []*LocalFile {
+    var files []*LocalFile
 
     for _, lf := range self.local {
         if !lf.info.IsDir() && !self.existsRemote(lf) {
@@ -288,8 +320,8 @@ func (self *syncFiles) filterMissingRemoteFiles() []*localFile {
     return files
 }
 
-func (self *syncFiles) filterMissingLocalFiles() []*remoteFile {
-    var files []*remoteFile
+func (self *syncFiles) filterMissingLocalFiles() []*RemoteFile {
+    var files []*RemoteFile
 
     for _, rf := range self.remote {
         if !isDir(rf.file) && !self.existsLocal(rf) {
@@ -315,8 +347,8 @@ func (self *syncFiles) filterChangedLocalFiles() []*changedFile {
             continue
         }
 
-        // Add files where remote md5 sum does not match local
-        if rf.file.Md5Checksum != md5sum(lf.absPath) {
+        // Check if file has changed
+        if self.compare.Changed(lf, rf) {
             files = append(files, &changedFile{
                 local: lf,
                 remote: rf,
@@ -342,8 +374,8 @@ func (self *syncFiles) filterChangedRemoteFiles() []*changedFile {
             continue
         }
 
-        // Add files where remote md5 sum does not match local
-        if rf.file.Md5Checksum != md5sum(lf.absPath) {
+        // Check if file has changed
+        if self.compare.Changed(lf, rf) {
             files = append(files, &changedFile{
                 local: lf,
                 remote: rf,
@@ -354,8 +386,8 @@ func (self *syncFiles) filterChangedRemoteFiles() []*changedFile {
     return files
 }
 
-func (self *syncFiles) filterExtraneousRemoteFiles() []*remoteFile {
-    var files []*remoteFile
+func (self *syncFiles) filterExtraneousRemoteFiles() []*RemoteFile {
+    var files []*RemoteFile
 
     for _, rf := range self.remote {
         if !self.existsLocal(rf) {
@@ -366,8 +398,8 @@ func (self *syncFiles) filterExtraneousRemoteFiles() []*remoteFile {
     return files
 }
 
-func (self *syncFiles) filterExtraneousLocalFiles() []*localFile {
-    var files []*localFile
+func (self *syncFiles) filterExtraneousLocalFiles() []*LocalFile {
+    var files []*LocalFile
 
     for _, lf := range self.local {
         if !self.existsRemote(lf) {
@@ -378,17 +410,17 @@ func (self *syncFiles) filterExtraneousLocalFiles() []*localFile {
     return files
 }
 
-func (self *syncFiles) existsRemote(lf *localFile) bool {
+func (self *syncFiles) existsRemote(lf *LocalFile) bool {
     _, found := self.findRemoteByPath(lf.relPath)
     return found
 }
 
-func (self *syncFiles) existsLocal(rf *remoteFile) bool {
+func (self *syncFiles) existsLocal(rf *RemoteFile) bool {
     _, found := self.findLocalByPath(rf.relPath)
     return found
 }
 
-func (self *syncFiles) findRemoteByPath(relPath string) (*remoteFile, bool) {
+func (self *syncFiles) findRemoteByPath(relPath string) (*RemoteFile, bool) {
     if relPath == "." {
         return self.root, true
     }
@@ -402,7 +434,7 @@ func (self *syncFiles) findRemoteByPath(relPath string) (*remoteFile, bool) {
     return nil, false
 }
 
-func (self *syncFiles) findLocalByPath(relPath string) (*localFile, bool) {
+func (self *syncFiles) findLocalByPath(relPath string) (*LocalFile, bool) {
     for _, lf := range self.local {
         if relPath == lf.relPath {
             return lf, true
@@ -412,7 +444,7 @@ func (self *syncFiles) findLocalByPath(relPath string) (*localFile, bool) {
     return nil, false
 }
 
-type byLocalPathLength []*localFile
+type byLocalPathLength []*LocalFile
 
 func (self byLocalPathLength) Len() int {
     return len(self)
@@ -426,7 +458,7 @@ func (self byLocalPathLength) Less(i, j int) bool {
     return pathLength(self[i].relPath) < pathLength(self[j].relPath)
 }
 
-type byRemotePathLength []*remoteFile
+type byRemotePathLength []*RemoteFile
 
 func (self byRemotePathLength) Len() int {
     return len(self)

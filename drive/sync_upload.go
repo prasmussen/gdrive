@@ -19,6 +19,7 @@ type UploadSyncArgs struct {
     DryRun bool
     DeleteExtraneous bool
     ChunkSize int64
+    Comparer FileComparer
 }
 
 func (self *Drive) UploadSync(args UploadSyncArgs) error {
@@ -36,7 +37,7 @@ func (self *Drive) UploadSync(args UploadSyncArgs) error {
     }
 
     fmt.Fprintln(args.Out, "Collecting local and remote file information...")
-    files, err := self.prepareSyncFiles(args.Path, rootDir)
+    files, err := self.prepareSyncFiles(args.Path, rootDir, args.Comparer)
     if err != nil {
         return err
     }
@@ -143,7 +144,7 @@ func (self *Drive) createMissingRemoteDirs(files *syncFiles, args UploadSyncArgs
         fmt.Fprintf(args.Out, "[%04d/%04d] Creating directory: %s\n", i + 1, missingCount, filepath.Join(files.root.file.Name, lf.relPath))
 
         if args.DryRun {
-            files.remote = append(files.remote, &remoteFile{
+            files.remote = append(files.remote, &RemoteFile{
                 relPath: lf.relPath,
                 file: dstFile,
             })
@@ -153,7 +154,7 @@ func (self *Drive) createMissingRemoteDirs(files *syncFiles, args UploadSyncArgs
                 return nil, fmt.Errorf("Failed to create directory: %s", err)
             }
 
-            files.remote = append(files.remote, &remoteFile{
+            files.remote = append(files.remote, &RemoteFile{
                 relPath: lf.relPath,
                 file: f,
             })
@@ -244,7 +245,7 @@ func (self *Drive) deleteExtraneousRemoteFiles(files *syncFiles, args UploadSync
     return nil
 }
 
-func (self *Drive) uploadMissingFile(parentId string, lf *localFile, args UploadSyncArgs) error {
+func (self *Drive) uploadMissingFile(parentId string, lf *LocalFile, args UploadSyncArgs) error {
     srcFile, err := os.Open(lf.absPath)
     if err != nil {
         return fmt.Errorf("Failed to open file: %s", err)
@@ -300,7 +301,7 @@ func (self *Drive) updateChangedFile(cf *changedFile, args UploadSyncArgs) error
     return nil
 }
 
-func (self *Drive) deleteRemoteFile(rf *remoteFile, args UploadSyncArgs) error {
+func (self *Drive) deleteRemoteFile(rf *RemoteFile, args UploadSyncArgs) error {
     err := self.service.Files.Delete(rf.file.Id).Do()
     if err != nil {
         return fmt.Errorf("Failed to delete file: %s", err)

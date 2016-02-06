@@ -18,6 +18,7 @@ type DownloadSyncArgs struct {
     Path string
     DryRun bool
     DeleteExtraneous bool
+    Comparer FileComparer
 }
 
 func (self *Drive) DownloadSync(args DownloadSyncArgs) error {
@@ -31,7 +32,7 @@ func (self *Drive) DownloadSync(args DownloadSyncArgs) error {
     }
 
     fmt.Fprintln(args.Out, "Collecting local and remote file information...")
-    files, err := self.prepareSyncFiles(args.Path, rootDir)
+    files, err := self.prepareSyncFiles(args.Path, rootDir, args.Comparer)
     if err != nil {
         return err
     }
