@@ -4,7 +4,7 @@ import (
     "fmt"
     "os"
     "path/filepath"
-    "github.com/gyuho/goraph/graph"
+    "github.com/soniakeys/graph"
     "github.com/sabhiram/go-git-ignore"
     "golang.org/x/net/context"
     "google.golang.org/api/drive/v3"
@@ -140,36 +140,65 @@ func (self *Drive) prepareRemoteFiles(rootDir *drive.File) ([]*remoteFile, error
     return remoteFiles, nil
 }
 
-func prepareRemoteRelPaths(rootId string, files []*drive.File) (map[string]string, error) {
-    names := map[string]string{}
-    idGraph := graph.NewDefaultGraph()
+func prepareRemoteRelPaths(root *drive.File, files []*drive.File) (map[string]string, error) {
+    // The graph will only hold integer values so we use
+    // maps to lookup file by index and index by file id
+    indexLookup := map[string]graph.NI{}
+    fileLookup := map[graph.NI]*drive.File{}
 
-    for _, f := range files {
-        // Store directory name for quick lookup
-        names[f.Id] = f.Name
+    // All files includes root dir
+    allFiles := append([]*drive.File{root}, files...)
 
-        // Store path between parent and child folder
-        idGraph.AddVertex(f.Id)
-        idGraph.AddVertex(f.Parents[0])
-        idGraph.AddEdge(f.Parents[0], f.Id, 0)
+    // Prepare lookup maps
+    for i, f := range allFiles {
+        indexLookup[f.Id] = graph.NI(i)
+        fileLookup[graph.NI(i)] = f
     }
 
+    // Graph will hold relationship between parent and file
+    g := &graph.AdjacencyList{}
+
+    // Add relationship between parent and file for all files to graph
+    for i, f := range allFiles {
+        if f == root {
+            continue
+        }
+
+        // Lookup index of parent
+        parentIdx, found := indexLookup[f.Parents[0]]
+        if !found {
+            return nil, fmt.Errorf("Could not find parent of %s (%s)", f.Id, f.Name)
+        }
+
+        g.AddEdge(graph.NI(parentIdx), graph.NI(i))
+    }
+
+    // This will hold a map of file id => relative path
     paths := map[string]string{}
 
-    for _, f := range files {
-        // Find path from root to directory
-        pathIds, _, err := graph.Dijkstra(idGraph, rootId, f.Id)
-        if err != nil {
-            return nil, err
+    // Find relative path from root for all files
+    for _, f := range allFiles {
+        if f == root {
+            continue
         }
 
-        // Convert path ids to path names
-        var pathNames []string
-        for _, id := range pathIds {
-            pathNames = append(pathNames, names[id])
+        // Find nodes between root and file
+        nodes := g.BreadthFirstPath(0, indexLookup[f.Id])
+
+        // This will hold the name of all paths between root and
+        // file (exluding root and including file itself)
+        pathNames := []string{}
+
+        // Lookup file for each node and grab name
+        for _, n := range nodes {
+            file := fileLookup[n]
+            if file == root {
+                continue
+            }
+            pathNames = append(pathNames, file.Name)
         }
 
-        // Store relative file path from root to directory
+        // Join path names to form relative path and add to map
         paths[f.Id] = filepath.Join(pathNames...)
     }
 
