@@ -6,7 +6,9 @@ import (
     "path/filepath"
     "github.com/gyuho/goraph/graph"
     "github.com/sabhiram/go-git-ignore"
+    "golang.org/x/net/context"
     "google.golang.org/api/drive/v3"
+    "google.golang.org/api/googleapi"
 )
 
 const DefaultIgnoreFile = ".gdriveignore"
@@ -94,25 +96,37 @@ func prepareLocalFiles(root string) ([]*localFile, error) {
     return files, err
 }
 
+func (self *Drive) listAllFiles(q string, fields []googleapi.Field) ([]*drive.File, error) {
+    var files []*drive.File
+
+    err := self.service.Files.List().Q(q).Fields(fields...).PageSize(1000).Pages(context.TODO(), func(fl *drive.FileList) error {
+        files = append(files, fl.Files...)
+        return nil
+    })
+
+    return files, err
+}
+
 func (self *Drive) prepareRemoteFiles(rootDir *drive.File) ([]*remoteFile, error) {
     // Find all files which has rootDir as root
     query := fmt.Sprintf("appProperties has {key='syncRootId' and value='%s'}", rootDir.Id)
-    fileList, err := self.service.Files.List().Q(query).Fields("files(id,name,parents,md5Checksum,mimeType)").Do()
+    fields := []googleapi.Field{"nextPageToken", "files(id,name,parents,md5Checksum,mimeType)"}
+    files, err := self.listAllFiles(query, fields)
     if err != nil {
         return nil, fmt.Errorf("Failed listing files: %s", err)
     }
 
-    if err := checkFiles(fileList.Files); err != nil {
+    if err := checkFiles(files); err != nil {
         return nil, err
     }
 
-    relPaths, err := prepareRemoteRelPaths(rootDir.Id, fileList.Files)
+    relPaths, err := prepareRemoteRelPaths(rootDir, files)
     if err != nil {
         return nil, err
     }
 
     var remoteFiles []*remoteFile
-    for _, f := range fileList.Files {
+    for _, f := range files {
         relPath, ok := relPaths[f.Id]
         if !ok {
             return nil, fmt.Errorf("File %s does not have a valid parent", f.Id)
