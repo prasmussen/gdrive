@@ -5,6 +5,7 @@ import (
 	"os"
 	"io"
 	"io/ioutil"
+	"path/filepath"
     "./cli"
 	"./auth"
 	"./drive"
@@ -13,6 +14,7 @@ import (
 const ClientId     = "367116221053-7n0vf5akeru7on6o2fjinrecpdoe99eg.apps.googleusercontent.com"
 const ClientSecret = "1qsNodXNaWq1mQuBjUjmvhoO"
 const TokenFilename = "token_v2.json"
+const DefaultCacheFileName = "file_cache.json"
 
 
 func listHandler(ctx cli.Context) {
@@ -58,6 +60,7 @@ func downloadHandler(ctx cli.Context) {
 
 func downloadSyncHandler(ctx cli.Context) {
     args := ctx.Args()
+    cachePath := filepath.Join(args.String("configDir"), DefaultCacheFileName)
     err := newDrive(args).DownloadSync(drive.DownloadSyncArgs{
         Out: os.Stdout,
         Progress: progressWriter(args.Bool("noProgress")),
@@ -65,7 +68,7 @@ func downloadSyncHandler(ctx cli.Context) {
         RootId: args.String("id"),
         DryRun: args.Bool("dryRun"),
         DeleteExtraneous: args.Bool("deleteExtraneous"),
-        Comparer: Md5Comparer{},
+        Comparer: NewCachedMd5Comparer(cachePath),
     })
     checkErr(err)
 }
@@ -115,6 +118,7 @@ func uploadStdinHandler(ctx cli.Context) {
 
 func uploadSyncHandler(ctx cli.Context) {
     args := ctx.Args()
+    cachePath := filepath.Join(args.String("configDir"), DefaultCacheFileName)
     err := newDrive(args).UploadSync(drive.UploadSyncArgs{
         Out: os.Stdout,
         Progress: progressWriter(args.Bool("noProgress")),
@@ -123,7 +127,7 @@ func uploadSyncHandler(ctx cli.Context) {
         DryRun: args.Bool("dryRun"),
         DeleteExtraneous: args.Bool("deleteExtraneous"),
         ChunkSize: args.Int64("chunksize"),
-        Comparer: Md5Comparer{},
+        Comparer: NewCachedMd5Comparer(cachePath),
     })
     checkErr(err)
 }

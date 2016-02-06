@@ -4,7 +4,10 @@ import (
     "runtime"
     "path/filepath"
     "fmt"
+    "encoding/json"
     "os"
+    "io"
+    "crypto/md5"
 )
 
 func GetDefaultConfigDir() string {
@@ -55,4 +58,33 @@ func checkErr(err error) {
         fmt.Println(err)
         os.Exit(1)
     }
+}
+
+func writeJson(path string, data interface{}) error {
+    tmpFile := path + ".tmp"
+    f, err := os.Create(tmpFile)
+    if err != nil {
+        return err
+    }
+
+    err = json.NewEncoder(f).Encode(data)
+    f.Close()
+    if err != nil {
+        os.Remove(tmpFile)
+        return err
+    }
+
+    return os.Rename(tmpFile, path)
+}
+
+func md5sum(path string) string {
+    h := md5.New()
+    f, err := os.Open(path)
+    if err != nil {
+        return ""
+    }
+    defer f.Close()
+
+    io.Copy(h, f)
+    return fmt.Sprintf("%x", h.Sum(nil))
 }
