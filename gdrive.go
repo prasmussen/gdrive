@@ -12,6 +12,7 @@ const Version = "2.0.0"
 const DefaultMaxFiles = 30
 const DefaultMaxChanges = 100
 const DefaultNameWidth = 40
+const DefaultPathWidth = 60
 const DefaultUploadChunkSize = 8 * 1024 * 1024
 const DefaultQuery = "trashed = false and 'me' in owners"
 const DefaultShareRole = "reader"
@@ -347,6 +348,39 @@ func main() {
                         Name: "skipHeader",
                         Patterns: []string{"--no-header"},
                         Description: "Dont print the header",
+                        OmitValue: true,
+                    },
+                ),
+            },
+        },
+        &cli.Handler{
+            Pattern: "[global] sync list recursive [options] <id>",
+            Description: "List content of syncable directory",
+            Callback: listRecursiveSyncHandler,
+            FlagGroups: cli.FlagGroups{
+                cli.NewFlagGroup("global", globalFlags...),
+                cli.NewFlagGroup("options",
+                    cli.StringFlag{
+                        Name: "sortOrder",
+                        Patterns: []string{"--order"},
+                        Description: "Sort order. See https://godoc.org/google.golang.org/api/drive/v3#FilesListCall.OrderBy",
+                    },
+                    cli.IntFlag{
+                        Name: "pathWidth",
+                        Patterns: []string{"--path-width"},
+                        Description: fmt.Sprintf("Width of path column, default: %d, minimum: 9, use 0 for full width", DefaultPathWidth),
+                        DefaultValue: DefaultPathWidth,
+                    },
+                    cli.BoolFlag{
+                        Name: "skipHeader",
+                        Patterns: []string{"--no-header"},
+                        Description: "Dont print the header",
+                        OmitValue: true,
+                    },
+                    cli.BoolFlag{
+                        Name: "sizeInBytes",
+                        Patterns: []string{"--bytes"},
+                        Description: "Size in bytes",
                         OmitValue: true,
                     },
                 ),

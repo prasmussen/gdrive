@@ -4,6 +4,7 @@ import (
     "time"
     "fmt"
     "os"
+    "strings"
     "path/filepath"
     "github.com/soniakeys/graph"
     "github.com/sabhiram/go-git-ignore"
@@ -24,7 +25,7 @@ func (self *Drive) prepareSyncFiles(localPath string, root *drive.File, cmp File
     }()
 
     go func() {
-        files, err := self.prepareRemoteFiles(root)
+        files, err := self.prepareRemoteFiles(root, "")
         remoteCh <- struct{files []*RemoteFile; err error}{files, err}
     }()
 
@@ -103,10 +104,16 @@ func prepareLocalFiles(root string) ([]*LocalFile, error) {
     return files, err
 }
 
-func (self *Drive) listAllFiles(q string, fields []googleapi.Field) ([]*drive.File, error) {
+type listAllFilesArgs struct {
+    query string
+    fields []googleapi.Field
+    sortOrder string
+}
+
+func (self *Drive) listAllFiles(args listAllFilesArgs) ([]*drive.File, error) {
     var files []*drive.File
 
-    err := self.service.Files.List().Q(q).Fields(fields...).PageSize(1000).Pages(context.TODO(), func(fl *drive.FileList) error {
+    err := self.service.Files.List().Q(args.query).Fields(args.fields...).OrderBy(args.sortOrder).PageSize(1000).Pages(context.TODO(), func(fl *drive.FileList) error {
         files = append(files, fl.Files...)
         return nil
     })
@@ -114,11 +121,14 @@ func (self *Drive) listAllFiles(q string, fields []googleapi.Field) ([]*drive.Fi
     return files, err
 }
 
-func (self *Drive) prepareRemoteFiles(rootDir *drive.File) ([]*RemoteFile, error) {
+func (self *Drive) prepareRemoteFiles(rootDir *drive.File, sortOrder string) ([]*RemoteFile, error) {
     // Find all files which has rootDir as root
-    query := fmt.Sprintf("appProperties has {key='syncRootId' and value='%s'}", rootDir.Id)
-    fields := []googleapi.Field{"nextPageToken", "files(id,name,parents,md5Checksum,mimeType)"}
-    files, err := self.listAllFiles(query, fields)
+    listArgs := listAllFilesArgs{
+        query: fmt.Sprintf("appProperties has {key='syncRootId' and value='%s'}", rootDir.Id),
+        fields: []googleapi.Field{"nextPageToken", "files(id,name,parents,md5Checksum,mimeType,size,modifiedTime)"},
+        sortOrder: sortOrder,
+    }
+    files, err := self.listAllFiles(listArgs)
     if err != nil {
         return nil, fmt.Errorf("Failed listing files: %s", err)
     }
@@ -475,6 +485,20 @@ func (self byRemotePathLength) Swap(i, j int) {
 
 func (self byRemotePathLength) Less(i, j int) bool {
     return pathLength(self[i].relPath) < pathLength(self[j].relPath)
+}
+
+type byRemotePath []*RemoteFile
+
+func (self byRemotePath) Len() int {
+    return len(self)
+}
+
+func (self byRemotePath) Swap(i, j int) {
+    self[i], self[j] = self[j], self[i]
+}
+
+func (self byRemotePath) Less(i, j int) bool {
+    return strings.ToLower(self[i].relPath) < strings.ToLower(self[j].relPath)
 }
 
 type ignoreFunc func(string) bool

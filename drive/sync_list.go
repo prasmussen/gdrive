@@ -2,6 +2,7 @@ package drive
 
 import (
     "fmt"
+    "sort"
     "io"
     "text/tabwriter"
     "google.golang.org/api/googleapi"
@@ -14,13 +15,39 @@ type ListSyncArgs struct {
 }
 
 func (self *Drive) ListSync(args ListSyncArgs) error {
-    query := fmt.Sprintf("appProperties has {key='isSyncRoot' and value='true'}")
-    fields := []googleapi.Field{"nextPageToken", "files(id,name,mimeType,createdTime)"}
-    files, err := self.listAllFiles(query, fields)
+    listArgs := listAllFilesArgs{
+        query: "appProperties has {key='isSyncRoot' and value='true'}",
+        fields: []googleapi.Field{"nextPageToken", "files(id,name,mimeType,createdTime)"},
+    }
+    files, err := self.listAllFiles(listArgs)
     if err != nil {
         return err
     }
     printSyncDirectories(files, args)
+    return nil
+}
+
+type ListRecursiveSyncArgs struct {
+    Out io.Writer
+    RootId string
+    SkipHeader bool
+    PathWidth int64
+    SizeInBytes bool
+    SortOrder string
+}
+
+func (self *Drive) ListRecursiveSync(args ListRecursiveSyncArgs) error {
+    rootDir, err := self.getSyncRoot(args.RootId)
+    if err != nil {
+        return err
+    }
+
+    files, err := self.prepareRemoteFiles(rootDir, args.SortOrder)
+    if err != nil {
+        return err
+    }
+
+    printSyncDirContent(files, args)
     return nil
 }
 
@@ -37,6 +64,32 @@ func printSyncDirectories(files []*drive.File, args ListSyncArgs) {
             f.Id,
             f.Name,
             formatDatetime(f.CreatedTime),
+        )
+    }
+
+    w.Flush()
+}
+
+func printSyncDirContent(files []*RemoteFile, args ListRecursiveSyncArgs) {
+    if args.SortOrder == "" {
+        // Sort files by path
+        sort.Sort(byRemotePath(files))
+    }
+
+    w := new(tabwriter.Writer)
+    w.Init(args.Out, 0, 0, 3, ' ', 0)
+
+    if !args.SkipHeader {
+        fmt.Fprintln(w, "Id\tPath\tType\tSize\tModified")
+    }
+
+    for _, rf := range files {
+        fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\n",
+            rf.file.Id,
+            truncateString(rf.relPath, int(args.PathWidth)),
+            filetype(rf.file),
+            formatSize(rf.file.Size, args.SizeInBytes),
+            formatDatetime(rf.file.ModifiedTime),
         )
     }
 

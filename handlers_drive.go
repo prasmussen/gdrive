@@ -239,6 +239,19 @@ func listSyncHandler(ctx cli.Context) {
     checkErr(err)
 }
 
+func listRecursiveSyncHandler(ctx cli.Context) {
+    args := ctx.Args()
+    err := newDrive(args).ListRecursiveSync(drive.ListRecursiveSyncArgs{
+        Out: os.Stdout,
+        RootId: args.String("id"),
+        SkipHeader: args.Bool("skipHeader"),
+        PathWidth: args.Int64("pathWidth"),
+        SizeInBytes: args.Bool("sizeInBytes"),
+        SortOrder: args.String("sortOrder"),
+    })
+    checkErr(err)
+}
+
 func deleteRevisionHandler(ctx cli.Context) {
     args := ctx.Args()
     err := newDrive(args).DeleteRevision(drive.DeleteRevisionArgs{
