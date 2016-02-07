@@ -209,7 +209,7 @@ func (self *Drive) updateChangedFiles(files *syncFiles, args UploadSyncArgs) err
             continue
         }
 
-        err := self.updateChangedFile(cf, args)
+        err := self.updateChangedFile(cf, args, 0)
         if err != nil {
             return err
         }
@@ -307,7 +307,7 @@ func (self *Drive) uploadMissingFile(parentId string, lf *LocalFile, args Upload
     return nil
 }
 
-func (self *Drive) updateChangedFile(cf *changedFile, args UploadSyncArgs) error {
+func (self *Drive) updateChangedFile(cf *changedFile, args UploadSyncArgs, try int) error {
     srcFile, err := os.Open(cf.local.absPath)
     if err != nil {
         return fmt.Errorf("Failed to open file: %s", err)
@@ -327,7 +327,13 @@ func (self *Drive) updateChangedFile(cf *changedFile, args UploadSyncArgs) error
 
     _, err = self.service.Files.Update(cf.remote.file.Id, dstFile).Media(srcReader, chunkSize).Do()
     if err != nil {
-        return fmt.Errorf("Failed to update file: %s", err)
+        if isBackendError(err) && try < MaxBackendErrorRetries {
+            exponentialBackoffSleep(try)
+            try++
+            self.updateChangedFile(cf, args, try)
+        } else {
+            return fmt.Errorf("Failed to update file: %s", err)
+        }
     }
 
     return nil
