@@ -236,7 +236,7 @@ func (self *Drive) deleteExtraneousRemoteFiles(files *syncFiles, args UploadSync
             continue
         }
 
-        err := self.deleteRemoteFile(rf, args)
+        err := self.deleteRemoteFile(rf, args, 0)
         if err != nil {
             return err
         }
@@ -339,10 +339,16 @@ func (self *Drive) updateChangedFile(cf *changedFile, args UploadSyncArgs, try i
     return nil
 }
 
-func (self *Drive) deleteRemoteFile(rf *RemoteFile, args UploadSyncArgs) error {
+func (self *Drive) deleteRemoteFile(rf *RemoteFile, args UploadSyncArgs, try int) error {
     err := self.service.Files.Delete(rf.file.Id).Do()
     if err != nil {
-        return fmt.Errorf("Failed to delete file: %s", err)
+        if isBackendError(err) && try < MaxBackendErrorRetries {
+            exponentialBackoffSleep(try)
+            try++
+            self.deleteRemoteFile(rf, args, try)
+        } else {
+            return fmt.Errorf("Failed to delete file: %s", err)
+        }
     }
 
     return nil
