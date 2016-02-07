@@ -134,34 +134,34 @@ func (self *Drive) createMissingRemoteDirs(files *syncFiles, args UploadSyncArgs
             return nil, fmt.Errorf("Could not find remote directory with path '%s'", parentPath)
         }
 
-        dstFile := &drive.File{
-            Name: lf.info.Name(),
-            MimeType: DirectoryMimeType,
-            Parents: []string{parent.file.Id},
-            AppProperties: map[string]string{"syncRootId": args.RootId},
+        fmt.Fprintf(args.Out, "[%04d/%04d] Creating directory %s\n", i + 1, missingCount, filepath.Join(files.root.file.Name, lf.relPath))
+
+        f, err := self.createMissingRemoteDir(createMissingRemoteDirArgs{
+            name: lf.info.Name(),
+            parentId: parent.file.Id,
+            rootId: args.RootId,
+            dryRun: args.DryRun,
+            try: 0,
+        })
+        if err != nil {
+            return nil, err
         }
 
-        fmt.Fprintf(args.Out, "[%04d/%04d] Creating directory: %s\n", i + 1, missingCount, filepath.Join(files.root.file.Name, lf.relPath))
-
-        if args.DryRun {
-            files.remote = append(files.remote, &RemoteFile{
-                relPath: lf.relPath,
-                file: dstFile,
-            })
-        } else {
-            f, err := self.service.Files.Create(dstFile).Do()
-            if err != nil {
-                return nil, fmt.Errorf("Failed to create directory: %s", err)
-            }
-
-            files.remote = append(files.remote, &RemoteFile{
-                relPath: lf.relPath,
-                file: f,
-            })
-        }
+        files.remote = append(files.remote, &RemoteFile{
+            relPath: lf.relPath,
+            file: f,
+        })
     }
 
     return files, nil
+}
+
+type createMissingRemoteDirArgs struct {
+    name string
+    parentId string
+    rootId string
+    dryRun bool
+    try int
 }
 
 func (self *Drive) uploadMissingFiles(files *syncFiles, args UploadSyncArgs) error {
@@ -243,6 +243,32 @@ func (self *Drive) deleteExtraneousRemoteFiles(files *syncFiles, args UploadSync
     }
 
     return nil
+}
+
+func (self *Drive) createMissingRemoteDir(args createMissingRemoteDirArgs) (*drive.File, error) {
+    dstFile := &drive.File{
+        Name: args.name,
+        MimeType: DirectoryMimeType,
+        Parents: []string{args.parentId},
+        AppProperties: map[string]string{"syncRootId": args.rootId},
+    }
+
+    if args.dryRun {
+        return dstFile, nil
+    }
+
+    f, err := self.service.Files.Create(dstFile).Do()
+    if err != nil {
+        if isBackendError(err) && args.try < MaxBackendErrorRetries {
+            exponentialBackoffSleep(args.try)
+            args.try++
+            self.createMissingRemoteDir(args)
+        } else {
+            return nil, fmt.Errorf("Failed to create directory: %s", err)
+        }
+    }
+
+    return f, nil
 }
 
 func (self *Drive) uploadMissingFile(parentId string, lf *LocalFile, args UploadSyncArgs, try int) error {
