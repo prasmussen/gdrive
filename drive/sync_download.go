@@ -137,7 +137,7 @@ func (self *Drive) downloadMissingFiles(files *syncFiles, args DownloadSyncArgs)
             continue
         }
 
-        err = self.downloadRemoteFile(rf.file.Id, localPath, args)
+        err = self.downloadRemoteFile(rf.file.Id, localPath, args, 0)
         if err != nil {
             return err
         }
@@ -166,7 +166,7 @@ func (self *Drive) downloadChangedFiles(files *syncFiles, args DownloadSyncArgs)
             continue
         }
 
-        err = self.downloadRemoteFile(cf.remote.file.Id, localPath, args)
+        err = self.downloadRemoteFile(cf.remote.file.Id, localPath, args, 0)
         if err != nil {
             return err
         }
@@ -175,10 +175,16 @@ func (self *Drive) downloadChangedFiles(files *syncFiles, args DownloadSyncArgs)
     return nil
 }
 
-func (self *Drive) downloadRemoteFile(id, fpath string, args DownloadSyncArgs) error {
+func (self *Drive) downloadRemoteFile(id, fpath string, args DownloadSyncArgs, try int) error {
     res, err := self.service.Files.Get(id).Download()
     if err != nil {
-        return fmt.Errorf("Failed to download file: %s", err)
+        if isBackendError(err) && try < MaxBackendErrorRetries {
+            exponentialBackoffSleep(try)
+            try++
+            self.downloadRemoteFile(id, fpath, args, try)
+        } else {
+            return fmt.Errorf("Failed to download file: %s", err)
+        }
     }
 
     // Close body on function exit
@@ -203,7 +209,11 @@ func (self *Drive) downloadRemoteFile(id, fpath string, args DownloadSyncArgs) e
 
     // Save file to disk
     _, err = io.Copy(outFile, srcReader)
-    if err != nil {
+    if err != nil && try < MaxBackendErrorRetries {
+        exponentialBackoffSleep(try)
+        try++
+        self.downloadRemoteFile(id, fpath, args, try)
+    } else {
         return fmt.Errorf("Download was interrupted: %s", err)
     }
 
