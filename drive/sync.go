@@ -148,7 +148,7 @@ func (self *Drive) prepareRemoteFiles(rootDir *drive.File) ([]*RemoteFile, error
 }
 
 func prepareRemoteRelPaths(root *drive.File, files []*drive.File) (map[string]string, error) {
-    // The graph will only hold integer values so we use
+    // The tree only holds integer values so we use
     // maps to lookup file by index and index by file id
     indexLookup := map[string]graph.NI{}
     fileLookup := map[graph.NI]*drive.File{}
@@ -162,12 +162,13 @@ func prepareRemoteRelPaths(root *drive.File, files []*drive.File) (map[string]st
         fileLookup[graph.NI(i)] = f
     }
 
-    // Graph will hold relationship between parent and file
-    g := &graph.AdjacencyList{}
+    // This will hold 'parent index' -> 'file index' relationships
+    pathEnds := make([]graph.PathEnd, len(allFiles))
 
-    // Add relationship between parent and file for all files to graph
+    // Prepare parent -> file relationships
     for i, f := range allFiles {
         if f == root {
+            pathEnds[i] = graph.PathEnd{From: -1}
             continue
         }
 
@@ -176,9 +177,13 @@ func prepareRemoteRelPaths(root *drive.File, files []*drive.File) (map[string]st
         if !found {
             return nil, fmt.Errorf("Could not find parent of %s (%s)", f.Id, f.Name)
         }
-
-        g.AddEdge(graph.NI(parentIdx), graph.NI(i))
+        pathEnds[i] = graph.PathEnd{From: parentIdx}
     }
+
+    // Create parent pointer tree and calculate path lengths
+    tree := &graph.FromList{Paths: pathEnds}
+    tree.RecalcLeaves()
+    tree.RecalcLen()
 
     // This will hold a map of file id => relative path
     paths := map[string]string{}
@@ -190,7 +195,7 @@ func prepareRemoteRelPaths(root *drive.File, files []*drive.File) (map[string]st
         }
 
         // Find nodes between root and file
-        nodes := g.BreadthFirstPath(0, indexLookup[f.Id])
+        nodes := tree.PathTo(indexLookup[f.Id], nil)
 
         // This will hold the name of all paths between root and
         // file (exluding root and including file itself)
