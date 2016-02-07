@@ -8,7 +8,6 @@ import (
     "path/filepath"
     "github.com/soniakeys/graph"
     "github.com/sabhiram/go-git-ignore"
-    "golang.org/x/net/context"
     "google.golang.org/api/drive/v3"
     "google.golang.org/api/googleapi"
 )
@@ -100,23 +99,6 @@ func prepareLocalFiles(root string) ([]*LocalFile, error) {
     if err != nil {
         return nil, fmt.Errorf("Failed to prepare local files: %s", err)
     }
-
-    return files, err
-}
-
-type listAllFilesArgs struct {
-    query string
-    fields []googleapi.Field
-    sortOrder string
-}
-
-func (self *Drive) listAllFiles(args listAllFilesArgs) ([]*drive.File, error) {
-    var files []*drive.File
-
-    err := self.service.Files.List().Q(args.query).Fields(args.fields...).OrderBy(args.sortOrder).PageSize(1000).Pages(context.TODO(), func(fl *drive.FileList) error {
-        files = append(files, fl.Files...)
-        return nil
-    })
 
     return files, err
 }

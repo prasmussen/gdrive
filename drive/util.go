@@ -148,3 +148,8 @@ func pow(x int, y int) int {
     f := math.Pow(float64(x), float64(y))
     return int(f)
 }
+
+func min(x int, y int) int {
+    n := math.Min(float64(x), float64(y))
+    return int(n)
+}

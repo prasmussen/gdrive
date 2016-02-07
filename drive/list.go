@@ -4,7 +4,9 @@ import (
     "fmt"
     "io"
     "text/tabwriter"
+    "golang.org/x/net/context"
     "google.golang.org/api/drive/v3"
+    "google.golang.org/api/googleapi"
 )
 
 type ListFilesArgs struct {
@@ -18,20 +20,68 @@ type ListFilesArgs struct {
 }
 
 func (self *Drive) List(args ListFilesArgs) (err error) {
-    fileList, err := self.service.Files.List().PageSize(args.MaxFiles).Q(args.Query).OrderBy(args.SortOrder).Fields("files(id,name,md5Checksum,mimeType,size,createdTime)").Do()
+    listArgs := listAllFilesArgs{
+        query: args.Query,
+        fields: []googleapi.Field{"nextPageToken", "files(id,name,md5Checksum,mimeType,size,createdTime)"},
+        sortOrder: args.SortOrder,
+        maxFiles: args.MaxFiles,
+    }
+    files, err := self.listAllFiles(listArgs)
     if err != nil {
-        return fmt.Errorf("Failed listing files: %s", err)
+        return fmt.Errorf("Failed to list files: %s", err)
     }
 
     PrintFileList(PrintFileListArgs{
         Out: args.Out,
-        Files: fileList.Files,
+        Files: files,
         NameWidth: int(args.NameWidth),
         SkipHeader: args.SkipHeader,
         SizeInBytes: args.SizeInBytes,
     })
 
     return
+}
+
+type listAllFilesArgs struct {
+    query string
+    fields []googleapi.Field
+    sortOrder string
+    maxFiles int64
+}
+
+func (self *Drive) listAllFiles(args listAllFilesArgs) ([]*drive.File, error) {
+    var files []*drive.File
+
+    var pageSize int64
+    if args.maxFiles > 0 && args.maxFiles < 1000 {
+        pageSize = args.maxFiles
+    } else {
+        pageSize = 1000
+    }
+
+    controlledStop := fmt.Errorf("Controlled stop")
+
+    err := self.service.Files.List().Q(args.query).Fields(args.fields...).OrderBy(args.sortOrder).PageSize(pageSize).Pages(context.TODO(), func(fl *drive.FileList) error {
+        files = append(files, fl.Files...)
+
+        // Stop when we have all the files we need
+        if args.maxFiles > 0 && len(files) >= int(args.maxFiles) {
+            return controlledStop
+        }
+
+        return nil
+    })
+
+    if err != nil && err != controlledStop {
+        return nil, err
+    }
+
+    if args.maxFiles > 0 {
+        n := min(len(files), int(args.maxFiles))
+        return files[:n], nil
+    }
+
+    return files, nil
 }
 
 type PrintFileListArgs struct {
