@@ -209,12 +209,14 @@ func (self *Drive) downloadRemoteFile(id, fpath string, args DownloadSyncArgs, t
 
     // Save file to disk
     _, err = io.Copy(outFile, srcReader)
-    if err != nil && try < MaxBackendErrorRetries {
-        exponentialBackoffSleep(try)
-        try++
-        self.downloadRemoteFile(id, fpath, args, try)
-    } else {
-        return fmt.Errorf("Download was interrupted: %s", err)
+    if err != nil {
+        if try < MaxBackendErrorRetries {
+            exponentialBackoffSleep(try)
+            try++
+            self.downloadRemoteFile(id, fpath, args, try)
+        } else {
+            return fmt.Errorf("Download was interrupted: %s", err)
+        }
     }
 
     return nil
