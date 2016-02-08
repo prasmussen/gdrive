@@ -101,17 +101,17 @@ func (self *Drive) createMissingLocalDirs(files *syncFiles, args DownloadSyncArg
     sort.Sort(byRemotePathLength(missingDirs))
 
     for i, rf := range missingDirs {
-        path, err := filepath.Abs(filepath.Join(args.Path, rf.relPath))
+        absPath, err := filepath.Abs(filepath.Join(args.Path, rf.relPath))
         if err != nil {
             return fmt.Errorf("Failed to determine local absolute path: %s", err)
         }
-        fmt.Fprintf(args.Out, "[%04d/%04d] Creating directory: %s\n", i + 1, missingCount, path)
+        fmt.Fprintf(args.Out, "[%04d/%04d] Creating directory %s\n", i + 1, missingCount, filepath.Join(filepath.Base(args.Path), rf.relPath))
 
         if args.DryRun {
             continue
         }
 
-        mkdir(path)
+        os.MkdirAll(absPath, 0775)
     }
 
     return nil
@@ -126,18 +126,17 @@ func (self *Drive) downloadMissingFiles(files *syncFiles, args DownloadSyncArgs)
     }
 
     for i, rf := range missingFiles {
-        remotePath := filepath.Join(files.root.file.Name, rf.relPath)
-        localPath, err := filepath.Abs(filepath.Join(args.Path, rf.relPath))
+        absPath, err := filepath.Abs(filepath.Join(args.Path, rf.relPath))
         if err != nil {
             return fmt.Errorf("Failed to determine local absolute path: %s", err)
         }
-        fmt.Fprintf(args.Out, "[%04d/%04d] Downloading %s -> %s\n", i + 1, missingCount, remotePath, localPath)
+        fmt.Fprintf(args.Out, "[%04d/%04d] Downloading %s -> %s\n", i + 1, missingCount, rf.relPath, filepath.Join(filepath.Base(args.Path), rf.relPath))
 
         if args.DryRun {
             continue
         }
 
-        err = self.downloadRemoteFile(rf.file.Id, localPath, args, 0)
+        err = self.downloadRemoteFile(rf.file.Id, absPath, args, 0)
         if err != nil {
             return err
         }
@@ -155,18 +154,17 @@ func (self *Drive) downloadChangedFiles(files *syncFiles, args DownloadSyncArgs)
     }
 
     for i, cf := range changedFiles {
-        remotePath := filepath.Join(files.root.file.Name, cf.remote.relPath)
-        localPath, err := filepath.Abs(filepath.Join(args.Path, cf.remote.relPath))
+        absPath, err := filepath.Abs(filepath.Join(args.Path, cf.remote.relPath))
         if err != nil {
             return fmt.Errorf("Failed to determine local absolute path: %s", err)
         }
-        fmt.Fprintf(args.Out, "[%04d/%04d] Downloading %s -> %s\n", i + 1, changedCount, remotePath, localPath)
+        fmt.Fprintf(args.Out, "[%04d/%04d] Downloading %s -> %s\n", i + 1, changedCount, cf.remote.relPath, filepath.Join(filepath.Base(args.Path), cf.remote.relPath))
 
         if args.DryRun {
             continue
         }
 
-        err = self.downloadRemoteFile(cf.remote.file.Id, localPath, args, 0)
+        err = self.downloadRemoteFile(cf.remote.file.Id, absPath, args, 0)
         if err != nil {
             return err
         }

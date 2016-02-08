@@ -179,7 +179,7 @@ func (self *Drive) uploadMissingFiles(files *syncFiles, args UploadSyncArgs) err
             return fmt.Errorf("Could not find remote directory with path '%s'", parentPath)
         }
 
-        fmt.Fprintf(args.Out, "[%04d/%04d] Uploading %s -> %s\n", i + 1, missingCount, lf.absPath, filepath.Join(files.root.file.Name, lf.relPath))
+        fmt.Fprintf(args.Out, "[%04d/%04d] Uploading %s -> %s\n", i + 1, missingCount, lf.relPath, filepath.Join(files.root.file.Name, lf.relPath))
 
         if args.DryRun {
             continue
@@ -203,7 +203,7 @@ func (self *Drive) updateChangedFiles(files *syncFiles, args UploadSyncArgs) err
     }
 
     for i, cf := range changedFiles {
-        fmt.Fprintf(args.Out, "[%04d/%04d] Updating %s -> %s\n", i + 1, changedCount, cf.local.absPath, filepath.Join(files.root.file.Name, cf.local.relPath))
+        fmt.Fprintf(args.Out, "[%04d/%04d] Updating %s -> %s\n", i + 1, changedCount, cf.local.relPath, filepath.Join(files.root.file.Name, cf.local.relPath))
 
         if args.DryRun {
             continue
