@@ -7,6 +7,7 @@ import (
     "time"
     "path/filepath"
     "google.golang.org/api/drive/v3"
+    "google.golang.org/api/googleapi"
 )
 
 type DownloadArgs struct {
@@ -102,15 +103,18 @@ func (self *Drive) downloadBinary(f *drive.File, args DownloadArgs) error {
 }
 
 func (self *Drive) downloadDirectory(parent *drive.File, args DownloadArgs) error {
-    query := fmt.Sprintf("'%s' in parents", parent.Id)
-    fileList, err := self.service.Files.List().Q(query).Fields("files(id,name)").Do()
+    listArgs := listAllFilesArgs{
+        query: fmt.Sprintf("'%s' in parents", parent.Id),
+        fields: []googleapi.Field{"nextPageToken", "files(id,name)"},
+    }
+    files, err := self.listAllFiles(listArgs)
     if err != nil {
         return fmt.Errorf("Failed listing files: %s", err)
     }
 
     newPath := filepath.Join(args.Path, parent.Name)
 
-    for _, f := range fileList.Files {
+    for _, f := range files {
         // Copy args and update changed fields
         newArgs := args
         newArgs.Path = newPath
