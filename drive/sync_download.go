@@ -31,7 +31,7 @@ func (self *Drive) DownloadSync(args DownloadSyncArgs) error {
         return err
     }
 
-    fmt.Fprintln(args.Out, "Collecting local and remote file information...")
+    fmt.Fprintln(args.Out, "Collecting file information...")
     files, err := self.prepareSyncFiles(args.Path, rootDir, args.Comparer)
     if err != nil {
         return err
