@@ -6,6 +6,7 @@ import (
     "os"
     "sort"
     "time"
+    "bytes"
     "path/filepath"
     "google.golang.org/api/googleapi"
     "google.golang.org/api/drive/v3"
@@ -18,6 +19,7 @@ type DownloadSyncArgs struct {
     Path string
     DryRun bool
     DeleteExtraneous bool
+    Resolution ConflictResolution
     Comparer FileComparer
 }
 
@@ -37,7 +39,18 @@ func (self *Drive) DownloadSync(args DownloadSyncArgs) error {
         return err
     }
 
+    // Find changed files
+    changedFiles := files.filterChangedRemoteFiles()
+
     fmt.Fprintf(args.Out, "Found %d local files and %d remote files\n", len(files.local), len(files.remote))
+
+    // Ensure that that we don't overwrite any local changes
+    if args.Resolution == NoResolution {
+        err = ensureNoLocalModifications(changedFiles)
+        if err != nil {
+            return fmt.Errorf("Conflict detected!\nThe following files have changed and the local file are newer than it's remote counterpart:\n\n%s\nNo conflict resolution was given, aborting...", err)
+        }
+    }
 
     // Create missing directories
     err = self.createMissingLocalDirs(files, args)
@@ -52,7 +65,7 @@ func (self *Drive) DownloadSync(args DownloadSyncArgs) error {
     }
 
     // Download files that has changed
-    err = self.downloadChangedFiles(files, args)
+    err = self.downloadChangedFiles(changedFiles, args)
     if err != nil {
         return err
     }
@@ -145,8 +158,7 @@ func (self *Drive) downloadMissingFiles(files *syncFiles, args DownloadSyncArgs)
     return nil
 }
 
-func (self *Drive) downloadChangedFiles(files *syncFiles, args DownloadSyncArgs) error {
-    changedFiles := files.filterChangedRemoteFiles()
+func (self *Drive) downloadChangedFiles(changedFiles []*changedFile, args DownloadSyncArgs) error {
     changedCount := len(changedFiles)
 
     if changedCount > 0 {
@@ -154,6 +166,11 @@ func (self *Drive) downloadChangedFiles(files *syncFiles, args DownloadSyncArgs)
     }
 
     for i, cf := range changedFiles {
+        if skip, reason := checkLocalConflict(cf, args.Resolution); skip {
+            fmt.Fprintf(args.Out, "[%04d/%04d] Skipping %s (%s)\n", i + 1, changedCount, cf.remote.relPath, reason)
+            continue
+        }
+
         absPath, err := filepath.Abs(filepath.Join(args.Path, cf.remote.relPath))
         if err != nil {
             return fmt.Errorf("Failed to determine local absolute path: %s", err)
@@ -245,4 +262,56 @@ func (self *Drive) deleteExtraneousLocalFiles(files *syncFiles, args DownloadSyn
     }
 
     return nil
+}
+
+func checkLocalConflict(cf *changedFile, resolution ConflictResolution) (bool, string) {
+    // No conflict unless local file was last modified
+    if cf.compareModTime() != LocalLastModified {
+        return false, ""
+    }
+
+    // Don't skip if want to keep the remote file
+    if resolution == KeepRemote {
+        return false, ""
+    }
+
+    // Skip if we want to keep the local file
+    if resolution == KeepLocal {
+        return true, "conflicting file, keeping local file"
+    }
+
+    if resolution == KeepLargest {
+        largest := cf.compareSize()
+
+        // Skip if the local file is largest
+        if largest == LocalLargestSize {
+            return true, "conflicting file, local file is largest, keeping local"
+        }
+
+        // Don't skip if the remote file is largest
+        if largest == RemoteLargestSize {
+            return false, ""
+        }
+
+        // Keep local if both files have the same size
+        if largest == EqualSize {
+            return true, "conflicting file, file sizes are equal, keeping local"
+        }
+    }
+
+    // The conditionals above should cover all cases,
+    // unless the programmer did something wrong,
+    // in which case we default to being non-destructive and skip the file
+    return true, "conflicting file, unhandled case"
+}
+
+func ensureNoLocalModifications(files []*changedFile) error {
+    conflicts := findLocalConflicts(files)
+    if len(conflicts) == 0 {
+        return nil
+    }
+
+    buffer := bytes.NewBufferString("")
+    formatConflicts(conflicts, buffer)
+    return fmt.Errorf(buffer.String())
 }

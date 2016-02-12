@@ -4,8 +4,10 @@ import (
     "time"
     "fmt"
     "os"
+    "io"
     "strings"
     "path/filepath"
+    "text/tabwriter"
     "github.com/soniakeys/graph"
     "github.com/sabhiram/go-git-ignore"
     "google.golang.org/api/drive/v3"
@@ -13,6 +15,31 @@ import (
 )
 
 const DefaultIgnoreFile = ".gdriveignore"
+
+type ModTime int
+
+const (
+    LocalLastModified ModTime = iota
+    RemoteLastModified
+    EqualModifiedTime
+)
+
+type LargestSize int
+
+const (
+    LocalLargestSize LargestSize = iota
+    RemoteLargestSize
+    EqualSize
+)
+
+type ConflictResolution int
+
+const (
+    NoResolution ConflictResolution = iota
+    KeepLocal
+    KeepRemote
+    KeepLargest
+)
 
 func (self *Drive) prepareSyncFiles(localPath string, root *drive.File, cmp FileComparer) (*syncFiles, error) {
     localCh := make(chan struct{files []*LocalFile; err error})
@@ -281,6 +308,36 @@ func (self RemoteFile) Modified() time.Time {
     return t
 }
 
+func (self *changedFile) compareModTime() ModTime {
+    localTime := self.local.Modified()
+    remoteTime := self.remote.Modified()
+
+    if localTime.After(remoteTime) {
+        return LocalLastModified
+    }
+
+    if remoteTime.After(localTime) {
+        return RemoteLastModified
+    }
+
+    return EqualModifiedTime
+}
+
+func (self *changedFile) compareSize() LargestSize {
+    localSize := self.local.Size()
+    remoteSize := self.remote.Size()
+
+    if localSize > remoteSize {
+        return LocalLargestSize
+    }
+
+    if remoteSize > localSize {
+        return RemoteLargestSize
+    }
+
+    return EqualSize
+}
+
 func (self *syncFiles) filterMissingRemoteDirs() []*LocalFile {
     var files []*LocalFile
 
@@ -441,6 +498,18 @@ func (self *syncFiles) findLocalByPath(relPath string) (*LocalFile, bool) {
     return nil, false
 }
 
+func findLocalConflicts(files []*changedFile) []*changedFile {
+    var conflicts []*changedFile
+
+    for _, cf := range files {
+        if cf.compareModTime() == LocalLastModified {
+            conflicts = append(conflicts, cf)
+        }
+    }
+
+    return conflicts
+}
+
 type byLocalPathLength []*LocalFile
 
 func (self byLocalPathLength) Len() int {
@@ -500,4 +569,23 @@ func prepareIgnorer(path string) (ignoreFunc, error) {
     }
 
     return ignorer.MatchesPath, nil
+}
+
+func formatConflicts(conflicts []*changedFile, out io.Writer) {
+    w := new(tabwriter.Writer)
+    w.Init(out, 0, 0, 3, ' ', 0)
+
+    fmt.Fprintln(w, "Path\tSize Local\tSize Remote\tModified Local\tModified Remote")
+
+    for _, cf := range conflicts {
+        fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\n",
+            truncateString(cf.local.relPath, 60),
+            formatSize(cf.local.Size(), false),
+            formatSize(cf.remote.Size(), false),
+            cf.local.Modified().Local().Format("Jan _2 2006 15:04:05.000"),
+            cf.remote.Modified().Local().Format("Jan _2 2006 15:04:05.000"),
+        )
+    }
+
+    w.Flush()
 }

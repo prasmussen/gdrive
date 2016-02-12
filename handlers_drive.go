@@ -68,6 +68,7 @@ func downloadSyncHandler(ctx cli.Context) {
         RootId: args.String("id"),
         DryRun: args.Bool("dryRun"),
         DeleteExtraneous: args.Bool("deleteExtraneous"),
+        Resolution: conflictResolution(args),
         Comparer: NewCachedMd5Comparer(cachePath),
     })
     checkErr(err)
@@ -323,4 +324,28 @@ func progressWriter(discard bool) io.Writer {
         return ioutil.Discard
     }
     return os.Stderr
+}
+
+func conflictResolution(args cli.Arguments) drive.ConflictResolution {
+    keepLocal := args.Bool("keepLocal")
+    keepRemote := args.Bool("keepRemote")
+    keepLargest := args.Bool("keepLargest")
+
+    if (keepLocal && keepRemote) || (keepLocal && keepLargest) || (keepRemote && keepLargest) {
+        ExitF("Only one conflict resolution flag can be given")
+    }
+
+    if keepLocal {
+        return drive.KeepLocal
+    }
+
+    if keepRemote {
+        return drive.KeepRemote
+    }
+
+    if keepLargest {
+        return drive.KeepLargest
+    }
+
+    return drive.NoResolution
 }

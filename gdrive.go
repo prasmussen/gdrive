@@ -394,9 +394,27 @@ func main() {
                 cli.NewFlagGroup("global", globalFlags...),
                 cli.NewFlagGroup("options",
                     cli.BoolFlag{
-                        Name: "noProgress",
-                        Patterns: []string{"--no-progress"},
-                        Description: "Hide progress",
+                        Name: "keepRemote",
+                        Patterns: []string{"--keep-remote"},
+                        Description: "Keep remote file when a conflict is encountered",
+                        OmitValue: true,
+                    },
+                    cli.BoolFlag{
+                        Name: "keepLocal",
+                        Patterns: []string{"--keep-local"},
+                        Description: "Keep local file when a conflict is encountered",
+                        OmitValue: true,
+                    },
+                    cli.BoolFlag{
+                        Name: "keepLargest",
+                        Patterns: []string{"--keep-largest"},
+                        Description: "Keep largest file when a conflict is encountered",
+                        OmitValue: true,
+                    },
+                    cli.BoolFlag{
+                        Name: "deleteExtraneous",
+                        Patterns: []string{"--delete-extraneous"},
+                        Description: "Delete extraneous local files",
                         OmitValue: true,
                     },
                     cli.BoolFlag{
@@ -406,9 +424,9 @@ func main() {
                         OmitValue: true,
                     },
                     cli.BoolFlag{
-                        Name: "deleteExtraneous",
-                        Patterns: []string{"--delete-extraneous"},
-                        Description: "Delete extraneous local files",
+                        Name: "noProgress",
+                        Patterns: []string{"--no-progress"},
+                        Description: "Hide progress",
                         OmitValue: true,
                     },
                 ),
