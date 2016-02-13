@@ -196,7 +196,7 @@ func (self *Drive) downloadRemoteFile(id, fpath string, args DownloadSyncArgs, t
         if isBackendError(err) && try < MaxBackendErrorRetries {
             exponentialBackoffSleep(try)
             try++
-            self.downloadRemoteFile(id, fpath, args, try)
+            return self.downloadRemoteFile(id, fpath, args, try)
         } else {
             return fmt.Errorf("Failed to download file: %s", err)
         }
@@ -213,28 +213,34 @@ func (self *Drive) downloadRemoteFile(id, fpath string, args DownloadSyncArgs, t
         return err
     }
 
+    // Download to tmp file
+    tmpPath := fpath + ".incomplete"
+
     // Create new file
-    outFile, err := os.Create(fpath)
+    outFile, err := os.Create(tmpPath)
     if err != nil {
         return fmt.Errorf("Unable to create local file: %s", err)
     }
 
-    // Close file on function exit
-    defer outFile.Close()
-
     // Save file to disk
     _, err = io.Copy(outFile, srcReader)
     if err != nil {
+        outFile.Close()
         if try < MaxBackendErrorRetries {
             exponentialBackoffSleep(try)
             try++
-            self.downloadRemoteFile(id, fpath, args, try)
+            return self.downloadRemoteFile(id, fpath, args, try)
         } else {
+            os.Remove(tmpPath)
             return fmt.Errorf("Download was interrupted: %s", err)
         }
     }
 
-    return nil
+    // Close file
+    outFile.Close()
+
+    // Rename tmp file to proper filename
+    return os.Rename(tmpPath, fpath)
 }
 
 func (self *Drive) deleteExtraneousLocalFiles(files *syncFiles, args DownloadSyncArgs) error {
