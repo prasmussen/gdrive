@@ -49,25 +49,28 @@ func (self *Drive) DownloadRevision(args DownloadRevisionArgs) (err error) {
         return fmt.Errorf("File '%s' already exists, use --force to overwrite", rev.OriginalFilename)
     }
 
+    // Download to tmp file
+    tmpPath := rev.OriginalFilename + ".incomplete"
+
     // Create new file
-    outFile, err := os.Create(rev.OriginalFilename)
+    outFile, err := os.Create(tmpPath)
     if err != nil {
         return fmt.Errorf("Unable to create new file: %s", err)
     }
 
-    // Close file on function exit
-    defer outFile.Close()
-
     // Save file to disk
     bytes, err := io.Copy(outFile, srcReader)
     if err != nil {
+        outFile.Close()
+        os.Remove(tmpPath)
         return fmt.Errorf("Failed saving file: %s", err)
     }
 
     fmt.Fprintf(args.Out, "Downloaded '%s' at %s, total %d\n", rev.OriginalFilename, "x/s", bytes)
 
-    //if deleteSourceFile {
-    //    self.Delete(args.Id)
-    //}
-    return
+    // Close File
+    outFile.Close()
+
+    // Rename tmp file to proper filename
+    return os.Rename(tmpPath, rev.OriginalFilename)
 }
