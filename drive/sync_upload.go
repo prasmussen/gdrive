@@ -44,12 +44,18 @@ func (self *Drive) UploadSync(args UploadSyncArgs) error {
         return err
     }
 
-    // Find changed files
+    // Find missing and changed files
     changedFiles := files.filterChangedLocalFiles()
+    missingFiles := files.filterMissingRemoteFiles()
 
     fmt.Fprintf(args.Out, "Found %d local files and %d remote files\n", len(files.local), len(files.remote))
 
-    // Ensure that that we don't overwrite any remote changes
+    // Ensure that there is enough free space on drive
+    if ok, msg := self.checkRemoteFreeSpace(missingFiles, changedFiles); !ok {
+        return fmt.Errorf(msg)
+    }
+
+    // Ensure that we don't overwrite any remote changes
     if args.Resolution == NoResolution {
         err = ensureNoRemoteModifications(changedFiles)
         if err != nil {
@@ -64,7 +70,7 @@ func (self *Drive) UploadSync(args UploadSyncArgs) error {
     }
 
     // Upload missing files
-    err = self.uploadMissingFiles(files, args)
+    err = self.uploadMissingFiles(missingFiles, files, args)
     if err != nil {
         return err
     }
@@ -177,8 +183,7 @@ type createMissingRemoteDirArgs struct {
     try int
 }
 
-func (self *Drive) uploadMissingFiles(files *syncFiles, args UploadSyncArgs) error {
-    missingFiles := files.filterMissingRemoteFiles()
+func (self *Drive) uploadMissingFiles(missingFiles []*LocalFile, files *syncFiles, args UploadSyncArgs) error {
     missingCount := len(missingFiles)
 
     if missingCount > 0 {
@@ -432,4 +437,34 @@ func ensureNoRemoteModifications(files []*changedFile) error {
     buffer := bytes.NewBufferString("")
     formatConflicts(conflicts, buffer)
     return fmt.Errorf(buffer.String())
+}
+
+func (self *Drive) checkRemoteFreeSpace(missingFiles []*LocalFile, changedFiles []*changedFile) (bool, string) {
+    about, err := self.service.About.Get().Fields("storageQuota").Do()
+    if err != nil {
+        return false, fmt.Sprintf("Failed to determine free space: %s", err)
+    }
+
+    quota := about.StorageQuota
+    if quota.Limit == 0 {
+        return true, ""
+    }
+
+    freeSpace := quota.Limit - quota.Usage
+
+    var totalSize int64
+
+    for _, lf := range missingFiles {
+        totalSize += lf.Size()
+    }
+
+    for _, cf := range changedFiles {
+        totalSize += cf.local.Size()
+    }
+
+    if totalSize > freeSpace {
+        return false, fmt.Sprintf("Not enough free space, have %s need %s", formatSize(freeSpace, false), formatSize(totalSize, false))
+    }
+
+    return true, ""
 }
