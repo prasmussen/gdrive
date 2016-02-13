@@ -194,10 +194,6 @@ func (self *Drive) uploadMissingFiles(files *syncFiles, args UploadSyncArgs) err
 
         fmt.Fprintf(args.Out, "[%04d/%04d] Uploading %s -> %s\n", i + 1, missingCount, lf.relPath, filepath.Join(files.root.file.Name, lf.relPath))
 
-        if args.DryRun {
-            continue
-        }
-
         err := self.uploadMissingFile(parent.file.Id, lf, args, 0)
         if err != nil {
             return err
@@ -222,10 +218,6 @@ func (self *Drive) updateChangedFiles(changedFiles []*changedFile, root *drive.F
 
         fmt.Fprintf(args.Out, "[%04d/%04d] Updating %s -> %s\n", i + 1, changedCount, cf.local.relPath, filepath.Join(root.Name, cf.local.relPath))
 
-        if args.DryRun {
-            continue
-        }
-
         err := self.updateChangedFile(cf, args, 0)
         if err != nil {
             return err
@@ -248,10 +240,6 @@ func (self *Drive) deleteExtraneousRemoteFiles(files *syncFiles, args UploadSync
 
     for i, rf := range extraneousFiles {
         fmt.Fprintf(args.Out, "[%04d/%04d] Deleting %s\n", i + 1, extraneousCount, filepath.Join(files.root.file.Name, rf.relPath))
-
-        if args.DryRun {
-            continue
-        }
 
         err := self.deleteRemoteFile(rf, args, 0)
         if err != nil {
@@ -289,6 +277,10 @@ func (self *Drive) createMissingRemoteDir(args createMissingRemoteDirArgs) (*dri
 }
 
 func (self *Drive) uploadMissingFile(parentId string, lf *LocalFile, args UploadSyncArgs, try int) error {
+    if args.DryRun {
+        return nil
+    }
+
     srcFile, err := os.Open(lf.absPath)
     if err != nil {
         return fmt.Errorf("Failed to open file: %s", err)
@@ -325,6 +317,10 @@ func (self *Drive) uploadMissingFile(parentId string, lf *LocalFile, args Upload
 }
 
 func (self *Drive) updateChangedFile(cf *changedFile, args UploadSyncArgs, try int) error {
+    if args.DryRun {
+        return nil
+    }
+
     srcFile, err := os.Open(cf.local.absPath)
     if err != nil {
         return fmt.Errorf("Failed to open file: %s", err)
@@ -357,6 +353,11 @@ func (self *Drive) updateChangedFile(cf *changedFile, args UploadSyncArgs, try i
 }
 
 func (self *Drive) deleteRemoteFile(rf *RemoteFile, args UploadSyncArgs, try int) error {
+    if args.DryRun {
+        return nil
+    }
+
+
     err := self.service.Files.Delete(rf.file.Id).Do()
     if err != nil {
         if isBackendError(err) && try < MaxBackendErrorRetries {

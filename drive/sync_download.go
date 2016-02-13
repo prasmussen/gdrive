@@ -145,10 +145,6 @@ func (self *Drive) downloadMissingFiles(files *syncFiles, args DownloadSyncArgs)
         }
         fmt.Fprintf(args.Out, "[%04d/%04d] Downloading %s -> %s\n", i + 1, missingCount, rf.relPath, filepath.Join(filepath.Base(args.Path), rf.relPath))
 
-        if args.DryRun {
-            continue
-        }
-
         err = self.downloadRemoteFile(rf.file.Id, absPath, args, 0)
         if err != nil {
             return err
@@ -177,10 +173,6 @@ func (self *Drive) downloadChangedFiles(changedFiles []*changedFile, args Downlo
         }
         fmt.Fprintf(args.Out, "[%04d/%04d] Downloading %s -> %s\n", i + 1, changedCount, cf.remote.relPath, filepath.Join(filepath.Base(args.Path), cf.remote.relPath))
 
-        if args.DryRun {
-            continue
-        }
-
         err = self.downloadRemoteFile(cf.remote.file.Id, absPath, args, 0)
         if err != nil {
             return err
@@ -191,6 +183,10 @@ func (self *Drive) downloadChangedFiles(changedFiles []*changedFile, args Downlo
 }
 
 func (self *Drive) downloadRemoteFile(id, fpath string, args DownloadSyncArgs, try int) error {
+    if args.DryRun {
+        return nil
+    }
+
     res, err := self.service.Files.Get(id).Download()
     if err != nil {
         if isBackendError(err) && try < MaxBackendErrorRetries {
