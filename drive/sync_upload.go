@@ -6,6 +6,7 @@ import (
     "os"
     "time"
     "sort"
+    "bytes"
     "path/filepath"
     "google.golang.org/api/googleapi"
     "google.golang.org/api/drive/v3"
@@ -19,6 +20,7 @@ type UploadSyncArgs struct {
     DryRun bool
     DeleteExtraneous bool
     ChunkSize int64
+    Resolution ConflictResolution
     Comparer FileComparer
 }
 
@@ -42,7 +44,18 @@ func (self *Drive) UploadSync(args UploadSyncArgs) error {
         return err
     }
 
+    // Find changed files
+    changedFiles := files.filterChangedLocalFiles()
+
     fmt.Fprintf(args.Out, "Found %d local files and %d remote files\n", len(files.local), len(files.remote))
+
+    // Ensure that that we don't overwrite any remote changes
+    if args.Resolution == NoResolution {
+        err = ensureNoRemoteModifications(changedFiles)
+        if err != nil {
+            return fmt.Errorf("Conflict detected!\nThe following files have changed and the remote file are newer than it's local counterpart:\n\n%s\nNo conflict resolution was given, aborting...", err)
+        }
+    }
 
     // Create missing directories
     files, err = self.createMissingRemoteDirs(files, args)
@@ -57,7 +70,7 @@ func (self *Drive) UploadSync(args UploadSyncArgs) error {
     }
 
     // Update modified files
-    err = self.updateChangedFiles(files, args)
+    err = self.updateChangedFiles(changedFiles, rootDir, args)
     if err != nil {
         return err
     }
@@ -194,8 +207,7 @@ func (self *Drive) uploadMissingFiles(files *syncFiles, args UploadSyncArgs) err
     return nil
 }
 
-func (self *Drive) updateChangedFiles(files *syncFiles, args UploadSyncArgs) error {
-    changedFiles := files.filterChangedLocalFiles()
+func (self *Drive) updateChangedFiles(changedFiles []*changedFile, root *drive.File, args UploadSyncArgs) error {
     changedCount := len(changedFiles)
 
     if changedCount > 0 {
@@ -203,7 +215,12 @@ func (self *Drive) updateChangedFiles(files *syncFiles, args UploadSyncArgs) err
     }
 
     for i, cf := range changedFiles {
-        fmt.Fprintf(args.Out, "[%04d/%04d] Updating %s -> %s\n", i + 1, changedCount, cf.local.relPath, filepath.Join(files.root.file.Name, cf.local.relPath))
+        if skip, reason := checkRemoteConflict(cf, args.Resolution); skip {
+            fmt.Fprintf(args.Out, "[%04d/%04d] Skipping %s (%s)\n", i + 1, changedCount, cf.local.relPath, reason)
+            continue
+        }
+
+        fmt.Fprintf(args.Out, "[%04d/%04d] Updating %s -> %s\n", i + 1, changedCount, cf.local.relPath, filepath.Join(root.Name, cf.local.relPath))
 
         if args.DryRun {
             continue
@@ -362,4 +379,56 @@ func (self *Drive) dirIsEmpty(id string) (bool, error) {
     }
 
     return len(fileList.Files) == 0, nil
+}
+
+func checkRemoteConflict(cf *changedFile, resolution ConflictResolution) (bool, string) {
+    // No conflict unless remote file was last modified
+    if cf.compareModTime() != RemoteLastModified {
+        return false, ""
+    }
+
+    // Don't skip if want to keep the local file
+    if resolution == KeepLocal {
+        return false, ""
+    }
+
+    // Skip if we want to keep the remote file
+    if resolution == KeepRemote {
+        return true, "conflicting file, keeping remote file"
+    }
+
+    if resolution == KeepLargest {
+        largest := cf.compareSize()
+
+        // Skip if the remote file is largest
+        if largest == RemoteLargestSize {
+            return true, "conflicting file, remote file is largest, keeping remote"
+        }
+
+        // Don't skip if the local file is largest
+        if largest == LocalLargestSize {
+            return false, ""
+        }
+
+        // Keep remote if both files have the same size
+        if largest == EqualSize {
+            return true, "conflicting file, file sizes are equal, keeping remote"
+        }
+    }
+
+    // The conditionals above should cover all cases,
+    // unless the programmer did something wrong,
+    // in which case we default to being non-destructive and skip the file
+    return true, "conflicting file, unhandled case"
+}
+
+func ensureNoRemoteModifications(files []*changedFile) error {
+    conflicts := findRemoteConflicts(files)
+    if len(conflicts) == 0 {
+        return nil
+    }
+
+    buffer := bytes.NewBufferString("")
+    formatConflicts(conflicts, buffer)
+    return fmt.Errorf(buffer.String())
 }

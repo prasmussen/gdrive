@@ -128,6 +128,7 @@ func uploadSyncHandler(ctx cli.Context) {
         DryRun: args.Bool("dryRun"),
         DeleteExtraneous: args.Bool("deleteExtraneous"),
         ChunkSize: args.Int64("chunksize"),
+        Resolution: conflictResolution(args),
         Comparer: NewCachedMd5Comparer(cachePath),
     })
     checkErr(err)

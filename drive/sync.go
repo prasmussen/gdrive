@@ -510,6 +510,18 @@ func findLocalConflicts(files []*changedFile) []*changedFile {
     return conflicts
 }
 
+func findRemoteConflicts(files []*changedFile) []*changedFile {
+    var conflicts []*changedFile
+
+    for _, cf := range files {
+        if cf.compareModTime() == RemoteLastModified {
+            conflicts = append(conflicts, cf)
+        }
+    }
+
+    return conflicts
+}
+
 type byLocalPathLength []*LocalFile
 
 func (self byLocalPathLength) Len() int {
