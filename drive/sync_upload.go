@@ -279,7 +279,7 @@ func (self *Drive) createMissingRemoteDir(args createMissingRemoteDirArgs) (*dri
         if isBackendError(err) && args.try < MaxBackendErrorRetries {
             exponentialBackoffSleep(args.try)
             args.try++
-            self.createMissingRemoteDir(args)
+            return self.createMissingRemoteDir(args)
         } else {
             return nil, fmt.Errorf("Failed to create directory: %s", err)
         }
@@ -315,7 +315,7 @@ func (self *Drive) uploadMissingFile(parentId string, lf *LocalFile, args Upload
         if isBackendError(err) && try < MaxBackendErrorRetries {
             exponentialBackoffSleep(try)
             try++
-            self.uploadMissingFile(parentId, lf, args, try)
+            return self.uploadMissingFile(parentId, lf, args, try)
         } else {
             return fmt.Errorf("Failed to upload file: %s", err)
         }
@@ -347,7 +347,7 @@ func (self *Drive) updateChangedFile(cf *changedFile, args UploadSyncArgs, try i
         if isBackendError(err) && try < MaxBackendErrorRetries {
             exponentialBackoffSleep(try)
             try++
-            self.updateChangedFile(cf, args, try)
+            return self.updateChangedFile(cf, args, try)
         } else {
             return fmt.Errorf("Failed to update file: %s", err)
         }
@@ -362,7 +362,7 @@ func (self *Drive) deleteRemoteFile(rf *RemoteFile, args UploadSyncArgs, try int
         if isBackendError(err) && try < MaxBackendErrorRetries {
             exponentialBackoffSleep(try)
             try++
-            self.deleteRemoteFile(rf, args, try)
+            return self.deleteRemoteFile(rf, args, try)
         } else {
             return fmt.Errorf("Failed to delete file: %s", err)
         }
