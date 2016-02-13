@@ -44,7 +44,7 @@ func (self *Drive) DownloadSync(args DownloadSyncArgs) error {
 
     fmt.Fprintf(args.Out, "Found %d local files and %d remote files\n", len(files.local), len(files.remote))
 
-    // Ensure that that we don't overwrite any local changes
+    // Ensure that we don't overwrite any local changes
     if args.Resolution == NoResolution {
         err = ensureNoLocalModifications(changedFiles)
         if err != nil {
