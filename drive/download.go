@@ -3,6 +3,7 @@ package drive
 import (
     "fmt"
     "io"
+    "io/ioutil"
     "os"
     "time"
     "path/filepath"
@@ -52,37 +53,74 @@ func (self *Drive) downloadBinary(f *drive.File, args DownloadArgs) error {
     // Close body on function exit
     defer res.Body.Close()
 
-    // Wrap response body in progress reader
-    srcReader := getProgressReader(res.Body, args.Progress, res.ContentLength)
-
+    // Discard other output if file is written to stdout
+    out := args.Out
     if args.Stdout {
-        // Write file content to stdout
-        _, err := io.Copy(args.Out, srcReader)
+        out = ioutil.Discard
+    }
+
+    // Path to file
+    fpath := filepath.Join(args.Path, f.Name)
+
+    fmt.Fprintf(out, "Downloading %s -> %s\n", f.Name, fpath)
+
+    bytes, rate, err := self.saveFile(saveFileArgs{
+        out: args.Out,
+        body: res.Body,
+        contentLength: res.ContentLength,
+        fpath: fpath,
+        force: args.Force,
+        stdout: args.Stdout,
+        progress: args.Progress,
+    })
+
+    if err != nil {
         return err
     }
 
-    filename := filepath.Join(args.Path, f.Name)
+    fmt.Fprintf(out, "Download complete, rate: %s/s, total size: %s\n", formatSize(rate, false), formatSize(bytes, false))
+    return nil
+}
+
+type saveFileArgs struct {
+    out io.Writer
+    body io.Reader
+    contentLength int64
+    fpath string
+    force bool
+    stdout bool
+    progress io.Writer
+}
+
+func (self *Drive) saveFile(args saveFileArgs) (int64, int64, error) {
+    // Wrap response body in progress reader
+    srcReader := getProgressReader(args.body, args.progress, args.contentLength)
+
+    if args.stdout {
+        // Write file content to stdout
+        _, err := io.Copy(args.out, srcReader)
+        return 0, 0, err
+    }
 
     // Check if file exists
-    if !args.Force && fileExists(filename) {
-        return fmt.Errorf("File '%s' already exists, use --force to overwrite", filename)
+    if !args.force && fileExists(args.fpath) {
+        return 0, 0, fmt.Errorf("File '%s' already exists, use --force to overwrite", args.fpath)
     }
 
     // Ensure any parent directories exists
-    if err = mkdir(filename); err != nil {
-        return err
+    if err := mkdir(args.fpath); err != nil {
+        return 0, 0, err
     }
 
     // Download to tmp file
-    tmpPath := filename + ".incomplete"
+    tmpPath := args.fpath + ".incomplete"
 
     // Create new file
     outFile, err := os.Create(tmpPath)
     if err != nil {
-        return fmt.Errorf("Unable to create new file: %s", err)
+        return 0, 0, fmt.Errorf("Unable to create new file: %s", err)
     }
 
-    fmt.Fprintf(args.Out, "\nDownloading %s...\n", f.Name)
     started := time.Now()
 
     // Save file to disk
@@ -90,13 +128,11 @@ func (self *Drive) downloadBinary(f *drive.File, args DownloadArgs) error {
     if err != nil {
         outFile.Close()
         os.Remove(tmpPath)
-        return fmt.Errorf("Failed saving file: %s", err)
+        return 0, 0, fmt.Errorf("Failed saving file: %s", err)
     }
 
     // Calculate average download rate
-    rate := calcRate(f.Size, started, time.Now())
-
-    fmt.Fprintf(args.Out, "Downloaded '%s' at %s/s, total %s\n", filename, formatSize(rate, false), formatSize(bytes, false))
+    rate := calcRate(bytes, started, time.Now())
 
     //if deleteSourceFile {
     //    self.Delete(args.Id)
@@ -106,7 +142,7 @@ func (self *Drive) downloadBinary(f *drive.File, args DownloadArgs) error {
     outFile.Close()
 
     // Rename tmp file to proper filename
-    return os.Rename(tmpPath, filename)
+    return bytes, rate, os.Rename(tmpPath, args.fpath)
 }
 
 func (self *Drive) downloadDirectory(parent *drive.File, args DownloadArgs) error {

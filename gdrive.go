@@ -577,6 +577,11 @@ func main() {
                         Description: "Write file content to stdout",
                         OmitValue: true,
                     },
+                    cli.StringFlag{
+                        Name: "path",
+                        Patterns: []string{"--path"},
+                        Description: "Download path",
+                    },
                 ),
             },
         },

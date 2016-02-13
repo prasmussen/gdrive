@@ -82,6 +82,7 @@ func downloadRevisionHandler(ctx cli.Context) {
         RevisionId: args.String("revisionId"),
         Force: args.Bool("force"),
         Stdout: args.Bool("stdout"),
+        Path: args.String("path"),
         Progress: progressWriter(args.Bool("noProgress")),
     })
     checkErr(err)
