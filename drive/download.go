@@ -73,14 +73,14 @@ func (self *Drive) downloadBinary(f *drive.File, args DownloadArgs) error {
         return err
     }
 
+    // Download to tmp file
+    tmpPath := filename + ".incomplete"
+
     // Create new file
-    outFile, err := os.Create(filename)
+    outFile, err := os.Create(tmpPath)
     if err != nil {
         return fmt.Errorf("Unable to create new file: %s", err)
     }
-
-    // Close file on function exit
-    defer outFile.Close()
 
     fmt.Fprintf(args.Out, "\nDownloading %s...\n", f.Name)
     started := time.Now()
@@ -88,6 +88,8 @@ func (self *Drive) downloadBinary(f *drive.File, args DownloadArgs) error {
     // Save file to disk
     bytes, err := io.Copy(outFile, srcReader)
     if err != nil {
+        outFile.Close()
+        os.Remove(tmpPath)
         return fmt.Errorf("Failed saving file: %s", err)
     }
 
@@ -99,7 +101,12 @@ func (self *Drive) downloadBinary(f *drive.File, args DownloadArgs) error {
     //if deleteSourceFile {
     //    self.Delete(args.Id)
     //}
-    return nil
+
+    // Close File
+    outFile.Close()
+
+    // Rename tmp file to proper filename
+    return os.Rename(tmpPath, filename)
 }
 
 func (self *Drive) downloadDirectory(parent *drive.File, args DownloadArgs) error {
