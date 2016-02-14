@@ -32,14 +32,9 @@ func (self *Drive) Upload(args UploadArgs) error {
 }
 
 func (self *Drive) upload(args UploadArgs) error {
-    f, err := os.Open(args.Path)
+    info, err := os.Stat(args.Path)
     if err != nil {
-        return fmt.Errorf("Failed to open file: %s", err)
-    }
-
-    info, err := f.Stat()
-    if err != nil {
-        return fmt.Errorf("Failed getting file metadata: %s", err)
+        return fmt.Errorf("Failed stat file: %s", err)
     }
 
     if info.IsDir() && !args.Recursive {
