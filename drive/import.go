@@ -33,7 +33,7 @@ func (self *Drive) Import(args ImportArgs) error {
         return fmt.Errorf("Mime type '%s' is not supported for import", fromMime)
     }
 
-    f, err := self.uploadFile(UploadArgs{
+    f, _, err := self.uploadFile(UploadArgs{
         Out: ioutil.Discard,
         Progress: args.Progress,
         Path: args.Path,
@@ -45,9 +45,7 @@ func (self *Drive) Import(args ImportArgs) error {
         return err
     }
 
-    fmt.Fprintf(args.Out, "[document] id: %s, name: %s\n", f.Id, f.Name)
-    fmt.Fprintf(args.Out, "Imported %s with mime type: '%s'\n", args.Path, toMimes[0])
-
+    fmt.Fprintf(args.Out, "Imported %s with mime type: '%s'\n", f.Id, toMimes[0])
     return nil
 }
 

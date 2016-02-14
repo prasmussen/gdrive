@@ -153,3 +153,17 @@ func min(x int, y int) int {
     n := math.Min(float64(x), float64(y))
     return int(n)
 }
+
+func openFile(path string) (*os.File, os.FileInfo, error) {
+    f, err := os.Open(path)
+    if err != nil {
+        return nil, nil, fmt.Errorf("Failed to open file: %s", err)
+    }
+
+    info, err := f.Stat()
+    if err != nil {
+        return nil, nil, fmt.Errorf("Failed getting file metadata: %s", err)
+    }
+
+    return f, info, nil
+}

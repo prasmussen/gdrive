@@ -219,12 +219,6 @@ func main() {
                         Description: "Hide progress",
                         OmitValue: true,
                     },
-                    cli.BoolFlag{
-                        Name: "stdin",
-                        Patterns: []string{"--stdin"},
-                        Description: "Use stdin as file content",
-                        OmitValue: true,
-                    },
                     cli.StringFlag{
                         Name: "mime",
                         Patterns: []string{"--mime"},

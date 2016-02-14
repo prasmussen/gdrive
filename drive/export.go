@@ -24,7 +24,7 @@ type ExportArgs struct {
     Force bool
 }
 
-func (self *Drive) Export(args ExportArgs) (err error) {
+func (self *Drive) Export(args ExportArgs) error {
     f, err := self.service.Files.Get(args.Id).Fields("name", "mimeType").Do()
     if err != nil {
         return fmt.Errorf("Failed to get file: %s", err)
@@ -64,13 +64,13 @@ func (self *Drive) Export(args ExportArgs) (err error) {
     defer outFile.Close()
 
     // Save file to disk
-    bytes, err := io.Copy(outFile, res.Body)
+    _, err = io.Copy(outFile, res.Body)
     if err != nil {
         return fmt.Errorf("Failed saving file: %s", err)
     }
 
-    fmt.Fprintf(args.Out, "Exported '%s' at %s, total %d\n", filename, "x/s", bytes)
-    return
+    fmt.Fprintf(args.Out, "Exported '%s' with mime type: '%s'\n", filename, exportMime)
+    return nil
 }
 
 func (self *Drive) printMimes(out io.Writer, mimeType string) error {
@@ -103,7 +103,7 @@ func getExportMime(userMime, fileMime string) (string, error) {
 
 func getExportFilename(name, mimeType string) string {
     extensions, err := mime.ExtensionsByType(mimeType)
-    if err != nil {
+    if err != nil || len(extensions) == 0 {
         return name
     }
 

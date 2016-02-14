@@ -3,7 +3,6 @@ package drive
 import (
     "fmt"
     "io"
-    "io/ioutil"
     "os"
     "time"
     "path/filepath"
@@ -22,49 +21,64 @@ type DownloadArgs struct {
 }
 
 func (self *Drive) Download(args DownloadArgs) error {
-    return self.download(args)
-}
+    if args.Recursive {
+        return self.downloadRecursive(args)
+    }
 
-func (self *Drive) download(args DownloadArgs) error {
     f, err := self.service.Files.Get(args.Id).Fields("id", "name", "size", "mimeType", "md5Checksum").Do()
     if err != nil {
         return fmt.Errorf("Failed to get file: %s", err)
     }
 
-    if isDir(f) && !args.Recursive {
+    if isDir(f) {
         return fmt.Errorf("'%s' is a directory, use --recursive to download directories", f.Name)
-    } else if isDir(f) && args.Recursive {
+    }
+
+    if !isBinary(f) {
+        return fmt.Errorf("'%s' is a google document and must be exported, see the export command", f.Name)
+    }
+
+    bytes, rate, err := self.downloadBinary(f, args)
+
+    if !args.Stdout {
+        fmt.Fprintf(args.Out, "Downloaded %s at %s/s, total %s\n", f.Id, formatSize(rate, false), formatSize(bytes, false))
+    }
+    return err
+}
+
+func (self *Drive) downloadRecursive(args DownloadArgs) error {
+    f, err := self.service.Files.Get(args.Id).Fields("id", "name", "size", "mimeType", "md5Checksum").Do()
+    if err != nil {
+        return fmt.Errorf("Failed to get file: %s", err)
+    }
+
+    if isDir(f) {
         return self.downloadDirectory(f, args)
     } else if isBinary(f) {
-        return self.downloadBinary(f, args)
-    } else if !args.Recursive {
-        return fmt.Errorf("'%s' is a google document and must be exported, see the export command", f.Name)
+        _, _, err = self.downloadBinary(f, args)
+        return err
     }
 
     return nil
 }
 
-func (self *Drive) downloadBinary(f *drive.File, args DownloadArgs) error {
+func (self *Drive) downloadBinary(f *drive.File, args DownloadArgs) (int64, int64, error) {
     res, err := self.service.Files.Get(f.Id).Download()
     if err != nil {
-        return fmt.Errorf("Failed to download file: %s", err)
+        return 0, 0, fmt.Errorf("Failed to download file: %s", err)
     }
 
     // Close body on function exit
     defer res.Body.Close()
 
-    // Discard other output if file is written to stdout
-    out := args.Out
-    if args.Stdout {
-        out = ioutil.Discard
-    }
-
     // Path to file
     fpath := filepath.Join(args.Path, f.Name)
 
-    fmt.Fprintf(out, "Downloading %s -> %s\n", f.Name, fpath)
+    if !args.Stdout {
+        fmt.Fprintf(args.Out, "Downloading %s -> %s\n", f.Name, fpath)
+    }
 
-    bytes, rate, err := self.saveFile(saveFileArgs{
+    return self.saveFile(saveFileArgs{
         out: args.Out,
         body: res.Body,
         contentLength: res.ContentLength,
@@ -73,13 +87,6 @@ func (self *Drive) downloadBinary(f *drive.File, args DownloadArgs) error {
         stdout: args.Stdout,
         progress: args.Progress,
     })
-
-    if err != nil {
-        return err
-    }
-
-    fmt.Fprintf(out, "Download complete, rate: %s/s, total size: %s\n", formatSize(rate, false), formatSize(bytes, false))
-    return nil
 }
 
 type saveFileArgs struct {
@@ -164,7 +171,7 @@ func (self *Drive) downloadDirectory(parent *drive.File, args DownloadArgs) erro
         newArgs.Id = f.Id
         newArgs.Stdout = false
 
-        err = self.download(newArgs)
+        err = self.downloadRecursive(newArgs)
         if err != nil {
             return err
         }

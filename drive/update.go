@@ -3,7 +3,7 @@ package drive
 import (
     "fmt"
     "mime"
-    "os"
+    "time"
     "io"
     "path/filepath"
     "google.golang.org/api/googleapi"
@@ -19,25 +19,17 @@ type UpdateArgs struct {
     Parents []string
     Mime string
     Recursive bool
-    Stdin bool
     Share bool
     ChunkSize int64
 }
 
-func (self *Drive) Update(args UpdateArgs) (err error) {
-    //if args.Stdin {
-    //    self.uploadStdin()
-    //}
-
-    srcFile, err := os.Open(args.Path)
+func (self *Drive) Update(args UpdateArgs) error {
+    srcFile, srcFileInfo, err := openFile(args.Path)
     if err != nil {
         return fmt.Errorf("Failed to open file: %s", err)
     }
 
-    srcFileInfo, err := srcFile.Stat()
-    if err != nil {
-        return fmt.Errorf("Failed to read file metadata: %s", err)
-    }
+    defer srcFile.Close()
 
     // Instantiate empty drive file
     dstFile := &drive.File{}
@@ -65,14 +57,17 @@ func (self *Drive) Update(args UpdateArgs) (err error) {
     // Wrap file in progress reader
     srcReader := getProgressReader(srcFile, args.Progress, srcFileInfo.Size())
 
-    f, err := self.service.Files.Update(args.Id, dstFile).Media(srcReader, chunkSize).Do()
+    fmt.Fprintf(args.Out, "Uploading %s\n", args.Path)
+    started := time.Now()
+
+    f, err := self.service.Files.Update(args.Id, dstFile).Fields("id", "name", "size").Media(srcReader, chunkSize).Do()
     if err != nil {
         return fmt.Errorf("Failed to upload file: %s", err)
     }
 
-    fmt.Fprintf(args.Out, "Uploaded '%s' at %s, total %d\n", f.Name, "x/s", f.Size)
-    //if args.Share {
-    //    self.Share(TODO)
-    //}
-    return
+    // Calculate average upload rate
+    rate := calcRate(f.Size, started, time.Now())
+
+    fmt.Fprintf(args.Out, "Updated %s at %s/s, total %s\n", f.Id, formatSize(rate, false), formatSize(f.Size, false))
+    return nil
 }

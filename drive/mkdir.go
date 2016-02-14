@@ -20,7 +20,7 @@ func (self *Drive) Mkdir(args MkdirArgs) error {
     if err != nil {
         return err
     }
-    fmt.Printf("Directory '%s' created\n", f.Name)
+    fmt.Fprintf(args.Out, "Directory %s created\n", f.Id)
     return nil
 }
 
@@ -35,8 +35,6 @@ func (self *Drive) mkdir(args MkdirArgs) (*drive.File, error) {
     if err != nil {
         return nil, fmt.Errorf("Failed to create directory: %s", err)
     }
-
-    fmt.Fprintf(args.Out, "\n[directory] id: %s, name: %s\n", f.Id, f.Name)
 
     //if args.Share {
     //    self.share(TODO)

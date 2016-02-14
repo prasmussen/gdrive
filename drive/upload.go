@@ -28,22 +28,35 @@ func (self *Drive) Upload(args UploadArgs) error {
         return fmt.Errorf("Chunk size is to big, max chunk size for this computer is %d", intMax() - 1)
     }
 
-    return self.upload(args)
-}
+    if args.Recursive {
+        return self.uploadRecursive(args)
+    }
 
-func (self *Drive) upload(args UploadArgs) error {
     info, err := os.Stat(args.Path)
     if err != nil {
         return fmt.Errorf("Failed stat file: %s", err)
     }
 
-    if info.IsDir() && !args.Recursive {
+    if info.IsDir() {
         return fmt.Errorf("'%s' is a directory, use --recursive to upload directories", info.Name())
-    } else if info.IsDir() {
+    }
+
+    f, rate, err := self.uploadFile(args)
+    fmt.Fprintf(args.Out, "Uploaded %s at %s/s, total %s\n", f.Id, formatSize(rate, false), formatSize(f.Size, false))
+    return err
+}
+
+func (self *Drive) uploadRecursive(args UploadArgs) error {
+    info, err := os.Stat(args.Path)
+    if err != nil {
+        return fmt.Errorf("Failed stat file: %s", err)
+    }
+
+    if info.IsDir() {
         args.Name = ""
         return self.uploadDirectory(args)
     } else {
-        _, err := self.uploadFile(args)
+        _, _, err := self.uploadFile(args)
         return err
     }
 }
@@ -57,6 +70,7 @@ func (self *Drive) uploadDirectory(args UploadArgs) error {
     // Close file on function exit
     defer srcFile.Close()
 
+    fmt.Fprintf(args.Out, "Creating directory %s\n", srcFileInfo.Name())
     // Make directory on drive
     f, err := self.mkdir(MkdirArgs{
         Out: args.Out,
@@ -81,7 +95,7 @@ func (self *Drive) uploadDirectory(args UploadArgs) error {
         newArgs.Parents = []string{f.Id}
 
         // Upload
-        err = self.upload(newArgs)
+        err = self.uploadRecursive(newArgs)
         if err != nil {
             return err
         }
@@ -90,10 +104,10 @@ func (self *Drive) uploadDirectory(args UploadArgs) error {
     return nil
 }
 
-func (self *Drive) uploadFile(args UploadArgs) (*drive.File, error) {
+func (self *Drive) uploadFile(args UploadArgs) (*drive.File, int64, error) {
     srcFile, srcFileInfo, err := openFile(args.Path)
     if err != nil {
-        return nil, err
+        return nil, 0, err
     }
 
     // Close file on function exit
@@ -125,20 +139,18 @@ func (self *Drive) uploadFile(args UploadArgs) (*drive.File, error) {
     // Wrap file in progress reader
     srcReader := getProgressReader(srcFile, args.Progress, srcFileInfo.Size())
 
-    fmt.Fprintf(args.Out, "\nUploading %s...\n", args.Path)
+    fmt.Fprintf(args.Out, "Uploading %s\n", args.Path)
     started := time.Now()
 
     f, err := self.service.Files.Create(dstFile).Fields("id", "name", "size", "md5Checksum").Media(srcReader, chunkSize).Do()
     if err != nil {
-        return nil, fmt.Errorf("Failed to upload file: %s", err)
+        return nil, 0, fmt.Errorf("Failed to upload file: %s", err)
     }
 
     // Calculate average upload rate
     rate := calcRate(f.Size, started, time.Now())
 
-    fmt.Fprintf(args.Out, "[file] id: %s, md5: %s, name: %s\n", f.Id, f.Md5Checksum, f.Name)
-    fmt.Fprintf(args.Out, "Uploaded '%s' at %s/s, total %s\n", f.Name, formatSize(rate, false), formatSize(f.Size, false))
-    return f, nil
+    return f, rate, nil
 }
 
 type UploadStreamArgs struct {
@@ -170,28 +182,20 @@ func (self *Drive) UploadStream(args UploadStreamArgs) (err error) {
     // Chunk size option
     chunkSize := googleapi.ChunkSize(int(args.ChunkSize))
 
-    f, err := self.service.Files.Create(dstFile).Media(args.In, chunkSize).Do()
+    fmt.Fprintf(args.Out, "Uploading %s\n", dstFile.Name)
+    started := time.Now()
+
+    f, err := self.service.Files.Create(dstFile).Fields("id", "name", "size").Media(args.In, chunkSize).Do()
     if err != nil {
         return fmt.Errorf("Failed to upload file: %s", err)
     }
 
-    fmt.Fprintf(args.Out, "Uploaded '%s' at %s, total %d\n", f.Name, "x/s", f.Size)
+    // Calculate average upload rate
+    rate := calcRate(f.Size, started, time.Now())
+
+    fmt.Fprintf(args.Out, "Uploaded %s at %s/s, total %s\n", f.Id, formatSize(rate, false), formatSize(f.Size, false))
     //if args.Share {
     //    self.Share(TODO)
     //}
     return
-}
-
-func openFile(path string) (*os.File, os.FileInfo, error) {
-    f, err := os.Open(path)
-    if err != nil {
-        return nil, nil, fmt.Errorf("Failed to open file: %s", err)
-    }
-
-    info, err := f.Stat()
-    if err != nil {
-        return nil, nil, fmt.Errorf("Failed getting file metadata: %s", err)
-    }
-
-    return f, info, nil
 }

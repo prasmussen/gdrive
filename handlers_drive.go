@@ -144,7 +144,6 @@ func updateHandler(ctx cli.Context) {
         Name: args.String("name"),
         Parents: args.StringSlice("parent"),
         Mime: args.String("mime"),
-        Stdin: args.Bool("stdin"),
         Share: args.Bool("share"),
         Progress: progressWriter(args.Bool("noProgress")),
         ChunkSize: args.Int64("chunksize"),
