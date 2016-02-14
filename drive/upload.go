@@ -161,6 +161,7 @@ type UploadStreamArgs struct {
     Mime string
     Share bool
     ChunkSize int64
+    Progress io.Writer
 }
 
 func (self *Drive) UploadStream(args UploadStreamArgs) (err error) {
@@ -182,10 +183,13 @@ func (self *Drive) UploadStream(args UploadStreamArgs) (err error) {
     // Chunk size option
     chunkSize := googleapi.ChunkSize(int(args.ChunkSize))
 
+    // Wrap file in progress reader
+    srcReader := getProgressReader(args.In, args.Progress, 0)
+
     fmt.Fprintf(args.Out, "Uploading %s\n", dstFile.Name)
     started := time.Now()
 
-    f, err := self.service.Files.Create(dstFile).Fields("id", "name", "size").Media(args.In, chunkSize).Do()
+    f, err := self.service.Files.Create(dstFile).Fields("id", "name", "size").Media(srcReader, chunkSize).Do()
     if err != nil {
         return fmt.Errorf("Failed to upload file: %s", err)
     }

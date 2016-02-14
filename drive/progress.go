@@ -12,7 +12,7 @@ const MaxRateInterval = time.Second * 3
 
 func getProgressReader(r io.Reader, w io.Writer, size int64) io.Reader {
     // Don't wrap reader if output is discarded or size is too small
-    if w == ioutil.Discard || size < 1024 * 1024 {
+    if w == ioutil.Discard || (size > 0 && size < 1024 * 1024) {
         return r
     }
 
@@ -79,7 +79,12 @@ func (self *Progress) draw(isLast bool) {
     self.clear()
 
     // Print progress
-    fmt.Fprintf(self.Writer, "%s/%s", formatSize(self.progress, false), formatSize(self.Size, false))
+    fmt.Fprintf(self.Writer, "%s", formatSize(self.progress, false))
+
+    // Print total size
+    if self.Size > 0 {
+        fmt.Fprintf(self.Writer, "/%s", formatSize(self.Size, false))
+    }
 
     // Print rate
     if self.rate > 0 {

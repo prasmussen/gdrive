@@ -114,6 +114,7 @@ func uploadStdinHandler(ctx cli.Context) {
         Mime: args.String("mime"),
         Share: args.Bool("share"),
         ChunkSize: args.Int64("chunksize"),
+        Progress: progressWriter(args.Bool("noProgress")),
     })
     checkErr(err)
 }

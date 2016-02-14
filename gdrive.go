@@ -193,6 +193,12 @@ func main() {
                         Description: "Share file",
                         OmitValue: true,
                     },
+                    cli.BoolFlag{
+                        Name: "noProgress",
+                        Patterns: []string{"--no-progress"},
+                        Description: "Hide progress",
+                        OmitValue: true,
+                    },
                 ),
             },
         },
