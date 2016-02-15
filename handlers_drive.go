@@ -48,7 +48,7 @@ func downloadHandler(ctx cli.Context) {
     args := ctx.Args()
     err := newDrive(args).Download(drive.DownloadArgs{
         Out: os.Stdout,
-        Id: args.String("id"),
+        Id: args.String("fileId"),
         Force: args.Bool("force"),
         Path: args.String("path"),
         Recursive: args.Bool("recursive"),
@@ -65,7 +65,7 @@ func downloadSyncHandler(ctx cli.Context) {
         Out: os.Stdout,
         Progress: progressWriter(args.Bool("noProgress")),
         Path: args.String("path"),
-        RootId: args.String("id"),
+        RootId: args.String("fileId"),
         DryRun: args.Bool("dryRun"),
         DeleteExtraneous: args.Bool("deleteExtraneous"),
         Resolution: conflictResolution(args),
@@ -126,7 +126,7 @@ func uploadSyncHandler(ctx cli.Context) {
         Out: os.Stdout,
         Progress: progressWriter(args.Bool("noProgress")),
         Path: args.String("path"),
-        RootId: args.String("id"),
+        RootId: args.String("fileId"),
         DryRun: args.Bool("dryRun"),
         DeleteExtraneous: args.Bool("deleteExtraneous"),
         ChunkSize: args.Int64("chunksize"),
@@ -140,7 +140,7 @@ func updateHandler(ctx cli.Context) {
     args := ctx.Args()
     err := newDrive(args).Update(drive.UpdateArgs{
         Out: os.Stdout,
-        Id: args.String("id"),
+        Id: args.String("fileId"),
         Path: args.String("path"),
         Name: args.String("name"),
         Parents: args.StringSlice("parent"),
@@ -155,7 +155,7 @@ func infoHandler(ctx cli.Context) {
     args := ctx.Args()
     err := newDrive(args).Info(drive.FileInfoArgs{
         Out: os.Stdout,
-        Id: args.String("id"),
+        Id: args.String("fileId"),
         SizeInBytes: args.Bool("sizeInBytes"),
     })
     checkErr(err)
@@ -176,7 +176,7 @@ func exportHandler(ctx cli.Context) {
     args := ctx.Args()
     err := newDrive(args).Export(drive.ExportArgs{
         Out: os.Stdout,
-        Id: args.String("id"),
+        Id: args.String("fileId"),
         Mime: args.String("mime"),
         PrintMimes: args.Bool("printMimes"),
         Force: args.Bool("force"),
@@ -188,7 +188,7 @@ func listRevisionsHandler(ctx cli.Context) {
     args := ctx.Args()
     err := newDrive(args).ListRevisions(drive.ListRevisionsArgs{
         Out: os.Stdout,
-        Id: args.String("id"),
+        Id: args.String("fileId"),
         NameWidth: args.Int64("nameWidth"),
         SizeInBytes: args.Bool("sizeInBytes"),
         SkipHeader: args.Bool("skipHeader"),
@@ -210,7 +210,7 @@ func shareHandler(ctx cli.Context) {
     args := ctx.Args()
     err := newDrive(args).Share(drive.ShareArgs{
         Out: os.Stdout,
-        FileId: args.String("id"),
+        FileId: args.String("fileId"),
         Role: args.String("role"),
         Type: args.String("type"),
         Email: args.String("email"),
@@ -242,7 +242,7 @@ func deleteHandler(ctx cli.Context) {
     args := ctx.Args()
     err := newDrive(args).Delete(drive.DeleteArgs{
         Out: os.Stdout,
-        Id: args.String("id"),
+        Id: args.String("fileId"),
         Recursive: args.Bool("recursive"),
     })
     checkErr(err)
@@ -261,7 +261,7 @@ func listRecursiveSyncHandler(ctx cli.Context) {
     args := ctx.Args()
     err := newDrive(args).ListRecursiveSync(drive.ListRecursiveSyncArgs{
         Out: os.Stdout,
-        RootId: args.String("id"),
+        RootId: args.String("fileId"),
         SkipHeader: args.Bool("skipHeader"),
         PathWidth: args.Int64("pathWidth"),
         SizeInBytes: args.Bool("sizeInBytes"),

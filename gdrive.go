@@ -77,7 +77,7 @@ func main() {
             },
         },
         &cli.Handler{
-            Pattern: "[global] download [options] <id>",
+            Pattern: "[global] download [options] <fileId>",
             Description: "Download file or directory",
             Callback: downloadHandler,
             FlagGroups: cli.FlagGroups{
@@ -203,7 +203,7 @@ func main() {
             },
         },
         &cli.Handler{
-            Pattern: "[global] update [options] <id> <path>",
+            Pattern: "[global] update [options] <fileId> <path>",
             Description: "Update file, this creates a new revision of the file",
             Callback: updateHandler,
             FlagGroups: cli.FlagGroups{
@@ -240,7 +240,7 @@ func main() {
             },
         },
         &cli.Handler{
-            Pattern: "[global] info [options] <id>",
+            Pattern: "[global] info [options] <fileId>",
             Description: "Show file info",
             Callback: infoHandler,
             FlagGroups: cli.FlagGroups{
@@ -271,7 +271,7 @@ func main() {
             },
         },
         &cli.Handler{
-            Pattern: "[global] share [options] <id>",
+            Pattern: "[global] share [options] <fileId>",
             Description: "Share file or directory",
             Callback: shareHandler,
             FlagGroups: cli.FlagGroups{
@@ -326,7 +326,7 @@ func main() {
             },
         },
         &cli.Handler{
-            Pattern: "[global] delete [options] <id>",
+            Pattern: "[global] delete [options] <fileId>",
             Description: "Delete file or directory",
             Callback: deleteHandler,
             FlagGroups: cli.FlagGroups{
@@ -358,7 +358,7 @@ func main() {
             },
         },
         &cli.Handler{
-            Pattern: "[global] sync list recursive [options] <id>",
+            Pattern: "[global] sync list recursive [options] <fileId>",
             Description: "List content of syncable directory",
             Callback: listRecursiveSyncHandler,
             FlagGroups: cli.FlagGroups{
@@ -391,7 +391,7 @@ func main() {
             },
         },
         &cli.Handler{
-            Pattern: "[global] sync download [options] <id> <path>",
+            Pattern: "[global] sync download [options] <fileId> <path>",
             Description: "Sync drive directory to local directory",
             Callback: downloadSyncHandler,
             FlagGroups: cli.FlagGroups{
@@ -437,7 +437,7 @@ func main() {
             },
         },
         &cli.Handler{
-            Pattern: "[global] sync upload [options] <path> <id>",
+            Pattern: "[global] sync upload [options] <path> <fileId>",
             Description: "Sync local directory to drive",
             Callback: uploadSyncHandler,
             FlagGroups: cli.FlagGroups{
@@ -529,7 +529,7 @@ func main() {
             },
         },
         &cli.Handler{
-            Pattern: "[global] revision list [options] <id>",
+            Pattern: "[global] revision list [options] <fileId>",
             Description: "List file revisions",
             Callback: listRevisionsHandler,
             FlagGroups: cli.FlagGroups{
@@ -619,7 +619,7 @@ func main() {
             },
         },
         &cli.Handler{
-            Pattern: "[global] export [options] <id>",
+            Pattern: "[global] export [options] <fileId>",
             Description: "Export a google document",
             Callback: exportHandler,
             FlagGroups: cli.FlagGroups{
