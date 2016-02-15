@@ -298,13 +298,13 @@ func main() {
                     cli.StringFlag{
                         Name: "role",
                         Patterns: []string{"--role"},
-                        Description: fmt.Sprintf("Share role. Default: %s", DefaultShareRole),
+                        Description: fmt.Sprintf("Share role: owner/writer/commenter/reader, default: %s", DefaultShareRole),
                         DefaultValue: DefaultShareRole,
                     },
                     cli.StringFlag{
                         Name: "type",
                         Patterns: []string{"--type"},
-                        Description: fmt.Sprintf("Share type. Default: %s", DefaultShareType),
+                        Description: fmt.Sprintf("Share type: user/group/domain/anyone, default: %s", DefaultShareType),
                         DefaultValue: DefaultShareType,
                     },
                     cli.StringFlag{
