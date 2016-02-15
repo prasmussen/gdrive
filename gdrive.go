@@ -230,12 +230,6 @@ func main() {
                         Patterns: []string{"--mime"},
                         Description: "Force mime type",
                     },
-                    cli.BoolFlag{
-                        Name: "share",
-                        Patterns: []string{"--share"},
-                        Description: "Share file",
-                        OmitValue: true,
-                    },
                     cli.IntFlag{
                         Name: "chunksize",
                         Patterns: []string{"--chunksize"},
@@ -273,12 +267,6 @@ func main() {
                         Patterns: []string{"-p", "--parent"},
                         Description: "Parent id of created directory, can be specified multiple times to give many parents",
                     },
-                    cli.BoolFlag{
-                        Name: "share",
-                        Patterns: []string{"--share"},
-                        Description: "Share created directory",
-                        OmitValue: true,
-                    },
                 ),
             },
         },
@@ -289,12 +277,6 @@ func main() {
             FlagGroups: cli.FlagGroups{
                 cli.NewFlagGroup("global", globalFlags...),
                 cli.NewFlagGroup("options",
-                    cli.BoolFlag{
-                        Name: "discoverable",
-                        Patterns: []string{"--discoverable"},
-                        Description: "Make file discoverable by search engines",
-                        OmitValue: true,
-                    },
                     cli.StringFlag{
                         Name: "role",
                         Patterns: []string{"--role"},
@@ -313,12 +295,34 @@ func main() {
                         Description: "The email address of the user or group to share the file with. Requires 'user' or 'group' as type",
                     },
                     cli.BoolFlag{
+                        Name: "discoverable",
+                        Patterns: []string{"--discoverable"},
+                        Description: "Make file discoverable by search engines",
+                        OmitValue: true,
+                    },
+                    cli.BoolFlag{
                         Name: "revoke",
                         Patterns: []string{"--revoke"},
-                        Description: "Delete all sharing permissions",
+                        Description: "Delete all sharing permissions (owner roles will be skipped)",
                         OmitValue: true,
                     },
                 ),
+            },
+        },
+        &cli.Handler{
+            Pattern: "[global] share list <fileId>",
+            Description: "List files permissions",
+            Callback: shareListHandler,
+            FlagGroups: cli.FlagGroups{
+                cli.NewFlagGroup("global", globalFlags...),
+            },
+        },
+        &cli.Handler{
+            Pattern: "[global] share revoke <fileId> <permissionId>",
+            Description: "Revoke permission",
+            Callback: shareRevokeHandler,
+            FlagGroups: cli.FlagGroups{
+                cli.NewFlagGroup("global", globalFlags...),
             },
         },
         &cli.Handler{
@@ -609,12 +613,6 @@ func main() {
                         Name: "noProgress",
                         Patterns: []string{"--no-progress"},
                         Description: "Hide progress",
-                        OmitValue: true,
-                    },
-                    cli.BoolFlag{
-                        Name: "share",
-                        Patterns: []string{"--share"},
-                        Description: "Share file",
                         OmitValue: true,
                     },
                 ),

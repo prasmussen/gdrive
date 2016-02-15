@@ -43,7 +43,16 @@ func (self *Drive) Upload(args UploadArgs) error {
 
     f, rate, err := self.uploadFile(args)
     fmt.Fprintf(args.Out, "Uploaded %s at %s/s, total %s\n", f.Id, formatSize(rate, false), formatSize(f.Size, false))
-    return err
+
+    if args.Share {
+        err = self.shareAnyoneReader(f.Id)
+        if err != nil {
+            return err
+        }
+
+        fmt.Fprintf(args.Out, "File is readable by anyone at %s\n", f.WebContentLink)
+    }
+    return nil
 }
 
 func (self *Drive) uploadRecursive(args UploadArgs) error {
@@ -76,7 +85,6 @@ func (self *Drive) uploadDirectory(args UploadArgs) error {
         Out: args.Out,
         Name: srcFileInfo.Name(),
         Parents: args.Parents,
-        Share: args.Share,
     })
     if err != nil {
         return err
@@ -142,7 +150,7 @@ func (self *Drive) uploadFile(args UploadArgs) (*drive.File, int64, error) {
     fmt.Fprintf(args.Out, "Uploading %s\n", args.Path)
     started := time.Now()
 
-    f, err := self.service.Files.Create(dstFile).Fields("id", "name", "size", "md5Checksum").Media(srcReader, chunkSize).Do()
+    f, err := self.service.Files.Create(dstFile).Fields("id", "name", "size", "md5Checksum", "webContentLink").Media(srcReader, chunkSize).Do()
     if err != nil {
         return nil, 0, fmt.Errorf("Failed to upload file: %s", err)
     }
@@ -164,7 +172,7 @@ type UploadStreamArgs struct {
     Progress io.Writer
 }
 
-func (self *Drive) UploadStream(args UploadStreamArgs) (err error) {
+func (self *Drive) UploadStream(args UploadStreamArgs) error {
     if args.ChunkSize > intMax() - 1 {
         return fmt.Errorf("Chunk size is to big, max chunk size for this computer is %d", intMax() - 1)
     }
@@ -189,7 +197,7 @@ func (self *Drive) UploadStream(args UploadStreamArgs) (err error) {
     fmt.Fprintf(args.Out, "Uploading %s\n", dstFile.Name)
     started := time.Now()
 
-    f, err := self.service.Files.Create(dstFile).Fields("id", "name", "size").Media(srcReader, chunkSize).Do()
+    f, err := self.service.Files.Create(dstFile).Fields("id", "name", "size", "webContentLink").Media(srcReader, chunkSize).Do()
     if err != nil {
         return fmt.Errorf("Failed to upload file: %s", err)
     }
@@ -198,8 +206,13 @@ func (self *Drive) UploadStream(args UploadStreamArgs) (err error) {
     rate := calcRate(f.Size, started, time.Now())
 
     fmt.Fprintf(args.Out, "Uploaded %s at %s/s, total %s\n", f.Id, formatSize(rate, false), formatSize(f.Size, false))
-    //if args.Share {
-    //    self.Share(TODO)
-    //}
-    return
+    if args.Share {
+        err = self.shareAnyoneReader(f.Id)
+        if err != nil {
+            return err
+        }
+
+        fmt.Fprintf(args.Out, "File is readable by anyone at %s\n", f.WebContentLink)
+    }
+    return nil
 }

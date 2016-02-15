@@ -145,7 +145,6 @@ func updateHandler(ctx cli.Context) {
         Name: args.String("name"),
         Parents: args.StringSlice("parent"),
         Mime: args.String("mime"),
-        Share: args.Bool("share"),
         Progress: progressWriter(args.Bool("noProgress")),
         ChunkSize: args.Int64("chunksize"),
     })
@@ -168,7 +167,6 @@ func importHandler(ctx cli.Context) {
         Out: os.Stdout,
         Path: args.String("path"),
         Parents: args.StringSlice("parent"),
-        Share: args.Bool("share"),
         Progress: progressWriter(args.Bool("noProgress")),
     })
     checkErr(err)
@@ -204,7 +202,6 @@ func mkdirHandler(ctx cli.Context) {
         Out: os.Stdout,
         Name: args.String("name"),
         Parents: args.StringSlice("parent"),
-        Share: args.Bool("share"),
     })
     checkErr(err)
 }
@@ -218,7 +215,25 @@ func shareHandler(ctx cli.Context) {
         Type: args.String("type"),
         Email: args.String("email"),
         Discoverable: args.Bool("discoverable"),
-        Revoke: args.Bool("revoke"),
+    })
+    checkErr(err)
+}
+
+func shareListHandler(ctx cli.Context) {
+    args := ctx.Args()
+    err := newDrive(args).ListPermissions(drive.ListPermissionsArgs{
+        Out: os.Stdout,
+        FileId: args.String("fileId"),
+    })
+    checkErr(err)
+}
+
+func shareRevokeHandler(ctx cli.Context) {
+    args := ctx.Args()
+    err := newDrive(args).RevokePermission(drive.RevokePermissionArgs{
+        Out: os.Stdout,
+        FileId: args.String("fileId"),
+        PermissionId: args.String("permissionId"),
     })
     checkErr(err)
 }

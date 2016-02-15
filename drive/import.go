@@ -13,7 +13,6 @@ type ImportArgs struct {
     Out io.Writer
     Progress io.Writer
     Path string
-    Share bool
     Parents []string
 }
 
@@ -39,7 +38,6 @@ func (self *Drive) Import(args ImportArgs) error {
         Path: args.Path,
         Parents: args.Parents,
         Mime: toMimes[0],
-        Share: args.Share,
     })
     if err != nil {
         return err

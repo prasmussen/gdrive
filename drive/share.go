@@ -3,6 +3,7 @@ package drive
 import (
     "io"
     "fmt"
+    "text/tabwriter"
     "google.golang.org/api/drive/v3"
 )
 
@@ -13,17 +14,9 @@ type ShareArgs struct {
     Type string
     Email string
     Discoverable bool
-    Revoke bool
 }
 
-func (self *Drive) Share(args ShareArgs) (err error) {
-    if args.Revoke {
-        err = self.deletePermissions(args)
-        if err != nil {
-            return fmt.Errorf("Failed delete permissions: %s", err)
-        }
-    }
-
+func (self *Drive) Share(args ShareArgs) error {
     permission := &drive.Permission{
         AllowFileDiscovery: args.Discoverable,
         Role: args.Role,
@@ -31,32 +24,86 @@ func (self *Drive) Share(args ShareArgs) (err error) {
         EmailAddress: args.Email,
     }
 
-    p, err := self.service.Permissions.Create(args.FileId, permission).Do()
+    _, err := self.service.Permissions.Create(args.FileId, permission).Do()
     if err != nil {
-        return fmt.Errorf("Failed share file: %s", err)
+        return fmt.Errorf("Failed to share file: %s", err)
     }
 
-    fmt.Fprintln(args.Out, p)
-    return
+    fmt.Fprintf(args.Out, "Granted %s permission to %s\n", args.Role, args.Type)
+    return nil
 }
 
-func (self *Drive) deletePermissions(args ShareArgs) error {
-    permList, err := self.service.Permissions.List(args.FileId).Do()
+type RevokePermissionArgs struct {
+    Out io.Writer
+    FileId string
+    PermissionId string
+}
+
+func (self *Drive) RevokePermission(args RevokePermissionArgs) error {
+    err := self.service.Permissions.Delete(args.FileId, args.PermissionId).Do()
     if err != nil {
+        fmt.Errorf("Failed to revoke permission: %s", err)
         return err
     }
 
-    for _, p := range permList.Permissions {
-        // Skip owner permissions
-        if p.Role == "owner" {
-            continue
-        }
+    fmt.Fprintf(args.Out, "Permission revoked\n")
+    return nil
+}
 
-        err := self.service.Permissions.Delete(args.FileId, p.Id).Do()
-        if err != nil {
-            return err
-        }
+type ListPermissionsArgs struct {
+    Out io.Writer
+    FileId string
+}
+
+func (self *Drive) ListPermissions(args ListPermissionsArgs) error {
+    permList, err := self.service.Permissions.List(args.FileId).Fields("permissions(id,role,type,domain,emailAddress,allowFileDiscovery)").Do()
+    if err != nil {
+        fmt.Errorf("Failed to list permissions: %s", err)
+        return err
+    }
+
+    printPermissions(printPermissionsArgs{
+        out: args.Out,
+        permissions: permList.Permissions,
+    })
+    return nil
+}
+
+func (self *Drive) shareAnyoneReader(fileId string) error {
+    permission := &drive.Permission{
+        Role: "reader",
+        Type: "anyone",
+    }
+
+    _, err := self.service.Permissions.Create(fileId, permission).Do()
+    if err != nil {
+        return fmt.Errorf("Failed to share file: %s", err)
     }
 
     return nil
+}
+
+type printPermissionsArgs struct {
+    out io.Writer
+    permissions []*drive.Permission
+}
+
+func printPermissions(args printPermissionsArgs) {
+    w := new(tabwriter.Writer)
+    w.Init(args.out, 0, 0, 3, ' ', 0)
+
+    fmt.Fprintln(w, "Id\tType\tRole\tEmail\tDomain\tDiscoverable")
+
+    for _, p := range args.permissions {
+        fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\t%s\n",
+            p.Id,
+            p.Type,
+            p.Role,
+            p.EmailAddress,
+            p.Domain,
+            formatBool(p.AllowFileDiscovery),
+        )
+    }
+
+    w.Flush()
 }

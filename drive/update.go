@@ -19,7 +19,6 @@ type UpdateArgs struct {
     Parents []string
     Mime string
     Recursive bool
-    Share bool
     ChunkSize int64
 }
 

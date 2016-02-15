@@ -12,7 +12,6 @@ type MkdirArgs struct {
     Out io.Writer
     Name string
     Parents []string
-    Share bool
 }
 
 func (self *Drive) Mkdir(args MkdirArgs) error {
@@ -35,10 +34,6 @@ func (self *Drive) mkdir(args MkdirArgs) (*drive.File, error) {
     if err != nil {
         return nil, fmt.Errorf("Failed to create directory: %s", err)
     }
-
-    //if args.Share {
-    //    self.share(TODO)
-    //}
 
     return f, nil
 }
