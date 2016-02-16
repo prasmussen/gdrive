@@ -1,6 +1,7 @@
 package auth
 
 import (
+    "fmt"
     "net/http"
     "golang.org/x/oauth2"
 )
@@ -22,7 +23,7 @@ func NewOauthClient(clientId, clientSecret, tokenFile string, authFn authCodeFn)
     // Read cached token
     token, exists, err := ReadToken(tokenFile)
     if err != nil {
-        return nil, err
+        return nil, fmt.Errorf("Failed to read token: %s", err)
     }
 
     // Require auth code if token file does not exist
@@ -31,6 +32,9 @@ func NewOauthClient(clientId, clientSecret, tokenFile string, authFn authCodeFn)
         authUrl := conf.AuthCodeURL("state", oauth2.AccessTypeOffline)
         authCode := authFn(authUrl)()
         token, err = conf.Exchange(oauth2.NoContext, authCode)
+        if err != nil {
+            return nil, fmt.Errorf("Failed to exchange auth code for token: %s", err)
+        }
     }
 
     return oauth2.NewClient(
