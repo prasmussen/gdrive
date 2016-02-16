@@ -17,6 +17,7 @@ type DownloadArgs struct {
     Path string
     Force bool
     Recursive bool
+    Delete bool
     Stdout bool
 }
 
@@ -42,6 +43,17 @@ func (self *Drive) Download(args DownloadArgs) error {
 
     if !args.Stdout {
         fmt.Fprintf(args.Out, "Downloaded %s at %s/s, total %s\n", f.Id, formatSize(rate, false), formatSize(bytes, false))
+    }
+
+    if args.Delete {
+        err = self.deleteFile(args.Id)
+        if err != nil {
+            return fmt.Errorf("Failed to delete file: %s", err)
+        }
+
+        if !args.Stdout {
+            fmt.Fprintf(args.Out, "Removed %s\n", args.Id)
+        }
     }
     return err
 }

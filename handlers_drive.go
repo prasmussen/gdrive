@@ -46,11 +46,13 @@ func listChangesHandler(ctx cli.Context) {
 
 func downloadHandler(ctx cli.Context) {
     args := ctx.Args()
+    checkDownloadArgs(args)
     err := newDrive(args).Download(drive.DownloadArgs{
         Out: os.Stdout,
         Id: args.String("fileId"),
         Force: args.Bool("force"),
         Path: args.String("path"),
+        Delete: args.Bool("delete"),
         Recursive: args.Bool("recursive"),
         Stdout: args.Bool("stdout"),
         Progress: progressWriter(args.Bool("noProgress")),
@@ -90,6 +92,7 @@ func downloadRevisionHandler(ctx cli.Context) {
 
 func uploadHandler(ctx cli.Context) {
     args := ctx.Args()
+    checkUploadArgs(args)
     err := newDrive(args).Upload(drive.UploadArgs{
         Out: os.Stdout,
         Progress: progressWriter(args.Bool("noProgress")),
@@ -99,6 +102,7 @@ func uploadHandler(ctx cli.Context) {
         Mime: args.String("mime"),
         Recursive: args.Bool("recursive"),
         Share: args.Bool("share"),
+        Delete: args.Bool("delete"),
         ChunkSize: args.Int64("chunksize"),
     })
     checkErr(err)
@@ -365,4 +369,20 @@ func conflictResolution(args cli.Arguments) drive.ConflictResolution {
     }
 
     return drive.NoResolution
+}
+
+func checkUploadArgs(args cli.Arguments) {
+    if args.Bool("recursive") && args.Bool("delete") {
+        ExitF("--delete is not allowed for recursive uploads")
+    }
+
+    if args.Bool("recursive") && args.Bool("share") {
+        ExitF("--share is not allowed for recursive uploads")
+    }
+}
+
+func checkDownloadArgs(args cli.Arguments) {
+    if args.Bool("recursive") && args.Bool("delete") {
+        ExitF("--delete is not allowed for recursive downloads")
+    }
 }

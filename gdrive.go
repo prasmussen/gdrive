@@ -101,6 +101,12 @@ func main() {
                         Description: "Download path",
                     },
                     cli.BoolFlag{
+                        Name: "delete",
+                        Patterns: []string{"--delete"},
+                        Description: "Delete remote file when download is successful",
+                        OmitValue: true,
+                    },
+                    cli.BoolFlag{
                         Name: "noProgress",
                         Patterns: []string{"--no-progress"},
                         Description: "Hide progress",
@@ -153,6 +159,12 @@ func main() {
                         Name: "share",
                         Patterns: []string{"--share"},
                         Description: "Share file",
+                        OmitValue: true,
+                    },
+                    cli.BoolFlag{
+                        Name: "delete",
+                        Patterns: []string{"--delete"},
+                        Description: "Delete local file when upload is successful",
                         OmitValue: true,
                     },
                     cli.IntFlag{

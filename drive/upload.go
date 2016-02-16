@@ -20,6 +20,7 @@ type UploadArgs struct {
     Mime string
     Recursive bool
     Share bool
+    Delete bool
     ChunkSize int64
 }
 
@@ -52,6 +53,15 @@ func (self *Drive) Upload(args UploadArgs) error {
 
         fmt.Fprintf(args.Out, "File is readable by anyone at %s\n", f.WebContentLink)
     }
+
+    if args.Delete {
+        err = os.Remove(args.Path)
+        if err != nil {
+            return fmt.Errorf("Failed to delete file: %s", err)
+        }
+        fmt.Fprintf(args.Out, "Removed %s\n", args.Path)
+    }
+
     return nil
 }
 
