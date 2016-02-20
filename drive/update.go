@@ -54,12 +54,15 @@ func (self *Drive) Update(args UpdateArgs) error {
     chunkSize := googleapi.ChunkSize(int(args.ChunkSize))
 
     // Wrap file in progress reader
-    srcReader := getProgressReader(srcFile, args.Progress, srcFileInfo.Size())
+    progressReader := getProgressReader(srcFile, args.Progress, srcFileInfo.Size())
+
+    // Wrap reader in timeout reader
+    reader, ctx := getTimeoutReaderContext(progressReader)
 
     fmt.Fprintf(args.Out, "Uploading %s\n", args.Path)
     started := time.Now()
 
-    f, err := self.service.Files.Update(args.Id, dstFile).Fields("id", "name", "size").Media(srcReader, chunkSize).Do()
+    f, err := self.service.Files.Update(args.Id, dstFile).Fields("id", "name", "size").Context(ctx).Media(reader, chunkSize).Do()
     if err != nil {
         return fmt.Errorf("Failed to upload file: %s", err)
     }

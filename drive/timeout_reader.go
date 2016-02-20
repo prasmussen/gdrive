@@ -10,6 +10,11 @@ import (
 const MaxIdleTimeout = time.Second * 120
 const TimeoutTimerInterval = time.Second * 10
 
+func getTimeoutReaderContext(r io.Reader) (io.Reader, context.Context) {
+    ctx, cancel := context.WithCancel(context.TODO())
+    return getTimeoutReader(r, cancel), ctx
+}
+
 func getTimeoutReader(r io.Reader, cancel context.CancelFunc) io.Reader {
     return &TimeoutReader{
         reader: r,

@@ -305,9 +305,12 @@ func (self *Drive) uploadMissingFile(parentId string, lf *LocalFile, args Upload
     chunkSize := googleapi.ChunkSize(int(args.ChunkSize))
 
     // Wrap file in progress reader
-    srcReader := getProgressReader(srcFile, args.Progress, lf.info.Size())
+    progressReader := getProgressReader(srcFile, args.Progress, lf.info.Size())
 
-    _, err = self.service.Files.Create(dstFile).Fields("id", "name", "size", "md5Checksum").Media(srcReader, chunkSize).Do()
+    // Wrap reader in timeout reader
+    reader, ctx := getTimeoutReaderContext(progressReader)
+
+    _, err = self.service.Files.Create(dstFile).Fields("id", "name", "size", "md5Checksum").Context(ctx).Media(reader, chunkSize).Do()
     if err != nil {
         if isBackendError(err) && try < MaxBackendErrorRetries {
             exponentialBackoffSleep(try)
@@ -341,9 +344,12 @@ func (self *Drive) updateChangedFile(cf *changedFile, args UploadSyncArgs, try i
     chunkSize := googleapi.ChunkSize(int(args.ChunkSize))
 
     // Wrap file in progress reader
-    srcReader := getProgressReader(srcFile, args.Progress, cf.local.info.Size())
+    progressReader := getProgressReader(srcFile, args.Progress, cf.local.info.Size())
 
-    _, err = self.service.Files.Update(cf.remote.file.Id, dstFile).Media(srcReader, chunkSize).Do()
+    // Wrap reader in timeout reader
+    reader, ctx := getTimeoutReaderContext(progressReader)
+
+    _, err = self.service.Files.Update(cf.remote.file.Id, dstFile).Context(ctx).Media(reader, chunkSize).Do()
     if err != nil {
         if isBackendError(err) && try < MaxBackendErrorRetries {
             exponentialBackoffSleep(try)

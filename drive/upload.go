@@ -158,12 +158,15 @@ func (self *Drive) uploadFile(args UploadArgs) (*drive.File, int64, error) {
     chunkSize := googleapi.ChunkSize(int(args.ChunkSize))
 
     // Wrap file in progress reader
-    srcReader := getProgressReader(srcFile, args.Progress, srcFileInfo.Size())
+    progressReader := getProgressReader(srcFile, args.Progress, srcFileInfo.Size())
+
+    // Wrap reader in timeout reader
+    reader, ctx := getTimeoutReaderContext(progressReader)
 
     fmt.Fprintf(args.Out, "Uploading %s\n", args.Path)
     started := time.Now()
 
-    f, err := self.service.Files.Create(dstFile).Fields("id", "name", "size", "md5Checksum", "webContentLink").Media(srcReader, chunkSize).Do()
+    f, err := self.service.Files.Create(dstFile).Fields("id", "name", "size", "md5Checksum", "webContentLink").Context(ctx).Media(reader, chunkSize).Do()
     if err != nil {
         return nil, 0, fmt.Errorf("Failed to upload file: %s", err)
     }
@@ -205,12 +208,15 @@ func (self *Drive) UploadStream(args UploadStreamArgs) error {
     chunkSize := googleapi.ChunkSize(int(args.ChunkSize))
 
     // Wrap file in progress reader
-    srcReader := getProgressReader(args.In, args.Progress, 0)
+    progressReader := getProgressReader(args.In, args.Progress, 0)
+
+    // Wrap reader in timeout reader
+    reader, ctx := getTimeoutReaderContext(progressReader)
 
     fmt.Fprintf(args.Out, "Uploading %s\n", dstFile.Name)
     started := time.Now()
 
-    f, err := self.service.Files.Create(dstFile).Fields("id", "name", "size", "webContentLink").Media(srcReader, chunkSize).Do()
+    f, err := self.service.Files.Create(dstFile).Fields("id", "name", "size", "webContentLink").Context(ctx).Media(reader, chunkSize).Do()
     if err != nil {
         return fmt.Errorf("Failed to upload file: %s", err)
     }
