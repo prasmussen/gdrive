@@ -311,8 +311,16 @@ func aboutExportHandler(ctx cli.Context) {
 }
 
 func getOauthClient(args cli.Arguments) (*http.Client, error) {
+    if args.String("refreshToken") != "" && args.String("accessToken") != "" {
+        ExitF("Access token not needed when refresh token is provided")
+    }
+
     if args.String("refreshToken") != "" {
         return auth.NewRefreshTokenClient(ClientId, ClientSecret, args.String("refreshToken")), nil
+    }
+
+    if args.String("accessToken") != "" {
+        return auth.NewAccessTokenClient(ClientId, ClientSecret, args.String("accessToken")), nil
     }
 
     configDir := args.String("configDir")

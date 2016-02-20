@@ -50,6 +50,20 @@ func NewRefreshTokenClient(clientId, clientSecret, refreshToken string) *http.Cl
     )
 }
 
+func NewAccessTokenClient(clientId, clientSecret, accessToken string) *http.Client {
+    conf := getConfig(clientId, clientSecret)
+
+    token := &oauth2.Token{
+        TokenType: "Bearer",
+        AccessToken: accessToken,
+    }
+
+    return oauth2.NewClient(
+        oauth2.NoContext,
+        conf.TokenSource(oauth2.NoContext, token),
+    )
+}
+
 func getConfig(clientId, clientSecret string) *oauth2.Config {
     return &oauth2.Config{
         ClientID:     clientId,

@@ -33,6 +33,11 @@ func main() {
             Patterns: []string{"--refresh-token"},
             Description: "Oauth refresh token used to get access token (for advanced users)",
         },
+        cli.StringFlag{
+            Name: "accessToken",
+            Patterns: []string{"--access-token"},
+            Description: "Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)",
+        },
     }
 
     handlers := []*cli.Handler{
