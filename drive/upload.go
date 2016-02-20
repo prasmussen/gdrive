@@ -43,6 +43,9 @@ func (self *Drive) Upload(args UploadArgs) error {
     }
 
     f, rate, err := self.uploadFile(args)
+    if err != nil {
+        return err
+    }
     fmt.Fprintf(args.Out, "Uploaded %s at %s/s, total %s\n", f.Id, formatSize(rate, false), formatSize(f.Size, false))
 
     if args.Share {
