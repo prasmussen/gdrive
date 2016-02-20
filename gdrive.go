@@ -28,6 +28,11 @@ func main() {
             Description: fmt.Sprintf("Application path, default: %s", DefaultConfigDir),
             DefaultValue: DefaultConfigDir,
         },
+        cli.StringFlag{
+            Name: "refreshToken",
+            Patterns: []string{"--refresh-token"},
+            Description: "Oauth refresh token used to get access token (for advanced users)",
+        },
     }
 
     handlers := []*cli.Handler{

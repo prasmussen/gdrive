@@ -2,23 +2,15 @@ package auth
 
 import (
     "fmt"
+    "time"
     "net/http"
     "golang.org/x/oauth2"
 )
 
 type authCodeFn func(string) func() string
 
-func NewOauthClient(clientId, clientSecret, tokenFile string, authFn authCodeFn) (*http.Client, error) {
-    conf := &oauth2.Config{
-        ClientID:     clientId,
-        ClientSecret: clientSecret,
-        Scopes:       []string{"https://www.googleapis.com/auth/drive"},
-        RedirectURL:  "urn:ietf:wg:oauth:2.0:oob",
-        Endpoint: oauth2.Endpoint{
-            AuthURL:  "https://accounts.google.com/o/oauth2/auth",
-            TokenURL: "https://accounts.google.com/o/oauth2/token",
-        },
-    }
+func NewFileSourceClient(clientId, clientSecret, tokenFile string, authFn authCodeFn) (*http.Client, error) {
+    conf := getConfig(clientId, clientSecret)
 
     // Read cached token
     token, exists, err := ReadToken(tokenFile)
@@ -41,4 +33,32 @@ func NewOauthClient(clientId, clientSecret, tokenFile string, authFn authCodeFn)
         oauth2.NoContext,
         FileSource(tokenFile, token, conf),
     ), nil
+}
+
+func NewRefreshTokenClient(clientId, clientSecret, refreshToken string) *http.Client {
+    conf := getConfig(clientId, clientSecret)
+
+    token := &oauth2.Token{
+        TokenType: "Bearer",
+        RefreshToken: refreshToken,
+        Expiry: time.Now(),
+    }
+
+    return oauth2.NewClient(
+        oauth2.NoContext,
+        conf.TokenSource(oauth2.NoContext, token),
+    )
+}
+
+func getConfig(clientId, clientSecret string) *oauth2.Config {
+    return &oauth2.Config{
+        ClientID:     clientId,
+        ClientSecret: clientSecret,
+        Scopes:       []string{"https://www.googleapis.com/auth/drive"},
+        RedirectURL:  "urn:ietf:wg:oauth:2.0:oob",
+        Endpoint: oauth2.Endpoint{
+            AuthURL:  "https://accounts.google.com/o/oauth2/auth",
+            TokenURL: "https://accounts.google.com/o/oauth2/token",
+        },
+    }
 }

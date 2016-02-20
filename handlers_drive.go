@@ -6,6 +6,7 @@ import (
 	"io"
 	"io/ioutil"
 	"path/filepath"
+	"net/http"
     "./cli"
 	"./auth"
 	"./drive"
@@ -309,10 +310,18 @@ func aboutExportHandler(ctx cli.Context) {
     checkErr(err)
 }
 
-func newDrive(args cli.Arguments) *drive.Drive {
+func getOauthClient(args cli.Arguments) (*http.Client, error) {
+    if args.String("refreshToken") != "" {
+        return auth.NewRefreshTokenClient(ClientId, ClientSecret, args.String("refreshToken")), nil
+    }
+
     configDir := args.String("configDir")
     tokenPath := ConfigFilePath(configDir, TokenFilename)
-    oauth, err := auth.NewOauthClient(ClientId, ClientSecret, tokenPath, authCodePrompt)
+    return auth.NewFileSourceClient(ClientId, ClientSecret, tokenPath, authCodePrompt)
+}
+
+func newDrive(args cli.Arguments) *drive.Drive {
+    oauth, err := getOauthClient(args)
     if err != nil {
         ExitF("Failed getting oauth client: %s", err.Error())
     }
