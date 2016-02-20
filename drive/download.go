@@ -75,7 +75,10 @@ func (self *Drive) downloadRecursive(args DownloadArgs) error {
 }
 
 func (self *Drive) downloadBinary(f *drive.File, args DownloadArgs) (int64, int64, error) {
-    res, err := self.service.Files.Get(f.Id).Download()
+    // Get timeout reader wrapper and context
+    timeoutReaderWrapper, ctx := getTimeoutReaderWrapperContext()
+
+    res, err := self.service.Files.Get(f.Id).Context(ctx).Download()
     if err != nil {
         return 0, 0, fmt.Errorf("Failed to download file: %s", err)
     }
@@ -92,7 +95,7 @@ func (self *Drive) downloadBinary(f *drive.File, args DownloadArgs) (int64, int6
 
     return self.saveFile(saveFileArgs{
         out: args.Out,
-        body: res.Body,
+        body: timeoutReaderWrapper(res.Body),
         contentLength: res.ContentLength,
         fpath: fpath,
         force: args.Force,

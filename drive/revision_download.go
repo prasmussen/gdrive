@@ -29,7 +29,10 @@ func (self *Drive) DownloadRevision(args DownloadRevisionArgs) (err error) {
         return fmt.Errorf("Download is not supported for this file type")
     }
 
-    res, err := getRev.Download()
+    // Get timeout reader wrapper and context
+    timeoutReaderWrapper, ctx := getTimeoutReaderWrapperContext()
+
+    res, err := getRev.Context(ctx).Download()
     if err != nil {
         return fmt.Errorf("Failed to download file: %s", err)
     }
@@ -50,7 +53,7 @@ func (self *Drive) DownloadRevision(args DownloadRevisionArgs) (err error) {
 
     bytes, rate, err := self.saveFile(saveFileArgs{
         out: args.Out,
-        body: res.Body,
+        body: timeoutReaderWrapper(res.Body),
         contentLength: res.ContentLength,
         fpath: fpath,
         force: args.Force,

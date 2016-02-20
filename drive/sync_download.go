@@ -187,7 +187,10 @@ func (self *Drive) downloadRemoteFile(id, fpath string, args DownloadSyncArgs, t
         return nil
     }
 
-    res, err := self.service.Files.Get(id).Download()
+    // Get timeout reader wrapper and context
+    timeoutReaderWrapper, ctx := getTimeoutReaderWrapperContext()
+
+    res, err := self.service.Files.Get(id).Context(ctx).Download()
     if err != nil {
         if isBackendError(err) && try < MaxBackendErrorRetries {
             exponentialBackoffSleep(try)
@@ -202,7 +205,10 @@ func (self *Drive) downloadRemoteFile(id, fpath string, args DownloadSyncArgs, t
     defer res.Body.Close()
 
     // Wrap response body in progress reader
-    srcReader := getProgressReader(res.Body, args.Progress, res.ContentLength)
+    progressReader := getProgressReader(res.Body, args.Progress, res.ContentLength)
+
+    // Wrap reader in timeout reader
+    reader := timeoutReaderWrapper(progressReader)
 
     // Ensure any parent directories exists
     if err = mkdir(fpath); err != nil {
@@ -219,7 +225,7 @@ func (self *Drive) downloadRemoteFile(id, fpath string, args DownloadSyncArgs, t
     }
 
     // Save file to disk
-    _, err = io.Copy(outFile, srcReader)
+    _, err = io.Copy(outFile, reader)
     if err != nil {
         outFile.Close()
         if try < MaxBackendErrorRetries {
