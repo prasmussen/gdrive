@@ -73,6 +73,16 @@ func (self *Drive) prepareSyncFiles(localPath string, root *drive.File, cmp File
     }, nil
 }
 
+func (self *Drive) isSyncFile(id string) (bool, error) {
+    f, err := self.service.Files.Get(id).Fields("appProperties").Do()
+    if err != nil {
+        return false, fmt.Errorf("Failed to get file: %s", err)
+    }
+
+    _, ok := f.AppProperties["sync"]
+    return ok, nil
+}
+
 func prepareLocalFiles(root string) ([]*LocalFile, error) {
     var files []*LocalFile
 

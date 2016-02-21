@@ -29,6 +29,18 @@ func (self *Drive) Upload(args UploadArgs) error {
         return fmt.Errorf("Chunk size is to big, max chunk size for this computer is %d", intMax() - 1)
     }
 
+    // Ensure that none of the parents are sync dirs
+    for _, parent := range args.Parents {
+        isSyncDir, err := self.isSyncFile(parent)
+        if err != nil {
+            return err
+        }
+
+        if isSyncDir {
+            return fmt.Errorf("%s is a sync directory, use 'sync upload' instead", parent)
+        }
+    }
+
     if args.Recursive {
         return self.uploadRecursive(args)
     }
