@@ -4,12 +4,13 @@ import (
 	"os"
 	"fmt"
 	"strings"
+	"runtime"
     "text/tabwriter"
     "./cli"
 )
 
 func printVersion(ctx cli.Context) {
-    fmt.Printf("%s v%s\n", Name, Version)
+    fmt.Printf("%s v%s, %s\n", Name, Version, runtime.Version())
 }
 
 func printHelp(ctx cli.Context) {
