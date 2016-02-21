@@ -419,7 +419,7 @@ func main() {
 			},
 		},
 		&cli.Handler{
-			Pattern:     "[global] sync list content [options] <fileId>",
+			Pattern:     "[global] sync content [options] <fileId>",
 			Description: "List content of syncable directory",
 			Callback:    listRecursiveSyncHandler,
 			FlagGroups: cli.FlagGroups{
