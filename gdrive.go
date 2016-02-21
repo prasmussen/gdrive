@@ -618,7 +618,7 @@ func main() {
 			},
 		},
 		&cli.Handler{
-			Pattern:     "[global] revision download [options] <fileId> <revisionId>",
+			Pattern:     "[global] revision download [options] <fileId> <revId>",
 			Description: "Download revision",
 			Callback:    downloadRevisionHandler,
 			FlagGroups: cli.FlagGroups{
@@ -651,7 +651,7 @@ func main() {
 			},
 		},
 		&cli.Handler{
-			Pattern:     "[global] revision delete <fileId> <revisionId>",
+			Pattern:     "[global] revision delete <fileId> <revId>",
 			Description: "Delete file revision",
 			Callback:    deleteRevisionHandler,
 			FlagGroups: cli.FlagGroups{

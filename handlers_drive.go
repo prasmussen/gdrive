@@ -95,7 +95,7 @@ func downloadRevisionHandler(ctx cli.Context) {
 	err := newDrive(args).DownloadRevision(drive.DownloadRevisionArgs{
 		Out:        os.Stdout,
 		FileId:     args.String("fileId"),
-		RevisionId: args.String("revisionId"),
+		RevisionId: args.String("revId"),
 		Force:      args.Bool("force"),
 		Stdout:     args.Bool("stdout"),
 		Path:       args.String("path"),
@@ -293,7 +293,7 @@ func deleteRevisionHandler(ctx cli.Context) {
 	err := newDrive(args).DeleteRevision(drive.DeleteRevisionArgs{
 		Out:        os.Stdout,
 		FileId:     args.String("fileId"),
-		RevisionId: args.String("revisionId"),
+		RevisionId: args.String("revId"),
 	})
 	checkErr(err)
 }
