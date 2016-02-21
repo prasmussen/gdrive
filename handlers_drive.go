@@ -323,9 +323,17 @@ func getOauthClient(args cli.Arguments) (*http.Client, error) {
         return auth.NewAccessTokenClient(ClientId, ClientSecret, args.String("accessToken")), nil
     }
 
-    configDir := args.String("configDir")
+    configDir := getConfigDir(args)
     tokenPath := ConfigFilePath(configDir, TokenFilename)
     return auth.NewFileSourceClient(ClientId, ClientSecret, tokenPath, authCodePrompt)
+}
+
+func getConfigDir(args cli.Arguments) string {
+    // Use dir from environment var if present
+    if os.Getenv("GDRIVE_CONFIG_DIR") != "" {
+        return os.Getenv("GDRIVE_CONFIG_DIR")
+    }
+    return args.String("configDir")
 }
 
 func newDrive(args cli.Arguments) *drive.Drive {
