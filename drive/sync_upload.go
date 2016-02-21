@@ -106,7 +106,7 @@ func (self *Drive) prepareSyncRoot(args UploadSyncArgs) (*drive.File, error) {
     }
 
     // Return directory if syncRoot property is already set
-    if _, ok := f.AppProperties["isSyncRoot"]; ok {
+    if _, ok := f.AppProperties["syncRoot"]; ok {
         return f, nil
     }
 
@@ -124,7 +124,7 @@ func (self *Drive) prepareSyncRoot(args UploadSyncArgs) (*drive.File, error) {
 
     // Update directory with syncRoot property
     dstFile := &drive.File{
-        AppProperties: map[string]string{"isSyncRoot": "true"},
+        AppProperties: map[string]string{"sync": "true", "syncRoot": "true"},
     }
 
     f, err = self.service.Files.Update(f.Id, dstFile).Fields(fields...).Do()
@@ -260,7 +260,7 @@ func (self *Drive) createMissingRemoteDir(args createMissingRemoteDirArgs) (*dri
         Name: args.name,
         MimeType: DirectoryMimeType,
         Parents: []string{args.parentId},
-        AppProperties: map[string]string{"syncRootId": args.rootId},
+        AppProperties: map[string]string{"sync": "true", "syncRootId": args.rootId},
     }
 
     if args.dryRun {
@@ -298,7 +298,7 @@ func (self *Drive) uploadMissingFile(parentId string, lf *LocalFile, args Upload
     dstFile := &drive.File{
         Name: lf.info.Name(),
         Parents: []string{parentId},
-        AppProperties: map[string]string{"syncRootId": args.RootId},
+        AppProperties: map[string]string{"sync": "true", "syncRootId": args.RootId},
     }
 
     // Chunk size option

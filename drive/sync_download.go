@@ -95,7 +95,7 @@ func (self *Drive) getSyncRoot(rootId string) (*drive.File, error) {
     }
 
     // Ensure directory is a proper syncRoot
-    if _, ok := f.AppProperties["isSyncRoot"]; !ok {
+    if _, ok := f.AppProperties["syncRoot"]; !ok {
         return nil, fmt.Errorf("Provided id is not a sync root directory")
     }
 

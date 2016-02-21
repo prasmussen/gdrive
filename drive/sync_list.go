@@ -16,7 +16,7 @@ type ListSyncArgs struct {
 
 func (self *Drive) ListSync(args ListSyncArgs) error {
     listArgs := listAllFilesArgs{
-        query: "appProperties has {key='isSyncRoot' and value='true'}",
+        query: "appProperties has {key='syncRoot' and value='true'}",
         fields: []googleapi.Field{"nextPageToken", "files(id,name,mimeType,createdTime)"},
     }
     files, err := self.listAllFiles(listArgs)
