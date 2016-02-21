@@ -10,7 +10,9 @@ import (
 )
 
 func printVersion(ctx cli.Context) {
-    fmt.Printf("%s v%s, %s\n", Name, Version, runtime.Version())
+    fmt.Printf("%s: %s\n", Name, Version)
+    fmt.Printf("Golang: %s\n", runtime.Version())
+    fmt.Printf("OS/Arch: %s/%s\n", runtime.GOOS, runtime.GOARCH)
 }
 
 func printHelp(ctx cli.Context) {
