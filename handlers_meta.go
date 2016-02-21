@@ -1,8 +1,10 @@
 package main
 
 import (
+	"os"
 	"fmt"
 	"strings"
+    "text/tabwriter"
     "./cli"
 )
 
@@ -11,11 +13,16 @@ func printVersion(ctx cli.Context) {
 }
 
 func printHelp(ctx cli.Context) {
-    fmt.Printf("%s usage:\n\n", Name)
+    w := new(tabwriter.Writer)
+    w.Init(os.Stdout, 0, 0, 3, ' ', 0)
+
+    fmt.Fprintf(w, "%s usage:\n\n", Name)
 
     for _, h := range ctx.Handlers() {
-        fmt.Printf("%s %s  (%s)\n", Name, h.Pattern, h.Description)
+        fmt.Fprintf(w, "%s %s\t%s\n", Name, h.Pattern, h.Description)
     }
+
+    w.Flush()
 }
 
 func printCommandHelp(ctx cli.Context) {
@@ -35,18 +42,24 @@ func printCommandPrefixHelp(ctx cli.Context, prefix ...string) {
         ExitF("Command not found")
     }
 
-    fmt.Printf("%s %s  (%s)\n", Name, handler.Pattern, handler.Description)
+    w := new(tabwriter.Writer)
+    w.Init(os.Stdout, 0, 0, 3, ' ', 0)
+
+    fmt.Fprintf(w, "%s\n", handler.Description)
+    fmt.Fprintf(w, "%s %s\n", Name, handler.Pattern)
     for _, group := range handler.FlagGroups {
-        fmt.Printf("\n%s:\n", group.Name)
+        fmt.Fprintf(w, "\n%s:\n", group.Name)
         for _, flag := range group.Flags {
             boolFlag, isBool := flag.(cli.BoolFlag)
             if isBool && boolFlag.OmitValue {
-                fmt.Printf("  %s  (%s)\n", strings.Join(flag.GetPatterns(), ", "), flag.GetDescription())
+                fmt.Fprintf(w, "  %s\t%s\n", strings.Join(flag.GetPatterns(), ", "), flag.GetDescription())
             } else {
-                fmt.Printf("  %s <%s>  (%s)\n", strings.Join(flag.GetPatterns(), ", "), flag.GetName(), flag.GetDescription())
+                fmt.Fprintf(w, "  %s <%s>\t%s\n", strings.Join(flag.GetPatterns(), ", "), flag.GetName(), flag.GetDescription())
             }
         }
     }
+
+    w.Flush()
 }
 
 func getHandler(handlers []*cli.Handler, prefix []string) *cli.Handler {
