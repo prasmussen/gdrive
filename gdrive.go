@@ -72,6 +72,12 @@ func main() {
                         DefaultValue: DefaultNameWidth,
                     },
                     cli.BoolFlag{
+                        Name: "absPath",
+                        Patterns: []string{"--absolute"},
+                        Description: "Show absolute path to file (will only show path from first parent)",
+                        OmitValue: true,
+                    },
+                    cli.BoolFlag{
                         Name: "skipHeader",
                         Patterns: []string{"--no-header"},
                         Description: "Dont print the header",

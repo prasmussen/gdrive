@@ -28,6 +28,7 @@ func listHandler(ctx cli.Context) {
         SortOrder: args.String("sortOrder"),
         SkipHeader: args.Bool("skipHeader"),
         SizeInBytes: args.Bool("sizeInBytes"),
+        AbsPath: args.Bool("absPath"),
     })
     checkErr(err)
 }

@@ -17,18 +17,31 @@ type ListFilesArgs struct {
     SortOrder string
     SkipHeader bool
     SizeInBytes bool
+    AbsPath bool
 }
 
 func (self *Drive) List(args ListFilesArgs) (err error) {
     listArgs := listAllFilesArgs{
         query: args.Query,
-        fields: []googleapi.Field{"nextPageToken", "files(id,name,md5Checksum,mimeType,size,createdTime)"},
+        fields: []googleapi.Field{"nextPageToken", "files(id,name,md5Checksum,mimeType,size,createdTime,parents)"},
         sortOrder: args.SortOrder,
         maxFiles: args.MaxFiles,
     }
     files, err := self.listAllFiles(listArgs)
     if err != nil {
         return fmt.Errorf("Failed to list files: %s", err)
+    }
+
+    pathfinder := self.newPathfinder()
+
+    if args.AbsPath {
+        // Replace name with absolute path
+        for _, f := range files {
+            f.Name, err = pathfinder.absPath(f)
+            if err != nil {
+                return err
+            }
+        }
     }
 
     PrintFileList(PrintFileListArgs{
