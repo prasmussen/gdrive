@@ -61,6 +61,19 @@ func downloadHandler(ctx cli.Context) {
     checkErr(err)
 }
 
+func downloadQueryHandler(ctx cli.Context) {
+    args := ctx.Args()
+    err := newDrive(args).DownloadQuery(drive.DownloadQueryArgs{
+        Out: os.Stdout,
+        Query: args.String("query"),
+        Force: args.Bool("force"),
+        Recursive: args.Bool("recursive"),
+        Path: args.String("path"),
+        Progress: progressWriter(args.Bool("noProgress")),
+    })
+    checkErr(err)
+}
+
 func downloadSyncHandler(ctx cli.Context) {
     args := ctx.Args()
     cachePath := filepath.Join(args.String("configDir"), DefaultCacheFileName)

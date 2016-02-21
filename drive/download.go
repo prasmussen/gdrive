@@ -58,6 +58,47 @@ func (self *Drive) Download(args DownloadArgs) error {
     return err
 }
 
+type DownloadQueryArgs struct {
+    Out io.Writer
+    Progress io.Writer
+    Query string
+    Path string
+    Force bool
+    Recursive bool
+}
+
+func (self *Drive) DownloadQuery(args DownloadQueryArgs) error {
+    listArgs := listAllFilesArgs{
+        query: args.Query,
+        fields: []googleapi.Field{"nextPageToken", "files(id,name,mimeType,size,md5Checksum)"},
+    }
+    files, err := self.listAllFiles(listArgs)
+    if err != nil {
+        return fmt.Errorf("Failed to list files: %s", err)
+    }
+
+    downloadArgs := DownloadArgs{
+        Out: args.Out,
+        Progress: args.Progress,
+        Path: args.Path,
+        Force: args.Force,
+    }
+
+    for _, f := range files {
+        if isDir(f) && args.Recursive {
+            err = self.downloadDirectory(f, downloadArgs)
+        } else if isBinary(f) {
+            _, _, err = self.downloadBinary(f, downloadArgs)
+        }
+
+        if err != nil {
+            return err
+        }
+    }
+
+    return nil
+}
+
 func (self *Drive) downloadRecursive(args DownloadArgs) error {
     f, err := self.service.Files.Get(args.Id).Fields("id", "name", "size", "mimeType", "md5Checksum").Do()
     if err != nil {

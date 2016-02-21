@@ -132,6 +132,39 @@ func main() {
             },
         },
         &cli.Handler{
+            Pattern: "[global] download query [options] <query>",
+            Description: "Download all files and directories matching query",
+            Callback: downloadQueryHandler,
+            FlagGroups: cli.FlagGroups{
+                cli.NewFlagGroup("global", globalFlags...),
+                cli.NewFlagGroup("options",
+                    cli.BoolFlag{
+                        Name: "force",
+                        Patterns: []string{"-f", "--force"},
+                        Description: "Overwrite existing file",
+                        OmitValue: true,
+                    },
+                    cli.BoolFlag{
+                        Name: "recursive",
+                        Patterns: []string{"-r", "--recursive"},
+                        Description: "Download directories recursively, documents will be skipped",
+                        OmitValue: true,
+                    },
+                    cli.StringFlag{
+                        Name: "path",
+                        Patterns: []string{"--path"},
+                        Description: "Download path",
+                    },
+                    cli.BoolFlag{
+                        Name: "noProgress",
+                        Patterns: []string{"--no-progress"},
+                        Description: "Hide progress",
+                        OmitValue: true,
+                    },
+                ),
+            },
+        },
+        &cli.Handler{
             Pattern: "[global] upload [options] <path>",
             Description: "Upload file or directory",
             Callback: uploadHandler,
