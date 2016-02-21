@@ -197,10 +197,6 @@ func (self *Drive) saveFile(args saveFileArgs) (int64, int64, error) {
 	// Calculate average download rate
 	rate := calcRate(bytes, started, time.Now())
 
-	//if deleteSourceFile {
-	//    self.Delete(args.Id)
-	//}
-
 	// Close File
 	outFile.Close()
 
