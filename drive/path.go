@@ -1,65 +1,65 @@
 package drive
 
 import (
-    "fmt"
-    "path/filepath"
-    "google.golang.org/api/drive/v3"
+	"fmt"
+	"google.golang.org/api/drive/v3"
+	"path/filepath"
 )
 
 func (self *Drive) newPathfinder() *remotePathfinder {
-    return &remotePathfinder{
-        service: self.service.Files,
-        files: make(map[string]*drive.File),
-    }
+	return &remotePathfinder{
+		service: self.service.Files,
+		files:   make(map[string]*drive.File),
+	}
 }
 
 type remotePathfinder struct {
-    service *drive.FilesService
-    files map[string]*drive.File
+	service *drive.FilesService
+	files   map[string]*drive.File
 }
 
 func (self *remotePathfinder) absPath(f *drive.File) (string, error) {
-    name := f.Name
+	name := f.Name
 
-    if len(f.Parents) == 0 {
-        return name, nil
-    }
+	if len(f.Parents) == 0 {
+		return name, nil
+	}
 
-    var path []string
+	var path []string
 
-    for {
-        parent, err := self.getParent(f.Parents[0])
-        if err != nil {
-            return "", err
-        }
+	for {
+		parent, err := self.getParent(f.Parents[0])
+		if err != nil {
+			return "", err
+		}
 
-        // Stop when we find the root dir
-        if len(parent.Parents) == 0 {
-            break
-        }
+		// Stop when we find the root dir
+		if len(parent.Parents) == 0 {
+			break
+		}
 
-        path = append([]string{parent.Name}, path...)
-        f = parent
-    }
+		path = append([]string{parent.Name}, path...)
+		f = parent
+	}
 
-    path = append(path, name)
-    return filepath.Join(path...), nil
+	path = append(path, name)
+	return filepath.Join(path...), nil
 }
 
 func (self *remotePathfinder) getParent(id string) (*drive.File, error) {
-    // Check cache
-    if f, ok := self.files[id]; ok {
-        return f, nil
-    }
+	// Check cache
+	if f, ok := self.files[id]; ok {
+		return f, nil
+	}
 
-    // Fetch file from drive
-    f, err := self.service.Get(id).Fields("id", "name", "parents").Do()
-    if err != nil {
-        return nil, fmt.Errorf("Failed to get file: %s", err)
-    }
+	// Fetch file from drive
+	f, err := self.service.Get(id).Fields("id", "name", "parents").Do()
+	if err != nil {
+		return nil, fmt.Errorf("Failed to get file: %s", err)
+	}
 
-    // Save in cache
-    self.files[f.Id] = f
+	// Save in cache
+	self.files[f.Id] = f
 
-    return f, nil
+	return f, nil
 }
