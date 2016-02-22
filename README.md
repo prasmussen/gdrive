@@ -105,7 +105,7 @@ gdrive help <command> <subcommand>                             Print subcommand 
 gdrive [global] list [options]
 
 global:
-  -c, --config <configDir>         Application path, default: /Users/pii/.gdrive
+  -c, --config <configDir>         Application path, default: /Users/<user>/.gdrive
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
 
@@ -124,7 +124,7 @@ options:
 gdrive [global] download [options] <fileId>
 
 global:
-  -c, --config <configDir>         Application path, default: /Users/pii/.gdrive
+  -c, --config <configDir>         Application path, default: /Users/<user>/.gdrive
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
 
@@ -142,7 +142,7 @@ options:
 gdrive [global] download query [options] <query>
 
 global:
-  -c, --config <configDir>         Application path, default: /Users/pii/.gdrive
+  -c, --config <configDir>         Application path, default: /Users/<user>/.gdrive
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
 
@@ -158,7 +158,7 @@ options:
 gdrive [global] upload [options] <path>
 
 global:
-  -c, --config <configDir>         Application path, default: /Users/pii/.gdrive
+  -c, --config <configDir>         Application path, default: /Users/<user>/.gdrive
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
 
@@ -178,7 +178,7 @@ options:
 gdrive [global] upload - [options] <name>
 
 global:
-  -c, --config <configDir>         Application path, default: /Users/pii/.gdrive
+  -c, --config <configDir>         Application path, default: /Users/<user>/.gdrive
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
 
@@ -195,7 +195,7 @@ options:
 gdrive [global] update [options] <fileId> <path>
 
 global:
-  -c, --config <configDir>         Application path, default: /Users/pii/.gdrive
+  -c, --config <configDir>         Application path, default: /Users/<user>/.gdrive
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
 
@@ -212,7 +212,7 @@ options:
 gdrive [global] info [options] <fileId>
 
 global:
-  -c, --config <configDir>         Application path, default: /Users/pii/.gdrive
+  -c, --config <configDir>         Application path, default: /Users/<user>/.gdrive
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
 
@@ -225,7 +225,7 @@ options:
 gdrive [global] mkdir [options] <name>
 
 global:
-  -c, --config <configDir>         Application path, default: /Users/pii/.gdrive
+  -c, --config <configDir>         Application path, default: /Users/<user>/.gdrive
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
 
@@ -238,7 +238,7 @@ options:
 gdrive [global] share [options] <fileId>
 
 global:
-  -c, --config <configDir>         Application path, default: /Users/pii/.gdrive
+  -c, --config <configDir>         Application path, default: /Users/<user>/.gdrive
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
 
@@ -255,7 +255,7 @@ options:
 gdrive [global] share list <fileId>
 
 global:
-  -c, --config <configDir>         Application path, default: /Users/pii/.gdrive
+  -c, --config <configDir>         Application path, default: /Users/<user>/.gdrive
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
 ```
@@ -265,7 +265,7 @@ global:
 gdrive [global] share revoke <fileId> <permissionId>
 
 global:
-  -c, --config <configDir>         Application path, default: /Users/pii/.gdrive
+  -c, --config <configDir>         Application path, default: /Users/<user>/.gdrive
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
 ```
@@ -275,7 +275,7 @@ global:
 gdrive [global] delete [options] <fileId>
 
 global:
-  -c, --config <configDir>         Application path, default: /Users/pii/.gdrive
+  -c, --config <configDir>         Application path, default: /Users/<user>/.gdrive
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
 
@@ -288,7 +288,7 @@ options:
 gdrive [global] sync list [options]
 
 global:
-  -c, --config <configDir>         Application path, default: /Users/pii/.gdrive
+  -c, --config <configDir>         Application path, default: /Users/<user>/.gdrive
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
 
@@ -301,7 +301,7 @@ options:
 gdrive [global] sync content [options] <fileId>
 
 global:
-  -c, --config <configDir>         Application path, default: /Users/pii/.gdrive
+  -c, --config <configDir>         Application path, default: /Users/<user>/.gdrive
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
 
@@ -317,7 +317,7 @@ options:
 gdrive [global] sync download [options] <fileId> <path>
 
 global:
-  -c, --config <configDir>         Application path, default: /Users/pii/.gdrive
+  -c, --config <configDir>         Application path, default: /Users/<user>/.gdrive
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
 
@@ -335,7 +335,7 @@ options:
 gdrive [global] sync upload [options] <path> <fileId>
 
 global:
-  -c, --config <configDir>         Application path, default: /Users/pii/.gdrive
+  -c, --config <configDir>         Application path, default: /Users/<user>/.gdrive
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
 
@@ -354,7 +354,7 @@ options:
 gdrive [global] changes [options]
 
 global:
-  -c, --config <configDir>         Application path, default: /Users/pii/.gdrive
+  -c, --config <configDir>         Application path, default: /Users/<user>/.gdrive
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
 
@@ -371,7 +371,7 @@ options:
 gdrive [global] revision list [options] <fileId>
 
 global:
-  -c, --config <configDir>         Application path, default: /Users/pii/.gdrive
+  -c, --config <configDir>         Application path, default: /Users/<user>/.gdrive
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
 
@@ -386,7 +386,7 @@ options:
 gdrive [global] revision download [options] <fileId> <revId>
 
 global:
-  -c, --config <configDir>         Application path, default: /Users/pii/.gdrive
+  -c, --config <configDir>         Application path, default: /Users/<user>/.gdrive
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
 
@@ -402,7 +402,7 @@ options:
 gdrive [global] revision delete <fileId> <revId>
 
 global:
-  -c, --config <configDir>         Application path, default: /Users/pii/.gdrive
+  -c, --config <configDir>         Application path, default: /Users/<user>/.gdrive
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
 ```
@@ -412,7 +412,7 @@ global:
 gdrive [global] import [options] <path>
 
 global:
-  -c, --config <configDir>         Application path, default: /Users/pii/.gdrive
+  -c, --config <configDir>         Application path, default: /Users/<user>/.gdrive
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
 
@@ -426,7 +426,7 @@ options:
 gdrive [global] export [options] <fileId>
 
 global:
-  -c, --config <configDir>         Application path, default: /Users/pii/.gdrive
+  -c, --config <configDir>         Application path, default: /Users/<user>/.gdrive
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
 
@@ -441,7 +441,7 @@ options:
 gdrive [global] about [options]
 
 global:
-  -c, --config <configDir>         Application path, default: /Users/pii/.gdrive
+  -c, --config <configDir>         Application path, default: /Users/<user>/.gdrive
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
 
@@ -454,7 +454,7 @@ options:
 gdrive [global] about import
 
 global:
-  -c, --config <configDir>         Application path, default: /Users/pii/.gdrive
+  -c, --config <configDir>         Application path, default: /Users/<user>/.gdrive
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
 ```
@@ -464,7 +464,7 @@ global:
 gdrive [global] about export
 
 global:
-  -c, --config <configDir>         Application path, default: /Users/pii/.gdrive
+  -c, --config <configDir>         Application path, default: /Users/<user>/.gdrive
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
 ```

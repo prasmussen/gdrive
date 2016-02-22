@@ -12,6 +12,6 @@ help=$(gdrive help | grep global | sed -E 's/ \[[^]]+\]//g' | sed -E 's/ <[^>]+>
 for args in $help; do
     cmd="gdrive help $args"
     echo
-    eval $cmd | sed -e '1s/^/#### /' | sed -e $'1s/$/\\\n```/'
+    eval $cmd | sed -e '1s/^/#### /' | sed -e $'1s/$/\\\n```/' | sed -e 's/pii/<user>/'
     echo '```'
 done
