@@ -10,7 +10,8 @@ None, binaries are statically linked.
 If you want to compile from source you need the [go toolchain](http://golang.org/doc/install).
 
 ## Installation
-Save the `gdrive` binary to a location in your PATH (i.e. `/usr/local/bin/`)
+Download `gdrive` from one of the links below. On unix systems
+run `chmod +x gdrive` after download to make the binary executable.
 The first time gdrive is launched, you will be prompted for a verification code.
 The code is obtained by following the printed url and authenticating with the
 google account for the drive you want access to. This will create a token file
