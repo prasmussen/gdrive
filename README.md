@@ -3,9 +3,7 @@ gdrive
 
 
 ## Overview
-gdrive is a command line utility for uploading and downloading files to your Google Drive.
-It's main goal is for automating backups, but it also has basic sync functionality.
-Works on most platforms.
+gdrive is a command line utility for interacting with Google Drive.
 
 ## Prerequisites
 None, binaries are statically linked.
@@ -480,6 +478,15 @@ Id                             Name                    Type   Size     Created
 0B3X9GlR6EmbnVjIzMDRqck1aekE   drive-osx-x64           bin    6.5 MB   2015-07-18 16:43:50
 0B3X9GlR6EmbnbEpXdlhza25zT1U   drive-osx-386           bin    5.2 MB   2015-07-18 16:43:41
 0B3X9GlR6Embnb095MGxEYmJhY2c   drive-linux-x64         bin    6.5 MB   2015-07-18 16:43:38
+```
+
+#### List largest files
+```
+$ gdrive list --query "name contains 'gdrive'" --order "quotaBytesUsed desc" -m 3
+Id                             Name                     Type   Size     Created
+0B3X9GlR6EmbnZXpDRG1xblM2LTg   gdrive-linux-mips64      bin    8.5 MB   2016-02-22 21:07:04
+0B3X9GlR6EmbnNW5CTV8xdFkxTjg   gdrive-linux-mips64le    bin    8.5 MB   2016-02-22 21:07:07
+0B3X9GlR6EmbnZ1NGS25FdEVlWEk   gdrive-osx-x64           bin    8.3 MB   2016-02-21 20:22:13
 ```
 
 #### Upload file
