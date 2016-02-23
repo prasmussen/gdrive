@@ -40,6 +40,9 @@ func (self *Drive) Download(args DownloadArgs) error {
 	}
 
 	bytes, rate, err := self.downloadBinary(f, args)
+	if err != nil {
+		return err
+	}
 
 	if !args.Stdout {
 		fmt.Fprintf(args.Out, "Downloaded %s at %s/s, total %s\n", f.Id, formatSize(rate, false), formatSize(bytes, false))
