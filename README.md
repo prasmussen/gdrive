@@ -55,10 +55,7 @@ You will be prompted for a new verification code if the folder does not exist.
 
 ## Compile from source
 ```bash
-git clone https://github.com/prasmussen/gdrive.git
-cd gdrive
-go get ./...
-go build -o gdrive
+go get github.com/prasmussen/gdrive
 ```
 
 ## Gdrive 2
