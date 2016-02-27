@@ -57,6 +57,8 @@ You will be prompted for a new verification code if the folder does not exist.
 ```bash
 go get github.com/prasmussen/gdrive
 ```
+The gdrive binary should now be available at `$GOPATH/bin/gdrive`
+
 
 ## Gdrive 2
 Gdrive 2 is more or less a full rewrite and is not backwards compatible
