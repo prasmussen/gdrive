@@ -90,10 +90,12 @@ func (self *Drive) uploadRecursive(args UploadArgs) error {
 	if info.IsDir() {
 		args.Name = ""
 		return self.uploadDirectory(args)
-	} else {
+	} else if info.Mode().IsRegular() {
 		_, _, err := self.uploadFile(args)
 		return err
 	}
+
+	return nil
 }
 
 func (self *Drive) uploadDirectory(args UploadArgs) error {
