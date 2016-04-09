@@ -8,6 +8,7 @@ gdrive is a command line utility for interacting with Google Drive.
 ## Prerequisites
 None, binaries are statically linked.
 If you want to compile from source you need the [go toolchain](http://golang.org/doc/install).
+Version 1.5 or higher.
 
 ## Installation
 Download `gdrive` from one of the links below. On unix systems
