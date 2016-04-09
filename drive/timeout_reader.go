@@ -7,39 +7,51 @@ import (
 	"time"
 )
 
-const MaxIdleTimeout = time.Second * 120
 const TimeoutTimerInterval = time.Second * 10
 
 type timeoutReaderWrapper func(io.Reader) io.Reader
 
-func getTimeoutReaderWrapperContext() (timeoutReaderWrapper, context.Context) {
+func getTimeoutReaderWrapperContext(timeout time.Duration) (timeoutReaderWrapper, context.Context) {
 	ctx, cancel := context.WithCancel(context.TODO())
 	wrapper := func(r io.Reader) io.Reader {
-		return getTimeoutReader(r, cancel)
+		// Return untouched reader if timeout is 0
+		if timeout == 0 {
+			return r
+		}
+
+		return getTimeoutReader(r, cancel, timeout)
 	}
 	return wrapper, ctx
 }
 
-func getTimeoutReaderContext(r io.Reader) (io.Reader, context.Context) {
+func getTimeoutReaderContext(r io.Reader, timeout time.Duration) (io.Reader, context.Context) {
 	ctx, cancel := context.WithCancel(context.TODO())
-	return getTimeoutReader(r, cancel), ctx
+
+	// Return untouched reader if timeout is 0
+	if timeout == 0 {
+		return r, ctx
+	}
+
+	return getTimeoutReader(r, cancel, timeout), ctx
 }
 
-func getTimeoutReader(r io.Reader, cancel context.CancelFunc) io.Reader {
+func getTimeoutReader(r io.Reader, cancel context.CancelFunc, timeout time.Duration) io.Reader {
 	return &TimeoutReader{
-		reader: r,
-		cancel: cancel,
-		mutex:  &sync.Mutex{},
+		reader:         r,
+		cancel:         cancel,
+		mutex:          &sync.Mutex{},
+		maxIdleTimeout: timeout,
 	}
 }
 
 type TimeoutReader struct {
-	reader       io.Reader
-	cancel       context.CancelFunc
-	lastActivity time.Time
-	timer        *time.Timer
-	mutex        *sync.Mutex
-	done         bool
+	reader         io.Reader
+	cancel         context.CancelFunc
+	lastActivity   time.Time
+	timer          *time.Timer
+	mutex          *sync.Mutex
+	maxIdleTimeout time.Duration
+	done           bool
 }
 
 func (self *TimeoutReader) Read(p []byte) (int, error) {
@@ -90,7 +102,7 @@ func (self *TimeoutReader) timeout() {
 		return
 	}
 
-	if time.Since(self.lastActivity) > MaxIdleTimeout {
+	if time.Since(self.lastActivity) > self.maxIdleTimeout {
 		self.cancel()
 		self.mutex.Unlock()
 		return

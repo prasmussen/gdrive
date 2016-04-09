@@ -5,6 +5,7 @@ import (
 	"io"
 	"io/ioutil"
 	"path/filepath"
+	"time"
 )
 
 type DownloadRevisionArgs struct {
@@ -15,6 +16,7 @@ type DownloadRevisionArgs struct {
 	Path       string
 	Force      bool
 	Stdout     bool
+	Timeout    time.Duration
 }
 
 func (self *Drive) DownloadRevision(args DownloadRevisionArgs) (err error) {
@@ -30,7 +32,7 @@ func (self *Drive) DownloadRevision(args DownloadRevisionArgs) (err error) {
 	}
 
 	// Get timeout reader wrapper and context
-	timeoutReaderWrapper, ctx := getTimeoutReaderWrapperContext()
+	timeoutReaderWrapper, ctx := getTimeoutReaderWrapperContext(args.Timeout)
 
 	res, err := getRev.Context(ctx).Download()
 	if err != nil {

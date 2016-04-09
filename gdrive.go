@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/prasmussen/gdrive/cli"
 	"fmt"
+	"github.com/prasmussen/gdrive/cli"
 	"os"
 )
 
@@ -14,6 +14,7 @@ const DefaultMaxChanges = 100
 const DefaultNameWidth = 40
 const DefaultPathWidth = 60
 const DefaultUploadChunkSize = 8 * 1024 * 1024
+const DefaultTimeout = 5 * 60
 const DefaultQuery = "trashed = false and 'me' in owners"
 const DefaultShareRole = "reader"
 const DefaultShareType = "anyone"
@@ -134,6 +135,12 @@ func main() {
 						Description: "Write file content to stdout",
 						OmitValue:   true,
 					},
+					cli.IntFlag{
+						Name:         "timeout",
+						Patterns:     []string{"--timeout"},
+						Description:  fmt.Sprintf("Set timeout in seconds, use 0 for no timeout. Timeout is reached when no data is transferred in set amount of seconds, default: %d", DefaultTimeout),
+						DefaultValue: DefaultTimeout,
+					},
 				),
 			},
 		},
@@ -217,6 +224,12 @@ func main() {
 						OmitValue:   true,
 					},
 					cli.IntFlag{
+						Name:         "timeout",
+						Patterns:     []string{"--timeout"},
+						Description:  fmt.Sprintf("Set timeout in seconds, use 0 for no timeout. Timeout is reached when no data is transferred in set amount of seconds, default: %d", DefaultTimeout),
+						DefaultValue: DefaultTimeout,
+					},
+					cli.IntFlag{
 						Name:         "chunksize",
 						Patterns:     []string{"--chunksize"},
 						Description:  fmt.Sprintf("Set chunk size in bytes, default: %d", DefaultUploadChunkSize),
@@ -254,6 +267,12 @@ func main() {
 						Description: "Share file",
 						OmitValue:   true,
 					},
+					cli.IntFlag{
+						Name:         "timeout",
+						Patterns:     []string{"--timeout"},
+						Description:  fmt.Sprintf("Set timeout in seconds, use 0 for no timeout. Timeout is reached when no data is transferred in set amount of seconds, default: %d", DefaultTimeout),
+						DefaultValue: DefaultTimeout,
+					},
 					cli.BoolFlag{
 						Name:        "noProgress",
 						Patterns:    []string{"--no-progress"},
@@ -290,6 +309,12 @@ func main() {
 						Name:        "mime",
 						Patterns:    []string{"--mime"},
 						Description: "Force mime type",
+					},
+					cli.IntFlag{
+						Name:         "timeout",
+						Patterns:     []string{"--timeout"},
+						Description:  fmt.Sprintf("Set timeout in seconds, use 0 for no timeout. Timeout is reached when no data is transferred in set amount of seconds, default: %d", DefaultTimeout),
+						DefaultValue: DefaultTimeout,
 					},
 					cli.IntFlag{
 						Name:         "chunksize",
@@ -494,6 +519,12 @@ func main() {
 						Description: "Hide progress",
 						OmitValue:   true,
 					},
+					cli.IntFlag{
+						Name:         "timeout",
+						Patterns:     []string{"--timeout"},
+						Description:  fmt.Sprintf("Set timeout in seconds, use 0 for no timeout. Timeout is reached when no data is transferred in set amount of seconds, default: %d", DefaultTimeout),
+						DefaultValue: DefaultTimeout,
+					},
 				),
 			},
 		},
@@ -539,6 +570,12 @@ func main() {
 						Patterns:    []string{"--no-progress"},
 						Description: "Hide progress",
 						OmitValue:   true,
+					},
+					cli.IntFlag{
+						Name:         "timeout",
+						Patterns:     []string{"--timeout"},
+						Description:  fmt.Sprintf("Set timeout in seconds, use 0 for no timeout. Timeout is reached when no data is transferred in set amount of seconds, default: %d", DefaultTimeout),
+						DefaultValue: DefaultTimeout,
 					},
 					cli.IntFlag{
 						Name:         "chunksize",
@@ -646,6 +683,12 @@ func main() {
 						Name:        "path",
 						Patterns:    []string{"--path"},
 						Description: "Download path",
+					},
+					cli.IntFlag{
+						Name:         "timeout",
+						Patterns:     []string{"--timeout"},
+						Description:  fmt.Sprintf("Set timeout in seconds, use 0 for no timeout. Timeout is reached when no data is transferred in set amount of seconds, default: %d", DefaultTimeout),
+						DefaultValue: DefaultTimeout,
 					},
 				),
 			},

@@ -22,6 +22,7 @@ type UploadArgs struct {
 	Share     bool
 	Delete    bool
 	ChunkSize int64
+	Timeout   time.Duration
 }
 
 func (self *Drive) Upload(args UploadArgs) error {
@@ -173,7 +174,7 @@ func (self *Drive) uploadFile(args UploadArgs) (*drive.File, int64, error) {
 	progressReader := getProgressReader(srcFile, args.Progress, srcFileInfo.Size())
 
 	// Wrap reader in timeout reader
-	reader, ctx := getTimeoutReaderContext(progressReader)
+	reader, ctx := getTimeoutReaderContext(progressReader, args.Timeout)
 
 	fmt.Fprintf(args.Out, "Uploading %s\n", args.Path)
 	started := time.Now()
@@ -198,6 +199,7 @@ type UploadStreamArgs struct {
 	Share     bool
 	ChunkSize int64
 	Progress  io.Writer
+	Timeout   time.Duration
 }
 
 func (self *Drive) UploadStream(args UploadStreamArgs) error {
@@ -223,7 +225,7 @@ func (self *Drive) UploadStream(args UploadStreamArgs) error {
 	progressReader := getProgressReader(args.In, args.Progress, 0)
 
 	// Wrap reader in timeout reader
-	reader, ctx := getTimeoutReaderContext(progressReader)
+	reader, ctx := getTimeoutReaderContext(progressReader, args.Timeout)
 
 	fmt.Fprintf(args.Out, "Uploading %s\n", dstFile.Name)
 	started := time.Now()

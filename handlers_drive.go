@@ -1,15 +1,16 @@
 package main
 
 import (
+	"fmt"
 	"github.com/prasmussen/gdrive/auth"
 	"github.com/prasmussen/gdrive/cli"
 	"github.com/prasmussen/gdrive/drive"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
+	"time"
 )
 
 const ClientId = "367116221053-7n0vf5akeru7on6o2fjinrecpdoe99eg.apps.googleusercontent.com"
@@ -57,6 +58,7 @@ func downloadHandler(ctx cli.Context) {
 		Recursive: args.Bool("recursive"),
 		Stdout:    args.Bool("stdout"),
 		Progress:  progressWriter(args.Bool("noProgress")),
+		Timeout:   durationInSeconds(args.Int64("timeout")),
 	})
 	checkErr(err)
 }
@@ -84,6 +86,7 @@ func downloadSyncHandler(ctx cli.Context) {
 		RootId:           args.String("fileId"),
 		DryRun:           args.Bool("dryRun"),
 		DeleteExtraneous: args.Bool("deleteExtraneous"),
+		Timeout:          durationInSeconds(args.Int64("timeout")),
 		Resolution:       conflictResolution(args),
 		Comparer:         NewCachedMd5Comparer(cachePath),
 	})
@@ -100,6 +103,7 @@ func downloadRevisionHandler(ctx cli.Context) {
 		Stdout:     args.Bool("stdout"),
 		Path:       args.String("path"),
 		Progress:   progressWriter(args.Bool("noProgress")),
+		Timeout:    durationInSeconds(args.Int64("timeout")),
 	})
 	checkErr(err)
 }
@@ -118,6 +122,7 @@ func uploadHandler(ctx cli.Context) {
 		Share:     args.Bool("share"),
 		Delete:    args.Bool("delete"),
 		ChunkSize: args.Int64("chunksize"),
+		Timeout:   durationInSeconds(args.Int64("timeout")),
 	})
 	checkErr(err)
 }
@@ -132,6 +137,7 @@ func uploadStdinHandler(ctx cli.Context) {
 		Mime:      args.String("mime"),
 		Share:     args.Bool("share"),
 		ChunkSize: args.Int64("chunksize"),
+		Timeout:   durationInSeconds(args.Int64("timeout")),
 		Progress:  progressWriter(args.Bool("noProgress")),
 	})
 	checkErr(err)
@@ -148,6 +154,7 @@ func uploadSyncHandler(ctx cli.Context) {
 		DryRun:           args.Bool("dryRun"),
 		DeleteExtraneous: args.Bool("deleteExtraneous"),
 		ChunkSize:        args.Int64("chunksize"),
+		Timeout:          durationInSeconds(args.Int64("timeout")),
 		Resolution:       conflictResolution(args),
 		Comparer:         NewCachedMd5Comparer(cachePath),
 	})
@@ -165,6 +172,7 @@ func updateHandler(ctx cli.Context) {
 		Mime:      args.String("mime"),
 		Progress:  progressWriter(args.Bool("noProgress")),
 		ChunkSize: args.Int64("chunksize"),
+		Timeout:   durationInSeconds(args.Int64("timeout")),
 	})
 	checkErr(err)
 }
@@ -383,6 +391,10 @@ func progressWriter(discard bool) io.Writer {
 		return ioutil.Discard
 	}
 	return os.Stderr
+}
+
+func durationInSeconds(seconds int64) time.Duration {
+	return time.Second * time.Duration(seconds)
 }
 
 func conflictResolution(args cli.Arguments) drive.ConflictResolution {

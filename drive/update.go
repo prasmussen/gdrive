@@ -20,6 +20,7 @@ type UpdateArgs struct {
 	Mime      string
 	Recursive bool
 	ChunkSize int64
+	Timeout   time.Duration
 }
 
 func (self *Drive) Update(args UpdateArgs) error {
@@ -57,7 +58,7 @@ func (self *Drive) Update(args UpdateArgs) error {
 	progressReader := getProgressReader(srcFile, args.Progress, srcFileInfo.Size())
 
 	// Wrap reader in timeout reader
-	reader, ctx := getTimeoutReaderContext(progressReader)
+	reader, ctx := getTimeoutReaderContext(progressReader, args.Timeout)
 
 	fmt.Fprintf(args.Out, "Uploading %s\n", args.Path)
 	started := time.Now()

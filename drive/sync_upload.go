@@ -20,6 +20,7 @@ type UploadSyncArgs struct {
 	DryRun           bool
 	DeleteExtraneous bool
 	ChunkSize        int64
+	Timeout          time.Duration
 	Resolution       ConflictResolution
 	Comparer         FileComparer
 }
@@ -308,7 +309,7 @@ func (self *Drive) uploadMissingFile(parentId string, lf *LocalFile, args Upload
 	progressReader := getProgressReader(srcFile, args.Progress, lf.info.Size())
 
 	// Wrap reader in timeout reader
-	reader, ctx := getTimeoutReaderContext(progressReader)
+	reader, ctx := getTimeoutReaderContext(progressReader, args.Timeout)
 
 	_, err = self.service.Files.Create(dstFile).Fields("id", "name", "size", "md5Checksum").Context(ctx).Media(reader, chunkSize).Do()
 	if err != nil {
@@ -347,7 +348,7 @@ func (self *Drive) updateChangedFile(cf *changedFile, args UploadSyncArgs, try i
 	progressReader := getProgressReader(srcFile, args.Progress, cf.local.info.Size())
 
 	// Wrap reader in timeout reader
-	reader, ctx := getTimeoutReaderContext(progressReader)
+	reader, ctx := getTimeoutReaderContext(progressReader, args.Timeout)
 
 	_, err = self.service.Files.Update(cf.remote.file.Id, dstFile).Context(ctx).Media(reader, chunkSize).Do()
 	if err != nil {

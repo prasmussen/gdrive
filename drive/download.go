@@ -19,6 +19,7 @@ type DownloadArgs struct {
 	Recursive bool
 	Delete    bool
 	Stdout    bool
+	Timeout   time.Duration
 }
 
 func (self *Drive) Download(args DownloadArgs) error {
@@ -120,7 +121,7 @@ func (self *Drive) downloadRecursive(args DownloadArgs) error {
 
 func (self *Drive) downloadBinary(f *drive.File, args DownloadArgs) (int64, int64, error) {
 	// Get timeout reader wrapper and context
-	timeoutReaderWrapper, ctx := getTimeoutReaderWrapperContext()
+	timeoutReaderWrapper, ctx := getTimeoutReaderWrapperContext(args.Timeout)
 
 	res, err := self.service.Files.Get(f.Id).Context(ctx).Download()
 	if err != nil {

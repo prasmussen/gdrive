@@ -19,6 +19,7 @@ type DownloadSyncArgs struct {
 	Path             string
 	DryRun           bool
 	DeleteExtraneous bool
+	Timeout          time.Duration
 	Resolution       ConflictResolution
 	Comparer         FileComparer
 }
@@ -188,7 +189,7 @@ func (self *Drive) downloadRemoteFile(id, fpath string, args DownloadSyncArgs, t
 	}
 
 	// Get timeout reader wrapper and context
-	timeoutReaderWrapper, ctx := getTimeoutReaderWrapperContext()
+	timeoutReaderWrapper, ctx := getTimeoutReaderWrapperContext(args.Timeout)
 
 	res, err := self.service.Files.Get(id).Context(ctx).Download()
 	if err != nil {
