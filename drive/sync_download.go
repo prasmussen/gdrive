@@ -193,7 +193,7 @@ func (self *Drive) downloadRemoteFile(id, fpath string, args DownloadSyncArgs, t
 
 	res, err := self.service.Files.Get(id).Context(ctx).Download()
 	if err != nil {
-		if isBackendError(err) && try < MaxBackendErrorRetries {
+		if isBackendOrRateLimitError(err) && try < MaxErrorRetries {
 			exponentialBackoffSleep(try)
 			try++
 			return self.downloadRemoteFile(id, fpath, args, try)
@@ -231,7 +231,7 @@ func (self *Drive) downloadRemoteFile(id, fpath string, args DownloadSyncArgs, t
 	_, err = io.Copy(outFile, reader)
 	if err != nil {
 		outFile.Close()
-		if try < MaxBackendErrorRetries {
+		if try < MaxErrorRetries {
 			exponentialBackoffSleep(try)
 			try++
 			return self.downloadRemoteFile(id, fpath, args, try)

@@ -270,7 +270,7 @@ func (self *Drive) createMissingRemoteDir(args createMissingRemoteDirArgs) (*dri
 
 	f, err := self.service.Files.Create(dstFile).Do()
 	if err != nil {
-		if isBackendError(err) && args.try < MaxBackendErrorRetries {
+		if isBackendOrRateLimitError(err) && args.try < MaxErrorRetries {
 			exponentialBackoffSleep(args.try)
 			args.try++
 			return self.createMissingRemoteDir(args)
@@ -313,7 +313,7 @@ func (self *Drive) uploadMissingFile(parentId string, lf *LocalFile, args Upload
 
 	_, err = self.service.Files.Create(dstFile).Fields("id", "name", "size", "md5Checksum").Context(ctx).Media(reader, chunkSize).Do()
 	if err != nil {
-		if isBackendError(err) && try < MaxBackendErrorRetries {
+		if isBackendOrRateLimitError(err) && try < MaxErrorRetries {
 			exponentialBackoffSleep(try)
 			try++
 			return self.uploadMissingFile(parentId, lf, args, try)
@@ -354,7 +354,7 @@ func (self *Drive) updateChangedFile(cf *changedFile, args UploadSyncArgs, try i
 
 	_, err = self.service.Files.Update(cf.remote.file.Id, dstFile).Context(ctx).Media(reader, chunkSize).Do()
 	if err != nil {
-		if isBackendError(err) && try < MaxBackendErrorRetries {
+		if isBackendOrRateLimitError(err) && try < MaxErrorRetries {
 			exponentialBackoffSleep(try)
 			try++
 			return self.updateChangedFile(cf, args, try)
@@ -375,7 +375,7 @@ func (self *Drive) deleteRemoteFile(rf *RemoteFile, args UploadSyncArgs, try int
 
 	err := self.service.Files.Delete(rf.file.Id).Do()
 	if err != nil {
-		if isBackendError(err) && try < MaxBackendErrorRetries {
+		if isBackendOrRateLimitError(err) && try < MaxErrorRetries {
 			exponentialBackoffSleep(try)
 			try++
 			return self.deleteRemoteFile(rf, args, try)
