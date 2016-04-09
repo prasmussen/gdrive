@@ -317,6 +317,8 @@ func (self *Drive) uploadMissingFile(parentId string, lf *LocalFile, args Upload
 			exponentialBackoffSleep(try)
 			try++
 			return self.uploadMissingFile(parentId, lf, args, try)
+		} else if isTimeoutError(err) {
+			return fmt.Errorf("Failed to upload file: timeout, no data was transferred for %v", args.Timeout)
 		} else {
 			return fmt.Errorf("Failed to upload file: %s", err)
 		}
@@ -356,6 +358,8 @@ func (self *Drive) updateChangedFile(cf *changedFile, args UploadSyncArgs, try i
 			exponentialBackoffSleep(try)
 			try++
 			return self.updateChangedFile(cf, args, try)
+		} else if isTimeoutError(err) {
+			return fmt.Errorf("Failed to upload file: timeout, no data was transferred for %v", args.Timeout)
 		} else {
 			return fmt.Errorf("Failed to update file: %s", err)
 		}

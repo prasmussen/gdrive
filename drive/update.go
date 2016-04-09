@@ -65,6 +65,9 @@ func (self *Drive) Update(args UpdateArgs) error {
 
 	f, err := self.service.Files.Update(args.Id, dstFile).Fields("id", "name", "size").Context(ctx).Media(reader, chunkSize).Do()
 	if err != nil {
+		if isTimeoutError(err) {
+			return fmt.Errorf("Failed to upload file: timeout, no data was transferred for %v", args.Timeout)
+		}
 		return fmt.Errorf("Failed to upload file: %s", err)
 	}
 

@@ -1,6 +1,7 @@
 package drive
 
 import (
+	"golang.org/x/net/context"
 	"google.golang.org/api/googleapi"
 	"time"
 )
@@ -14,6 +15,10 @@ func isBackendError(err error) bool {
 
 	ae, ok := err.(*googleapi.Error)
 	return ok && ae.Code >= 500 && ae.Code <= 599
+}
+
+func isTimeoutError(err error) bool {
+	return err == context.Canceled
 }
 
 func exponentialBackoffSleep(try int) {

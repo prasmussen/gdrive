@@ -181,6 +181,9 @@ func (self *Drive) uploadFile(args UploadArgs) (*drive.File, int64, error) {
 
 	f, err := self.service.Files.Create(dstFile).Fields("id", "name", "size", "md5Checksum", "webContentLink").Context(ctx).Media(reader, chunkSize).Do()
 	if err != nil {
+		if isTimeoutError(err) {
+			return nil, 0, fmt.Errorf("Failed to upload file: timeout, no data was transferred for %v", args.Timeout)
+		}
 		return nil, 0, fmt.Errorf("Failed to upload file: %s", err)
 	}
 
@@ -232,6 +235,9 @@ func (self *Drive) UploadStream(args UploadStreamArgs) error {
 
 	f, err := self.service.Files.Create(dstFile).Fields("id", "name", "size", "webContentLink").Context(ctx).Media(reader, chunkSize).Do()
 	if err != nil {
+		if isTimeoutError(err) {
+			return fmt.Errorf("Failed to upload file: timeout, no data was transferred for %v", args.Timeout)
+		}
 		return fmt.Errorf("Failed to upload file: %s", err)
 	}
 

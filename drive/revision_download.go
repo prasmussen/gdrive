@@ -36,6 +36,9 @@ func (self *Drive) DownloadRevision(args DownloadRevisionArgs) (err error) {
 
 	res, err := getRev.Context(ctx).Download()
 	if err != nil {
+		if isTimeoutError(err) {
+			return fmt.Errorf("Failed to download file: timeout, no data was transferred for %v", args.Timeout)
+		}
 		return fmt.Errorf("Failed to download file: %s", err)
 	}
 

@@ -197,6 +197,8 @@ func (self *Drive) downloadRemoteFile(id, fpath string, args DownloadSyncArgs, t
 			exponentialBackoffSleep(try)
 			try++
 			return self.downloadRemoteFile(id, fpath, args, try)
+		} else if isTimeoutError(err) {
+			return fmt.Errorf("Failed to download file: timeout, no data was transferred for %v", args.Timeout)
 		} else {
 			return fmt.Errorf("Failed to download file: %s", err)
 		}

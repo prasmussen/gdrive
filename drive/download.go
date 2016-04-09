@@ -125,6 +125,9 @@ func (self *Drive) downloadBinary(f *drive.File, args DownloadArgs) (int64, int6
 
 	res, err := self.service.Files.Get(f.Id).Context(ctx).Download()
 	if err != nil {
+		if isTimeoutError(err) {
+			return 0, 0, fmt.Errorf("Failed to download file: timeout, no data was transferred for %v", args.Timeout)
+		}
 		return 0, 0, fmt.Errorf("Failed to download file: %s", err)
 	}
 
