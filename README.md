@@ -147,12 +147,13 @@ global:
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
 
 options:
-  -f, --force       Overwrite existing file
-  -r, --recursive   Download directory recursively, documents will be skipped
-  --path <path>     Download path
-  --delete          Delete remote file when download is successful
-  --no-progress     Hide progress
-  --stdout          Write file content to stdout
+  -f, --force           Overwrite existing file
+  -r, --recursive       Download directory recursively, documents will be skipped
+  --path <path>         Download path
+  --delete              Delete remote file when download is successful
+  --no-progress         Hide progress
+  --stdout              Write file content to stdout
+  --timeout <timeout>   Set timeout in seconds, use 0 for no timeout. Timeout is reached when no data is transferred in set amount of seconds, default: 300
 ```
 
 #### Download all files and directories matching query
@@ -188,6 +189,7 @@ options:
   --mime <mime>             Force mime type
   --share                   Share file
   --delete                  Delete local file when upload is successful
+  --timeout <timeout>       Set timeout in seconds, use 0 for no timeout. Timeout is reached when no data is transferred in set amount of seconds, default: 300
   --chunksize <chunksize>   Set chunk size in bytes, default: 8388608
 ```
 
@@ -205,6 +207,7 @@ options:
   --chunksize <chunksize>   Set chunk size in bytes, default: 8388608
   --mime <mime>             Force mime type
   --share                   Share file
+  --timeout <timeout>       Set timeout in seconds, use 0 for no timeout. Timeout is reached when no data is transferred in set amount of seconds, default: 300
   --no-progress             Hide progress
 ```
 
@@ -222,6 +225,7 @@ options:
   --name <name>             Filename
   --no-progress             Hide progress
   --mime <mime>             Force mime type
+  --timeout <timeout>       Set timeout in seconds, use 0 for no timeout. Timeout is reached when no data is transferred in set amount of seconds, default: 300
   --chunksize <chunksize>   Set chunk size in bytes, default: 8388608
 ```
 
@@ -346,6 +350,7 @@ options:
   --delete-extraneous   Delete extraneous local files
   --dry-run             Show what would have been transferred
   --no-progress         Hide progress
+  --timeout <timeout>   Set timeout in seconds, use 0 for no timeout. Timeout is reached when no data is transferred in set amount of seconds, default: 300
 ```
 
 #### Sync local directory to drive
@@ -364,6 +369,7 @@ options:
   --delete-extraneous       Delete extraneous remote files
   --dry-run                 Show what would have been transferred
   --no-progress             Hide progress
+  --timeout <timeout>       Set timeout in seconds, use 0 for no timeout. Timeout is reached when no data is transferred in set amount of seconds, default: 300
   --chunksize <chunksize>   Set chunk size in bytes, default: 8388608
 ```
 
@@ -409,10 +415,11 @@ global:
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
 
 options:
-  -f, --force     Overwrite existing file
-  --no-progress   Hide progress
-  --stdout        Write file content to stdout
-  --path <path>   Download path
+  -f, --force           Overwrite existing file
+  --no-progress         Hide progress
+  --stdout              Write file content to stdout
+  --path <path>         Download path
+  --timeout <timeout>   Set timeout in seconds, use 0 for no timeout. Timeout is reached when no data is transferred in set amount of seconds, default: 300
 ```
 
 #### Delete file revision
