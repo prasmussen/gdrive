@@ -13,7 +13,8 @@ Version 1.5 or higher.
 ## Installation
 Download `gdrive` from one of the links below. On unix systems
 run `chmod +x gdrive` after download to make the binary executable.
-The first time gdrive is launched, you will be prompted for a verification code.
+The first time gdrive is launched (i.e. run `gdrive about` in your
+terminal not just `gdrive`), you will be prompted for a verification code.
 The code is obtained by following the printed url and authenticating with the
 google account for the drive you want access to. This will create a token file
 inside the .gdrive folder in your home directory. Note that anyone with access
