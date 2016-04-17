@@ -1,0 +1,8 @@
+sudo: false
+language: go
+# update travis.sh when changing version number here
+go:
+ - 1.2.1
+ - 1.6
+install: go get -t ./...
+script: ./travis.sh
