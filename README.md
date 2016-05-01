@@ -11,6 +11,12 @@ If you want to compile from source you need the [go toolchain](http://golang.org
 Version 1.5 or higher.
 
 ## Installation
+### [Homebrew](http://brew.sh) on Mac
+```
+brew tap paulz/gdrive
+brew install gdrive
+```
+### Other
 Download `gdrive` from one of the links below. On unix systems
 run `chmod +x gdrive` after download to make the binary executable.
 The first time gdrive is launched (i.e. run `gdrive about` in your
