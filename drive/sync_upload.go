@@ -120,7 +120,7 @@ func (self *Drive) prepareSyncRoot(args UploadSyncArgs) (*drive.File, error) {
 
 	// Ensure that the directory is empty
 	if !isEmpty {
-		return nil, fmt.Errorf("Root directoy is not empty, the initial sync requires an empty directory")
+		return nil, fmt.Errorf("Root directory is not empty, the initial sync requires an empty directory")
 	}
 
 	// Update directory with syncRoot property
