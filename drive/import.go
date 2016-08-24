@@ -11,15 +11,19 @@ import (
 
 type ImportArgs struct {
 	Out      io.Writer
+	Mime     string
 	Progress io.Writer
 	Path     string
 	Parents  []string
 }
 
 func (self *Drive) Import(args ImportArgs) error {
-	fromMime := getMimeType(args.Path)
+	fromMime := args.Mime
 	if fromMime == "" {
-		return fmt.Errorf("Could not determine mime type of file")
+		fromMime = getMimeType(args.Path)
+	}
+	if fromMime == "" {
+		return fmt.Errorf("Could not determine mime type of file, use --mime")
 	}
 
 	about, err := self.service.About.Get().Fields("importFormats").Do()

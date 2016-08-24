@@ -719,6 +719,11 @@ func main() {
 						Description: "Hide progress",
 						OmitValue:   true,
 					},
+					cli.StringFlag{
+						Name:        "mime",
+						Patterns:    []string{"--mime"},
+						Description: "Mime type of imported file",
+					},
 				),
 			},
 		},
