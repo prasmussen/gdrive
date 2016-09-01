@@ -380,6 +380,11 @@ func main() {
 						Patterns:    []string{"--email"},
 						Description: "The email address of the user or group to share the file with. Requires 'user' or 'group' as type",
 					},
+					cli.StringFlag{
+						Name:        "domain",
+						Patterns:    []string{"--domain"},
+						Description: "The name of Google Apps domain. Requires 'domain' as type",
+					},					
 					cli.BoolFlag{
 						Name:        "discoverable",
 						Patterns:    []string{"--discoverable"},
