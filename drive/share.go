@@ -13,6 +13,7 @@ type ShareArgs struct {
 	Role         string
 	Type         string
 	Email        string
+	Domain       string
 	Discoverable bool
 }
 
@@ -22,6 +23,7 @@ func (self *Drive) Share(args ShareArgs) error {
 		Role:               args.Role,
 		Type:               args.Type,
 		EmailAddress:       args.Email,
+		Domain:             args.Domain,
 	}
 
 	_, err := self.service.Permissions.Create(args.FileId, permission).Do()
