@@ -2,15 +2,16 @@ package main
 
 import (
 	"fmt"
-	"github.com/prasmussen/gdrive/auth"
-	"github.com/prasmussen/gdrive/cli"
-	"github.com/prasmussen/gdrive/drive"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
 	"time"
+
+	"github.com/prasmussen/gdrive/auth"
+	"github.com/prasmussen/gdrive/cli"
+	"github.com/prasmussen/gdrive/drive"
 )
 
 const ClientId = "367116221053-7n0vf5akeru7on6o2fjinrecpdoe99eg.apps.googleusercontent.com"
@@ -53,6 +54,7 @@ func downloadHandler(ctx cli.Context) {
 		Out:       os.Stdout,
 		Id:        args.String("fileId"),
 		Force:     args.Bool("force"),
+		Skip:      args.Bool("skip"),
 		Path:      args.String("path"),
 		Delete:    args.Bool("delete"),
 		Recursive: args.Bool("recursive"),
@@ -69,6 +71,7 @@ func downloadQueryHandler(ctx cli.Context) {
 		Out:       os.Stdout,
 		Query:     args.String("query"),
 		Force:     args.Bool("force"),
+		Skip:      args.Bool("skip"),
 		Recursive: args.Bool("recursive"),
 		Path:      args.String("path"),
 		Progress:  progressWriter(args.Bool("noProgress")),
