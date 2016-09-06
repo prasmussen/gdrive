@@ -2,12 +2,13 @@ package drive
 
 import (
 	"fmt"
-	"google.golang.org/api/drive/v3"
-	"google.golang.org/api/googleapi"
 	"io"
 	"os"
 	"path/filepath"
 	"time"
+
+	"google.golang.org/api/drive/v3"
+	"google.golang.org/api/googleapi"
 )
 
 type DownloadArgs struct {
@@ -16,6 +17,7 @@ type DownloadArgs struct {
 	Id        string
 	Path      string
 	Force     bool
+	Skip      bool
 	Recursive bool
 	Delete    bool
 	Stdout    bool
@@ -68,6 +70,7 @@ type DownloadQueryArgs struct {
 	Query     string
 	Path      string
 	Force     bool
+	Skip      bool
 	Recursive bool
 }
 
@@ -86,6 +89,7 @@ func (self *Drive) DownloadQuery(args DownloadQueryArgs) error {
 		Progress: args.Progress,
 		Path:     args.Path,
 		Force:    args.Force,
+		Skip:     args.Skip,
 	}
 
 	for _, f := range files {
@@ -147,6 +151,7 @@ func (self *Drive) downloadBinary(f *drive.File, args DownloadArgs) (int64, int6
 		contentLength: res.ContentLength,
 		fpath:         fpath,
 		force:         args.Force,
+		skip:          args.Skip,
 		stdout:        args.Stdout,
 		progress:      args.Progress,
 	})
@@ -158,6 +163,7 @@ type saveFileArgs struct {
 	contentLength int64
 	fpath         string
 	force         bool
+	skip          bool
 	stdout        bool
 	progress      io.Writer
 }
@@ -172,9 +178,15 @@ func (self *Drive) saveFile(args saveFileArgs) (int64, int64, error) {
 		return 0, 0, err
 	}
 
-	// Check if file exists
-	if !args.force && fileExists(args.fpath) {
-		return 0, 0, fmt.Errorf("File '%s' already exists, use --force to overwrite", args.fpath)
+	// Check if file exists to force
+	if !args.skip && !args.force && fileExists(args.fpath) {
+		return 0, 0, fmt.Errorf("File '%s' already exists, use --force to overwrite or --skip to skip", args.fpath)
+	}
+
+	//Check if file exists to skip
+	if args.skip && fileExists(args.fpath) {
+		fmt.Printf("File '%s' already exists, skipping\n", args.fpath)
+		return 0, 0, nil
 	}
 
 	// Ensure any parent directories exists
