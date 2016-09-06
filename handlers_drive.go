@@ -190,6 +190,7 @@ func infoHandler(ctx cli.Context) {
 func importHandler(ctx cli.Context) {
 	args := ctx.Args()
 	err := newDrive(args).Import(drive.ImportArgs{
+		Mime:     args.String("mime"),
 		Out:      os.Stdout,
 		Path:     args.String("path"),
 		Parents:  args.StringSlice("parent"),
