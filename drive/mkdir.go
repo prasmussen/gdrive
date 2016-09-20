@@ -9,9 +9,10 @@ import (
 const DirectoryMimeType = "application/vnd.google-apps.folder"
 
 type MkdirArgs struct {
-	Out     io.Writer
-	Name    string
-	Parents []string
+	Out         io.Writer
+	Name        string
+	Description string
+	Parents     []string
 }
 
 func (self *Drive) Mkdir(args MkdirArgs) error {
@@ -24,7 +25,11 @@ func (self *Drive) Mkdir(args MkdirArgs) error {
 }
 
 func (self *Drive) mkdir(args MkdirArgs) (*drive.File, error) {
-	dstFile := &drive.File{Name: args.Name, MimeType: DirectoryMimeType}
+	dstFile := &drive.File{
+		Name:        args.Name,
+		Description: args.Description,
+		MimeType:    DirectoryMimeType,
+	}
 
 	// Set parent folders
 	dstFile.Parents = args.Parents

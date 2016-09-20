@@ -115,17 +115,18 @@ func uploadHandler(ctx cli.Context) {
 	args := ctx.Args()
 	checkUploadArgs(args)
 	err := newDrive(args).Upload(drive.UploadArgs{
-		Out:       os.Stdout,
-		Progress:  progressWriter(args.Bool("noProgress")),
-		Path:      args.String("path"),
-		Name:      args.String("name"),
-		Parents:   args.StringSlice("parent"),
-		Mime:      args.String("mime"),
-		Recursive: args.Bool("recursive"),
-		Share:     args.Bool("share"),
-		Delete:    args.Bool("delete"),
-		ChunkSize: args.Int64("chunksize"),
-		Timeout:   durationInSeconds(args.Int64("timeout")),
+		Out:         os.Stdout,
+		Progress:    progressWriter(args.Bool("noProgress")),
+		Path:        args.String("path"),
+		Name:        args.String("name"),
+		Description: args.String("description"),
+		Parents:     args.StringSlice("parent"),
+		Mime:        args.String("mime"),
+		Recursive:   args.Bool("recursive"),
+		Share:       args.Bool("share"),
+		Delete:      args.Bool("delete"),
+		ChunkSize:   args.Int64("chunksize"),
+		Timeout:     durationInSeconds(args.Int64("timeout")),
 	})
 	checkErr(err)
 }
@@ -133,15 +134,16 @@ func uploadHandler(ctx cli.Context) {
 func uploadStdinHandler(ctx cli.Context) {
 	args := ctx.Args()
 	err := newDrive(args).UploadStream(drive.UploadStreamArgs{
-		Out:       os.Stdout,
-		In:        os.Stdin,
-		Name:      args.String("name"),
-		Parents:   args.StringSlice("parent"),
-		Mime:      args.String("mime"),
-		Share:     args.Bool("share"),
-		ChunkSize: args.Int64("chunksize"),
-		Timeout:   durationInSeconds(args.Int64("timeout")),
-		Progress:  progressWriter(args.Bool("noProgress")),
+		Out:         os.Stdout,
+		In:          os.Stdin,
+		Name:        args.String("name"),
+		Description: args.String("description"),
+		Parents:     args.StringSlice("parent"),
+		Mime:        args.String("mime"),
+		Share:       args.Bool("share"),
+		ChunkSize:   args.Int64("chunksize"),
+		Timeout:     durationInSeconds(args.Int64("timeout")),
+		Progress:    progressWriter(args.Bool("noProgress")),
 	})
 	checkErr(err)
 }
@@ -167,15 +169,16 @@ func uploadSyncHandler(ctx cli.Context) {
 func updateHandler(ctx cli.Context) {
 	args := ctx.Args()
 	err := newDrive(args).Update(drive.UpdateArgs{
-		Out:       os.Stdout,
-		Id:        args.String("fileId"),
-		Path:      args.String("path"),
-		Name:      args.String("name"),
-		Parents:   args.StringSlice("parent"),
-		Mime:      args.String("mime"),
-		Progress:  progressWriter(args.Bool("noProgress")),
-		ChunkSize: args.Int64("chunksize"),
-		Timeout:   durationInSeconds(args.Int64("timeout")),
+		Out:         os.Stdout,
+		Id:          args.String("fileId"),
+		Path:        args.String("path"),
+		Name:        args.String("name"),
+		Description: args.String("description"),
+		Parents:     args.StringSlice("parent"),
+		Mime:        args.String("mime"),
+		Progress:    progressWriter(args.Bool("noProgress")),
+		ChunkSize:   args.Int64("chunksize"),
+		Timeout:     durationInSeconds(args.Int64("timeout")),
 	})
 	checkErr(err)
 }
@@ -229,9 +232,10 @@ func listRevisionsHandler(ctx cli.Context) {
 func mkdirHandler(ctx cli.Context) {
 	args := ctx.Args()
 	err := newDrive(args).Mkdir(drive.MkdirArgs{
-		Out:     os.Stdout,
-		Name:    args.String("name"),
-		Parents: args.StringSlice("parent"),
+		Out:         os.Stdout,
+		Name:        args.String("name"),
+		Description: args.String("description"),
+		Parents:     args.StringSlice("parent"),
 	})
 	checkErr(err)
 }

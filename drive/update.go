@@ -11,16 +11,17 @@ import (
 )
 
 type UpdateArgs struct {
-	Out       io.Writer
-	Progress  io.Writer
-	Id        string
-	Path      string
-	Name      string
-	Parents   []string
-	Mime      string
-	Recursive bool
-	ChunkSize int64
-	Timeout   time.Duration
+	Out         io.Writer
+	Progress    io.Writer
+	Id          string
+	Path        string
+	Name        string
+	Description string
+	Parents     []string
+	Mime        string
+	Recursive   bool
+	ChunkSize   int64
+	Timeout     time.Duration
 }
 
 func (self *Drive) Update(args UpdateArgs) error {
@@ -32,7 +33,7 @@ func (self *Drive) Update(args UpdateArgs) error {
 	defer srcFile.Close()
 
 	// Instantiate empty drive file
-	dstFile := &drive.File{}
+	dstFile := &drive.File{Description: args.Description}
 
 	// Use provided file name or use filename
 	if args.Name == "" {
