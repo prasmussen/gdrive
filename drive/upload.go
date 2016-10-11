@@ -12,17 +12,18 @@ import (
 )
 
 type UploadArgs struct {
-	Out       io.Writer
-	Progress  io.Writer
-	Path      string
-	Name      string
-	Parents   []string
-	Mime      string
-	Recursive bool
-	Share     bool
-	Delete    bool
-	ChunkSize int64
-	Timeout   time.Duration
+	Out         io.Writer
+	Progress    io.Writer
+	Path        string
+	Name        string
+	Description string
+	Parents     []string
+	Mime        string
+	Recursive   bool
+	Share       bool
+	Delete      bool
+	ChunkSize   int64
+	Timeout     time.Duration
 }
 
 func (self *Drive) Upload(args UploadArgs) error {
@@ -110,9 +111,10 @@ func (self *Drive) uploadDirectory(args UploadArgs) error {
 	fmt.Fprintf(args.Out, "Creating directory %s\n", srcFileInfo.Name())
 	// Make directory on drive
 	f, err := self.mkdir(MkdirArgs{
-		Out:     args.Out,
-		Name:    srcFileInfo.Name(),
-		Parents: args.Parents,
+		Out:         args.Out,
+		Name:        srcFileInfo.Name(),
+		Parents:     args.Parents,
+		Description: args.Description,
 	})
 	if err != nil {
 		return err
@@ -129,6 +131,7 @@ func (self *Drive) uploadDirectory(args UploadArgs) error {
 		newArgs := args
 		newArgs.Path = filepath.Join(args.Path, name)
 		newArgs.Parents = []string{f.Id}
+		newArgs.Description = ""
 
 		// Upload
 		err = self.uploadRecursive(newArgs)
@@ -150,7 +153,7 @@ func (self *Drive) uploadFile(args UploadArgs) (*drive.File, int64, error) {
 	defer srcFile.Close()
 
 	// Instantiate empty drive file
-	dstFile := &drive.File{}
+	dstFile := &drive.File{Description: args.Description}
 
 	// Use provided file name or use filename
 	if args.Name == "" {
@@ -196,15 +199,16 @@ func (self *Drive) uploadFile(args UploadArgs) (*drive.File, int64, error) {
 }
 
 type UploadStreamArgs struct {
-	Out       io.Writer
-	In        io.Reader
-	Name      string
-	Parents   []string
-	Mime      string
-	Share     bool
-	ChunkSize int64
-	Progress  io.Writer
-	Timeout   time.Duration
+	Out         io.Writer
+	In          io.Reader
+	Name        string
+	Description string
+	Parents     []string
+	Mime        string
+	Share       bool
+	ChunkSize   int64
+	Progress    io.Writer
+	Timeout     time.Duration
 }
 
 func (self *Drive) UploadStream(args UploadStreamArgs) error {
@@ -213,7 +217,7 @@ func (self *Drive) UploadStream(args UploadStreamArgs) error {
 	}
 
 	// Instantiate empty drive file
-	dstFile := &drive.File{Name: args.Name}
+	dstFile := &drive.File{Name: args.Name, Description: args.Description}
 
 	// Set mime type if provided
 	if args.Mime != "" {

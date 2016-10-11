@@ -213,6 +213,11 @@ func main() {
 						Patterns:    []string{"--name"},
 						Description: "Filename",
 					},
+					cli.StringFlag{
+						Name:        "description",
+						Patterns:    []string{"--description"},
+						Description: "File description",
+					},
 					cli.BoolFlag{
 						Name:        "noProgress",
 						Patterns:    []string{"--no-progress"},
@@ -270,6 +275,11 @@ func main() {
 						DefaultValue: DefaultUploadChunkSize,
 					},
 					cli.StringFlag{
+						Name:        "description",
+						Patterns:    []string{"--description"},
+						Description: "File description",
+					},
+					cli.StringFlag{
 						Name:        "mime",
 						Patterns:    []string{"--mime"},
 						Description: "Force mime type",
@@ -311,6 +321,11 @@ func main() {
 						Name:        "name",
 						Patterns:    []string{"--name"},
 						Description: "Filename",
+					},
+					cli.StringFlag{
+						Name:        "description",
+						Patterns:    []string{"--description"},
+						Description: "File description",
 					},
 					cli.BoolFlag{
 						Name:        "noProgress",
@@ -366,6 +381,11 @@ func main() {
 						Patterns:    []string{"-p", "--parent"},
 						Description: "Parent id of created directory, can be specified multiple times to give many parents",
 					},
+					cli.StringFlag{
+						Name:        "description",
+						Patterns:    []string{"--description"},
+						Description: "Directory description",
+					},
 				),
 			},
 		},
@@ -397,7 +417,7 @@ func main() {
 						Name:        "domain",
 						Patterns:    []string{"--domain"},
 						Description: "The name of Google Apps domain. Requires 'domain' as type",
-					},					
+					},
 					cli.BoolFlag{
 						Name:        "discoverable",
 						Patterns:    []string{"--discoverable"},

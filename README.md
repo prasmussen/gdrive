@@ -195,15 +195,16 @@ global:
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
 
 options:
-  -r, --recursive           Upload directory recursively
-  -p, --parent <parent>     Parent id, used to upload file to a specific directory, can be specified multiple times to give many parents
-  --name <name>             Filename
-  --no-progress             Hide progress
-  --mime <mime>             Force mime type
-  --share                   Share file
-  --delete                  Delete local file when upload is successful
-  --timeout <timeout>       Set timeout in seconds, use 0 for no timeout. Timeout is reached when no data is transferred in set amount of seconds, default: 300
-  --chunksize <chunksize>   Set chunk size in bytes, default: 8388608
+  -r, --recursive               Upload directory recursively
+  -p, --parent <parent>         Parent id, used to upload file to a specific directory, can be specified multiple times to give many parents
+  --name <name>                 Filename
+  --description <description>   File description
+  --no-progress                 Hide progress
+  --mime <mime>                 Force mime type
+  --share                       Share file
+  --delete                      Delete local file when upload is successful
+  --timeout <timeout>           Set timeout in seconds, use 0 for no timeout. Timeout is reached when no data is transferred in set amount of seconds, default: 300
+  --chunksize <chunksize>       Set chunk size in bytes, default: 8388608
 ```
 
 #### Upload file from stdin
@@ -216,12 +217,13 @@ global:
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
 
 options:
-  -p, --parent <parent>     Parent id, used to upload file to a specific directory, can be specified multiple times to give many parents
-  --chunksize <chunksize>   Set chunk size in bytes, default: 8388608
-  --mime <mime>             Force mime type
-  --share                   Share file
-  --timeout <timeout>       Set timeout in seconds, use 0 for no timeout. Timeout is reached when no data is transferred in set amount of seconds, default: 300
-  --no-progress             Hide progress
+  -p, --parent <parent>         Parent id, used to upload file to a specific directory, can be specified multiple times to give many parents
+  --chunksize <chunksize>       Set chunk size in bytes, default: 8388608
+  --description <description>   File description
+  --mime <mime>                 Force mime type
+  --share                       Share file
+  --timeout <timeout>           Set timeout in seconds, use 0 for no timeout. Timeout is reached when no data is transferred in set amount of seconds, default: 300
+  --no-progress                 Hide progress
 ```
 
 #### Update file, this creates a new revision of the file
@@ -234,12 +236,13 @@ global:
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
 
 options:
-  -p, --parent <parent>     Parent id, used to upload file to a specific directory, can be specified multiple times to give many parents
-  --name <name>             Filename
-  --no-progress             Hide progress
-  --mime <mime>             Force mime type
-  --timeout <timeout>       Set timeout in seconds, use 0 for no timeout. Timeout is reached when no data is transferred in set amount of seconds, default: 300
-  --chunksize <chunksize>   Set chunk size in bytes, default: 8388608
+  -p, --parent <parent>         Parent id, used to upload file to a specific directory, can be specified multiple times to give many parents
+  --name <name>                 Filename
+  --description <description>   File description
+  --no-progress                 Hide progress
+  --mime <mime>                 Force mime type
+  --timeout <timeout>           Set timeout in seconds, use 0 for no timeout. Timeout is reached when no data is transferred in set amount of seconds, default: 300
+  --chunksize <chunksize>       Set chunk size in bytes, default: 8388608
 ```
 
 #### Show file info
@@ -265,7 +268,8 @@ global:
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
 
 options:
-  -p, --parent <parent>   Parent id of created directory, can be specified multiple times to give many parents
+  -p, --parent <parent>         Parent id of created directory, can be specified multiple times to give many parents
+  --description <description>   Directory description
 ```
 
 #### Share file or directory
