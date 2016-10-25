@@ -88,7 +88,7 @@ To learn more see usage and the examples below.
 #### .gdriveignore
 Placing a .gdriveignore in the root of your sync directory can be used to
 skip certain files from being synced. .gdriveignore follows the same
-rules as [.gitignore](https://git-scm.com/docs/gitignore).
+rules as [.gitignore](https://git-scm.com/docs/gitignore), except that gdrive only reads the .gdriveignore file in the root of the sync directory, not ones in any subdirectories.
 
 
 ## Usage
