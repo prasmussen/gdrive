@@ -118,6 +118,7 @@ gdrive [global] share [options] <fileId>                       Share file or dir
 gdrive [global] share list <fileId>                            List files permissions
 gdrive [global] share revoke <fileId> <permissionId>           Revoke permission
 gdrive [global] delete [options] <fileId>                      Delete file or directory
+gdrive [global] rename <fileId> <newName>                      Rename file or directory
 gdrive [global] sync list [options]                            List all syncable directories on drive
 gdrive [global] sync content [options] <fileId>                List content of syncable directory
 gdrive [global] sync download [options] <fileId> <path>        Sync drive directory to local directory
@@ -345,6 +346,17 @@ global:
   
 options:
   -r, --recursive   Delete directory and all it's content
+```
+
+#### Rename file or directory
+```
+Rename file or directory
+gdrive [global] rename <fileId> <newName>
+
+global:
+  -c, --config <configDir>         Application path, default: /Users/jack/.gdrive
+  --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
+  --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
 ```
 
 #### List all syncable directories on drive

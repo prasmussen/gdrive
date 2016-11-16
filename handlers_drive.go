@@ -283,6 +283,16 @@ func deleteHandler(ctx cli.Context) {
 	checkErr(err)
 }
 
+func renameHandler(ctx cli.Context) {
+	args := ctx.Args()
+	err := newDrive(args).Rename(drive.RenameArgs{
+		Out:       os.Stdout,
+		Id:        args.String("fileId"),
+		NewName:   args.String("newName"),
+	})
+	checkErr(err)
+}
+
 func listSyncHandler(ctx cli.Context) {
 	args := ctx.Args()
 	err := newDrive(args).ListSync(drive.ListSyncArgs{

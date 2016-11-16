@@ -471,6 +471,14 @@ func main() {
 			},
 		},
 		&cli.Handler{
+			Pattern:     "[global] rename <fileId> <newName>",
+			Description: "Rename file or directory",
+			Callback:    renameHandler,
+			FlagGroups: cli.FlagGroups{
+				cli.NewFlagGroup("global", globalFlags...),
+			},
+		},
+		&cli.Handler{
 			Pattern:     "[global] sync list [options]",
 			Description: "List all syncable directories on drive",
 			Callback:    listSyncHandler,
