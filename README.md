@@ -45,7 +45,7 @@ You will be prompted for a new verification code if the folder does not exist.
 | [gdrive-linux-ppc64](https://docs.google.com/uc?id=0B3X9GlR6EmbnS09XMzhfRXBnUzA&export=download) | 2.1.0 | Linux PPC 64-bit | 70a1ac5be9ba819da5cf7a8dbd513805a26509ac |
 | [gdrive-linux-ppc64le](https://docs.google.com/uc?id=0B3X9GlR6EmbneDJ2b3hqbVlNZnc&export=download) | 2.1.0 | Linux PPC 64-bit le | f426817ee4824b83b978f82f8e72eac6db92f2d1 |
 | [gdrive-windows-386.exe](https://docs.google.com/uc?id=0B3X9GlR6EmbnV3RNeFVUQjZvS2c&export=download) | 2.1.0 | Window 32-bit | 1429200631b598543eddc3df3487117cad95adbb |
-| [gdrive-windows-x64.exe](https://docs.google.com/uc?id=0B3X9GlR6EmbnNFRSSW1GaFBSRk0&export=download) | 2.1.0 | Windows 64-bit | 16ccab7c66b144e5806daeb2ba50d567b51504ca |
+| [gdrive-windows-x64.exe](https://drive.google.com/uc?id=0B3X9GlR6EmbnbnBsTXlfS1J5UjQ&export=download) | 2.1.0 | Windows 64-bit | 17f692a027a049385af2576503cd376593cc87b7 |
 | [gdrive-dragonfly-x64](https://docs.google.com/uc?id=0B3X9GlR6EmbnelNIdmRMMGpVa2s&export=download) | 2.1.0 | DragonFly BSD 64-bit | dc214a24e59f68d99ca62757d99099051f83804a |
 | [gdrive-freebsd-x64](https://docs.google.com/uc?id=0B3X9GlR6EmbnQkN0NnUwZ0tKLXM&export=download) | 2.1.0 | FreeBSD 64-bit | 93a5581652f9c01c47fb6c16e8ae655182f265da |
 | [gdrive-freebsd-386](https://docs.google.com/uc?id=0B3X9GlR6EmbnNU5rbXBzeEhhOTA&export=download) | 2.1.0 | FreeBSD 32-bit | b9a3ee1e0fdbb5fa970942ab89b354ee863a5758 |
