@@ -354,6 +354,16 @@ func getOauthClient(args cli.Arguments) (*http.Client, error) {
 	}
 
 	configDir := getConfigDir(args)
+
+	if args.String("serviceAccount") != "" {
+		serviceAccountPath := ConfigFilePath(configDir, args.String("serviceAccount"))
+		serviceAccountClient, err := auth.NewServiceAccountClient(serviceAccountPath)
+		if err != nil {
+			return nil, err
+		}
+		return serviceAccountClient, nil
+	}
+
 	tokenPath := ConfigFilePath(configDir, TokenFilename)
 	return auth.NewFileSourceClient(ClientId, ClientSecret, tokenPath, authCodePrompt)
 }

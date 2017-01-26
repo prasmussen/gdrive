@@ -40,6 +40,11 @@ func main() {
 			Patterns:    []string{"--access-token"},
 			Description: "Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)",
 		},
+		cli.StringFlag{
+			Name:        "serviceAccount",
+			Patterns:    []string{"--service-account"},
+			Description: "Oauth service account filename, used for server to server communication without user interaction (filename path is relative to config dir)",
+		},
 	}
 
 	handlers := []*cli.Handler{
