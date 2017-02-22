@@ -47,7 +47,7 @@ func ReadFile(path string) ([]byte, bool, error) {
 func ReadToken(path string) (*oauth2.Token, bool, error) {
 
 	content, exists, err := ReadFile(path)
-	if err != nil {
+	if err != nil || !exists {
 		return nil, exists, err
 	}
 
