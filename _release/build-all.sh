@@ -13,7 +13,7 @@ rm $BIN_PATH/* 2> /dev/null
 for PLATFORM in $PLATFORMS; do
     GOOS=${PLATFORM%/*}
     GOARCH=${PLATFORM#*/}
-    BIN_NAME="${APP_NAME}-${GOOS/darwin/osx}-${GOARCH/amd64/x64}"
+    BIN_NAME="${APP_NAME}-${GOOS}/darwin/osx-${GOARCH}/amd64/x64}"
 
     if [ $GOOS == "windows" ]; then
         BIN_NAME="${BIN_NAME}.exe"
