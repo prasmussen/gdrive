@@ -45,7 +45,7 @@ You will be prompted for a new verification code if the folder does not exist.
 | [gdrive-linux-ppc64](https://docs.google.com/uc?id=0B3X9GlR6EmbnS09XMzhfRXBnUzA&export=download) | 2.1.0 | Linux PPC 64-bit | 70a1ac5be9ba819da5cf7a8dbd513805a26509ac |
 | [gdrive-linux-ppc64le](https://docs.google.com/uc?id=0B3X9GlR6EmbneDJ2b3hqbVlNZnc&export=download) | 2.1.0 | Linux PPC 64-bit le | f426817ee4824b83b978f82f8e72eac6db92f2d1 |
 | [gdrive-windows-386.exe](https://docs.google.com/uc?id=0B3X9GlR6EmbnV3RNeFVUQjZvS2c&export=download) | 2.1.0 | Window 32-bit | 1429200631b598543eddc3df3487117cad95adbb |
-| [gdrive-windows-x64.exe](https://docs.google.com/uc?id=0B3X9GlR6EmbnNFRSSW1GaFBSRk0&export=download) | 2.1.0 | Windows 64-bit | 16ccab7c66b144e5806daeb2ba50d567b51504ca |
+| [gdrive-windows-x64.exe](https://drive.google.com/uc?id=0B3X9GlR6EmbnbnBsTXlfS1J5UjQ&export=download) | 2.1.0 | Windows 64-bit | 17f692a027a049385af2576503cd376593cc87b7 |
 | [gdrive-dragonfly-x64](https://docs.google.com/uc?id=0B3X9GlR6EmbnelNIdmRMMGpVa2s&export=download) | 2.1.0 | DragonFly BSD 64-bit | dc214a24e59f68d99ca62757d99099051f83804a |
 | [gdrive-freebsd-x64](https://docs.google.com/uc?id=0B3X9GlR6EmbnQkN0NnUwZ0tKLXM&export=download) | 2.1.0 | FreeBSD 64-bit | 93a5581652f9c01c47fb6c16e8ae655182f265da |
 | [gdrive-freebsd-386](https://docs.google.com/uc?id=0B3X9GlR6EmbnNU5rbXBzeEhhOTA&export=download) | 2.1.0 | FreeBSD 32-bit | b9a3ee1e0fdbb5fa970942ab89b354ee863a5758 |
@@ -85,10 +85,18 @@ syncing many files. Currently only one file is uploaded at the time,
 the speed can be improved in the future by uploading several files concurrently.
 To learn more see usage and the examples below.
 
+### Service Account
+For server to server communication, where user interaction is not a viable option, 
+is it possible to use a service account, as described in this [Google document](https://developers.google.com/identity/protocols/OAuth2ServiceAccount).
+If you want to use a service account, instead of being interactively prompted for
+authentication, you need to use the `--service-account <serviceAccountCredentials>` 
+global option, where `serviceAccountCredentials` is a file in JSON format obtained
+through the Google API Console, and its location is relative to the config dir. 
+
 #### .gdriveignore
 Placing a .gdriveignore in the root of your sync directory can be used to
 skip certain files from being synced. .gdriveignore follows the same
-rules as [.gitignore](https://git-scm.com/docs/gitignore).
+rules as [.gitignore](https://git-scm.com/docs/gitignore), except that gdrive only reads the .gdriveignore file in the root of the sync directory, not ones in any subdirectories.
 
 
 ## Usage
@@ -132,6 +140,7 @@ global:
   -c, --config <configDir>         Application path, default: /Users/<user>/.gdrive
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
+  --service-account <accountFile>  Oauth service account filename, used for server to server communication without user interaction (file is relative to config dir)
 
 options:
   -m, --max <maxFiles>       Max files to list, default: 30
@@ -158,7 +167,8 @@ global:
   -c, --config <configDir>         Application path, default: /Users/<user>/.gdrive
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
-
+  --service-account <accountFile>  Oauth service account filename, used for server to server communication without user interaction (file is relative to config dir)
+  
 options:
   -f, --force           Overwrite existing file
   -r, --recursive       Download directory recursively, documents will be skipped
@@ -177,7 +187,8 @@ global:
   -c, --config <configDir>         Application path, default: /Users/<user>/.gdrive
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
-
+  --service-account <accountFile>  Oauth service account filename, used for server to server communication without user interaction (file is relative to config dir)
+  
 options:
   -f, --force       Overwrite existing file
   -r, --recursive   Download directories recursively, documents will be skipped
@@ -193,7 +204,8 @@ global:
   -c, --config <configDir>         Application path, default: /Users/<user>/.gdrive
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
-
+  --service-account <accountFile>  Oauth service account filename, used for server to server communication without user interaction (file is relative to config dir)
+  
 options:
   -r, --recursive               Upload directory recursively
   -p, --parent <parent>         Parent id, used to upload file to a specific directory, can be specified multiple times to give many parents
@@ -215,7 +227,8 @@ global:
   -c, --config <configDir>         Application path, default: /Users/<user>/.gdrive
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
-
+  --service-account <accountFile>  Oauth service account filename, used for server to server communication without user interaction (file is relative to config dir)
+  
 options:
   -p, --parent <parent>         Parent id, used to upload file to a specific directory, can be specified multiple times to give many parents
   --chunksize <chunksize>       Set chunk size in bytes, default: 8388608
@@ -234,7 +247,8 @@ global:
   -c, --config <configDir>         Application path, default: /Users/<user>/.gdrive
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
-
+  --service-account <accountFile>  Oauth service account filename, used for server to server communication without user interaction (file is relative to config dir)
+  
 options:
   -p, --parent <parent>         Parent id, used to upload file to a specific directory, can be specified multiple times to give many parents
   --name <name>                 Filename
@@ -253,7 +267,8 @@ global:
   -c, --config <configDir>         Application path, default: /Users/<user>/.gdrive
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
-
+  --service-account <accountFile>  Oauth service account filename, used for server to server communication without user interaction (file is relative to config dir)
+  
 options:
   --bytes   Show size in bytes
 ```
@@ -266,7 +281,8 @@ global:
   -c, --config <configDir>         Application path, default: /Users/<user>/.gdrive
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
-
+  --service-account <accountFile>  Oauth service account filename, used for server to server communication without user interaction (file is relative to config dir)
+  
 options:
   -p, --parent <parent>         Parent id of created directory, can be specified multiple times to give many parents
   --description <description>   Directory description
@@ -280,7 +296,8 @@ global:
   -c, --config <configDir>         Application path, default: /Users/<user>/.gdrive
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
-
+  --service-account <accountFile>  Oauth service account filename, used for server to server communication without user interaction (file is relative to config dir)
+  
 options:
   --role <role>     Share role: owner/writer/commenter/reader, default: reader
   --type <type>     Share type: user/group/domain/anyone, default: anyone
@@ -297,6 +314,7 @@ global:
   -c, --config <configDir>         Application path, default: /Users/<user>/.gdrive
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
+  --service-account <accountFile>  Oauth service account filename, used for server to server communication without user interaction (file is relative to config dir)
 ```
 
 #### Revoke permission
@@ -307,6 +325,7 @@ global:
   -c, --config <configDir>         Application path, default: /Users/<user>/.gdrive
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
+  --service-account <accountFile>  Oauth service account filename, used for server to server communication without user interaction (file is relative to config dir)
 ```
 
 #### Delete file or directory
@@ -317,7 +336,8 @@ global:
   -c, --config <configDir>         Application path, default: /Users/<user>/.gdrive
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
-
+  --service-account <accountFile>  Oauth service account filename, used for server to server communication without user interaction (file is relative to config dir)
+  
 options:
   -r, --recursive   Delete directory and all it's content
 ```
@@ -330,7 +350,8 @@ global:
   -c, --config <configDir>         Application path, default: /Users/<user>/.gdrive
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
-
+  --service-account <accountFile>  Oauth service account filename, used for server to server communication without user interaction (file is relative to config dir)
+  
 options:
   --no-header   Dont print the header
 ```
@@ -343,7 +364,8 @@ global:
   -c, --config <configDir>         Application path, default: /Users/<user>/.gdrive
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
-
+  --service-account <accountFile>  Oauth service account filename, used for server to server communication without user interaction (file is relative to config dir)
+  
 options:
   --order <sortOrder>        Sort order. See https://godoc.org/google.golang.org/api/drive/v3#FilesListCall.OrderBy
   --path-width <pathWidth>   Width of path column, default: 60, minimum: 9, use 0 for full width
@@ -359,7 +381,8 @@ global:
   -c, --config <configDir>         Application path, default: /Users/<user>/.gdrive
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
-
+  --service-account <accountFile>  Oauth service account filename, used for server to server communication without user interaction (file is relative to config dir)
+  
 options:
   --keep-remote         Keep remote file when a conflict is encountered
   --keep-local          Keep local file when a conflict is encountered
@@ -378,7 +401,8 @@ global:
   -c, --config <configDir>         Application path, default: /Users/<user>/.gdrive
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
-
+  --service-account <accountFile>  Oauth service account filename, used for server to server communication without user interaction (file is relative to config dir)
+  
 options:
   --keep-remote             Keep remote file when a conflict is encountered
   --keep-local              Keep local file when a conflict is encountered
@@ -398,7 +422,8 @@ global:
   -c, --config <configDir>         Application path, default: /Users/<user>/.gdrive
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
-
+  --service-account <accountFile>  Oauth service account filename, used for server to server communication without user interaction (file is relative to config dir)
+  
 options:
   -m, --max <maxChanges>     Max changes to list, default: 100
   --since <pageToken>        Page token to start listing changes from
@@ -415,7 +440,8 @@ global:
   -c, --config <configDir>         Application path, default: /Users/<user>/.gdrive
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
-
+  --service-account <accountFile>  Oauth service account filename, used for server to server communication without user interaction (file is relative to config dir)
+  
 options:
   --name-width <nameWidth>   Width of name column, default: 40, minimum: 9, use 0 for full width
   --no-header                Dont print the header
@@ -430,7 +456,8 @@ global:
   -c, --config <configDir>         Application path, default: /Users/<user>/.gdrive
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
-
+  --service-account <accountFile>  Oauth service account filename, used for server to server communication without user interaction (file is relative to config dir)
+  
 options:
   -f, --force           Overwrite existing file
   --no-progress         Hide progress
@@ -447,6 +474,7 @@ global:
   -c, --config <configDir>         Application path, default: /Users/<user>/.gdrive
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
+  --service-account <accountFile>  Oauth service account filename, used for server to server communication without user interaction (file is relative to config dir)
 ```
 
 #### Upload and convert file to a google document, see 'about import' for available conversions
@@ -457,7 +485,8 @@ global:
   -c, --config <configDir>         Application path, default: /Users/<user>/.gdrive
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
-
+  --service-account <accountFile>  Oauth service account filename, used for server to server communication without user interaction (file is relative to config dir)
+  
 options:
   -p, --parent <parent>   Parent id, used to upload file to a specific directory, can be specified multiple times to give many parents
   --no-progress           Hide progress
@@ -471,7 +500,8 @@ global:
   -c, --config <configDir>         Application path, default: /Users/<user>/.gdrive
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
-
+  --service-account <accountFile>  Oauth service account filename, used for server to server communication without user interaction (file is relative to config dir)
+  
 options:
   -f, --force     Overwrite existing file
   --mime <mime>   Mime type of exported file
@@ -486,7 +516,8 @@ global:
   -c, --config <configDir>         Application path, default: /Users/<user>/.gdrive
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
-
+  --service-account <accountFile>  Oauth service account filename, used for server to server communication without user interaction (file is relative to config dir)
+  
 options:
   --bytes   Show size in bytes
 ```
@@ -499,6 +530,7 @@ global:
   -c, --config <configDir>         Application path, default: /Users/<user>/.gdrive
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
+  --service-account <accountFile>  Oauth service account filename, used for server to server communication without user interaction (file is relative to config dir)
 ```
 
 #### Show supported export formats
@@ -509,6 +541,7 @@ global:
   -c, --config <configDir>         Application path, default: /Users/<user>/.gdrive
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
+  --service-account <accountFile>  Oauth service account filename, used for server to server communication without user interaction (file is relative to config dir)
 ```
 
 

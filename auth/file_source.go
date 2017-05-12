@@ -31,7 +31,7 @@ func (self *fileSource) Token() (*oauth2.Token, error) {
 	return token, nil
 }
 
-func ReadToken(path string) (*oauth2.Token, bool, error) {
+func ReadFile(path string) ([]byte, bool, error) {
 	if !fileExists(path) {
 		return nil, false, nil
 	}
@@ -40,8 +40,19 @@ func ReadToken(path string) (*oauth2.Token, bool, error) {
 	if err != nil {
 		return nil, true, err
 	}
+	return content, true, nil
+}
+
+
+func ReadToken(path string) (*oauth2.Token, bool, error) {
+
+	content, exists, err := ReadFile(path)
+	if err != nil || exists == false {
+		return nil, exists, err
+	}
+
 	token := &oauth2.Token{}
-	return token, true, json.Unmarshal(content, token)
+	return token, exists, json.Unmarshal(content, token)
 }
 
 func SaveToken(path string, token *oauth2.Token) error {
