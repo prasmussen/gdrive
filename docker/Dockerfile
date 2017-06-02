@@ -6,4 +6,5 @@ RUN apk add --update git && \
 
 RUN go get github.com/prasmussen/gdrive
 
-ENTRYPOINT gdrive
+ENTRYPOINT ["gdrive"]
+CMD ["help"]
