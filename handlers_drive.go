@@ -44,6 +44,7 @@ func listChangesHandler(ctx cli.Context) {
 		Now:        args.Bool("now"),
 		NameWidth:  args.Int64("nameWidth"),
 		SkipHeader: args.Bool("skipHeader"),
+		OutJSON:    args.Bool("outjson"),
 	})
 	checkErr(err)
 }
@@ -190,6 +191,7 @@ func infoHandler(ctx cli.Context) {
 		Out:         os.Stdout,
 		Id:          args.String("fileId"),
 		SizeInBytes: args.Bool("sizeInBytes"),
+		OutJSON:     args.Bool("outjson"),
 	})
 	checkErr(err)
 }
@@ -226,6 +228,7 @@ func listRevisionsHandler(ctx cli.Context) {
 		NameWidth:   args.Int64("nameWidth"),
 		SizeInBytes: args.Bool("sizeInBytes"),
 		SkipHeader:  args.Bool("skipHeader"),
+		OutJSON:     args.Bool("outjson"),
 	})
 	checkErr(err)
 }
@@ -237,6 +240,7 @@ func mkdirHandler(ctx cli.Context) {
 		Name:        args.String("name"),
 		Description: args.String("description"),
 		Parents:     args.StringSlice("parent"),
+		OutJSON:     args.Bool("outjson"),
 	})
 	checkErr(err)
 }
@@ -280,6 +284,7 @@ func deleteHandler(ctx cli.Context) {
 		Out:       os.Stdout,
 		Id:        args.String("fileId"),
 		Recursive: args.Bool("recursive"),
+		OutJSON:   args.Bool("outjson"),
 	})
 	checkErr(err)
 }
@@ -289,6 +294,7 @@ func listSyncHandler(ctx cli.Context) {
 	err := newDrive(args).ListSync(drive.ListSyncArgs{
 		Out:        os.Stdout,
 		SkipHeader: args.Bool("skipHeader"),
+		OutJSON:    args.Bool("outjson"),
 	})
 	checkErr(err)
 }
@@ -302,6 +308,7 @@ func listRecursiveSyncHandler(ctx cli.Context) {
 		PathWidth:   args.Int64("pathWidth"),
 		SizeInBytes: args.Bool("sizeInBytes"),
 		SortOrder:   args.String("sortOrder"),
+		OutJSON:     args.Bool("outjson"),
 	})
 	checkErr(err)
 }
@@ -321,6 +328,7 @@ func aboutHandler(ctx cli.Context) {
 	err := newDrive(args).About(drive.AboutArgs{
 		Out:         os.Stdout,
 		SizeInBytes: args.Bool("sizeInBytes"),
+		OutJSON:     args.Bool("outjson"),
 	})
 	checkErr(err)
 }

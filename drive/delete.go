@@ -1,14 +1,17 @@
 package drive
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
+	"os"
 )
 
 type DeleteArgs struct {
 	Out       io.Writer
 	Id        string
 	Recursive bool
+	OutJSON   bool
 }
 
 func (self *Drive) Delete(args DeleteArgs) error {
@@ -25,8 +28,14 @@ func (self *Drive) Delete(args DeleteArgs) error {
 	if err != nil {
 		return fmt.Errorf("Failed to delete file: %s", err)
 	}
-
-	fmt.Fprintf(args.Out, "Deleted '%s'\n", f.Name)
+	if args.OutJSON {
+		enc := json.NewEncoder(os.Stdout)
+		if err := enc.Encode(f); err != nil {
+			fmt.Println(err)
+		}
+	} else {
+		fmt.Fprintf(args.Out, "Deleted '%s'\n", f.Name)
+	}
 	return nil
 }
 

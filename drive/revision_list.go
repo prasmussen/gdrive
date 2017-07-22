@@ -1,10 +1,13 @@
 package drive
 
 import (
+	"encoding/json"
 	"fmt"
-	"google.golang.org/api/drive/v3"
 	"io"
+	"os"
 	"text/tabwriter"
+
+	"google.golang.org/api/drive/v3"
 )
 
 type ListRevisionsArgs struct {
@@ -13,6 +16,7 @@ type ListRevisionsArgs struct {
 	NameWidth   int64
 	SkipHeader  bool
 	SizeInBytes bool
+	OutJSON     bool
 }
 
 func (self *Drive) ListRevisions(args ListRevisionsArgs) (err error) {
@@ -27,6 +31,7 @@ func (self *Drive) ListRevisions(args ListRevisionsArgs) (err error) {
 		NameWidth:   int(args.NameWidth),
 		SkipHeader:  args.SkipHeader,
 		SizeInBytes: args.SizeInBytes,
+		OutJSON:     args.OutJSON,
 	})
 
 	return
@@ -38,25 +43,33 @@ type PrintRevisionListArgs struct {
 	NameWidth   int
 	SkipHeader  bool
 	SizeInBytes bool
+	OutJSON     bool
 }
 
 func PrintRevisionList(args PrintRevisionListArgs) {
-	w := new(tabwriter.Writer)
-	w.Init(args.Out, 0, 0, 3, ' ', 0)
+	if args.OutJSON {
+		enc := json.NewEncoder(os.Stdout)
+		if err := enc.Encode(args.Revisions); err != nil {
+			fmt.Println(err)
+		}
+	} else {
+		w := new(tabwriter.Writer)
+		w.Init(args.Out, 0, 0, 3, ' ', 0)
 
-	if !args.SkipHeader {
-		fmt.Fprintln(w, "Id\tName\tSize\tModified\tKeepForever")
+		if !args.SkipHeader {
+			fmt.Fprintln(w, "Id\tName\tSize\tModified\tKeepForever")
+		}
+
+		for _, rev := range args.Revisions {
+			fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\n",
+				rev.Id,
+				truncateString(rev.OriginalFilename, args.NameWidth),
+				formatSize(rev.Size, args.SizeInBytes),
+				formatDatetime(rev.ModifiedTime),
+				formatBool(rev.KeepForever),
+			)
+		}
+		w.Flush()
 	}
 
-	for _, rev := range args.Revisions {
-		fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\n",
-			rev.Id,
-			truncateString(rev.OriginalFilename, args.NameWidth),
-			formatSize(rev.Size, args.SizeInBytes),
-			formatDatetime(rev.ModifiedTime),
-			formatBool(rev.KeepForever),
-		)
-	}
-
-	w.Flush()
 }
