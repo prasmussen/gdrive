@@ -1,14 +1,17 @@
 package drive
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
+	"os"
 	"text/tabwriter"
 )
 
 type AboutArgs struct {
 	Out         io.Writer
 	SizeInBytes bool
+	OutJSON     bool
 }
 
 func (self *Drive) About(args AboutArgs) (err error) {
@@ -20,11 +23,26 @@ func (self *Drive) About(args AboutArgs) (err error) {
 	user := about.User
 	quota := about.StorageQuota
 
-	fmt.Fprintf(args.Out, "User: %s, %s\n", user.DisplayName, user.EmailAddress)
-	fmt.Fprintf(args.Out, "Used: %s\n", formatSize(quota.Usage, args.SizeInBytes))
-	fmt.Fprintf(args.Out, "Free: %s\n", formatSize(quota.Limit-quota.Usage, args.SizeInBytes))
-	fmt.Fprintf(args.Out, "Total: %s\n", formatSize(quota.Limit, args.SizeInBytes))
-	fmt.Fprintf(args.Out, "Max upload size: %s\n", formatSize(about.MaxUploadSize, args.SizeInBytes))
+	if args.OutJSON {
+		jsonabout := map[string]string{
+			"displayname":     user.DisplayName,
+			"email":           user.EmailAddress,
+			"used":            formatSize(quota.Usage, args.SizeInBytes),
+			"free":            formatSize(quota.Limit-quota.Usage, args.SizeInBytes),
+			"total":           formatSize(quota.Limit, args.SizeInBytes),
+			"max_upload_size": formatSize(about.MaxUploadSize, args.SizeInBytes),
+		}
+		enc := json.NewEncoder(os.Stdout)
+		if err := enc.Encode(jsonabout); err != nil {
+			fmt.Println(err)
+		}
+	} else {
+		fmt.Fprintf(args.Out, "User: %s, %s\n", user.DisplayName, user.EmailAddress)
+		fmt.Fprintf(args.Out, "Used: %s\n", formatSize(quota.Usage, args.SizeInBytes))
+		fmt.Fprintf(args.Out, "Free: %s\n", formatSize(quota.Limit-quota.Usage, args.SizeInBytes))
+		fmt.Fprintf(args.Out, "Total: %s\n", formatSize(quota.Limit, args.SizeInBytes))
+		fmt.Fprintf(args.Out, "Max upload size: %s\n", formatSize(about.MaxUploadSize, args.SizeInBytes))
+	}
 	return
 }
 

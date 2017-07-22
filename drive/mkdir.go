@@ -1,9 +1,12 @@
 package drive
 
 import (
+	"encoding/json"
 	"fmt"
-	"google.golang.org/api/drive/v3"
 	"io"
+	"os"
+
+	"google.golang.org/api/drive/v3"
 )
 
 const DirectoryMimeType = "application/vnd.google-apps.folder"
@@ -13,6 +16,7 @@ type MkdirArgs struct {
 	Name        string
 	Description string
 	Parents     []string
+	OutJSON     bool
 }
 
 func (self *Drive) Mkdir(args MkdirArgs) error {
@@ -20,7 +24,15 @@ func (self *Drive) Mkdir(args MkdirArgs) error {
 	if err != nil {
 		return err
 	}
-	fmt.Fprintf(args.Out, "Directory %s created\n", f.Id)
+
+	if args.OutJSON {
+		enc := json.NewEncoder(os.Stdout)
+		if err := enc.Encode(f); err != nil {
+			fmt.Println(err)
+		}
+	} else {
+		fmt.Fprintf(args.Out, "Directory %s created\n", f.Id)
+	}
 	return nil
 }
 

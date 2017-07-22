@@ -1,17 +1,21 @@
 package drive
 
 import (
+	"encoding/json"
 	"fmt"
-	"google.golang.org/api/drive/v3"
-	"google.golang.org/api/googleapi"
 	"io"
+	"os"
 	"sort"
 	"text/tabwriter"
+
+	"google.golang.org/api/drive/v3"
+	"google.golang.org/api/googleapi"
 )
 
 type ListSyncArgs struct {
 	Out        io.Writer
 	SkipHeader bool
+	OutJSON    bool
 }
 
 func (self *Drive) ListSync(args ListSyncArgs) error {
@@ -34,6 +38,7 @@ type ListRecursiveSyncArgs struct {
 	PathWidth   int64
 	SizeInBytes bool
 	SortOrder   string
+	OutJSON     bool
 }
 
 func (self *Drive) ListRecursiveSync(args ListRecursiveSyncArgs) error {
@@ -52,22 +57,29 @@ func (self *Drive) ListRecursiveSync(args ListRecursiveSyncArgs) error {
 }
 
 func printSyncDirectories(files []*drive.File, args ListSyncArgs) {
-	w := new(tabwriter.Writer)
-	w.Init(args.Out, 0, 0, 3, ' ', 0)
+	if args.OutJSON {
+		enc := json.NewEncoder(os.Stdout)
+		if err := enc.Encode(files); err != nil {
+			fmt.Println(err)
+		}
+	} else {
+		w := new(tabwriter.Writer)
+		w.Init(args.Out, 0, 0, 3, ' ', 0)
 
-	if !args.SkipHeader {
-		fmt.Fprintln(w, "Id\tName\tCreated")
+		if !args.SkipHeader {
+			fmt.Fprintln(w, "Id\tName\tCreated")
+		}
+
+		for _, f := range files {
+			fmt.Fprintf(w, "%s\t%s\t%s\n",
+				f.Id,
+				f.Name,
+				formatDatetime(f.CreatedTime),
+			)
+		}
+
+		w.Flush()
 	}
-
-	for _, f := range files {
-		fmt.Fprintf(w, "%s\t%s\t%s\n",
-			f.Id,
-			f.Name,
-			formatDatetime(f.CreatedTime),
-		)
-	}
-
-	w.Flush()
 }
 
 func printSyncDirContent(files []*RemoteFile, args ListRecursiveSyncArgs) {
@@ -76,22 +88,30 @@ func printSyncDirContent(files []*RemoteFile, args ListRecursiveSyncArgs) {
 		sort.Sort(byRemotePath(files))
 	}
 
-	w := new(tabwriter.Writer)
-	w.Init(args.Out, 0, 0, 3, ' ', 0)
+	if args.OutJSON {
+		enc := json.NewEncoder(os.Stdout)
+		if err := enc.Encode(files); err != nil {
+			fmt.Println(err)
+		}
+	} else {
 
-	if !args.SkipHeader {
-		fmt.Fprintln(w, "Id\tPath\tType\tSize\tModified")
+		w := new(tabwriter.Writer)
+		w.Init(args.Out, 0, 0, 3, ' ', 0)
+
+		if !args.SkipHeader {
+			fmt.Fprintln(w, "Id\tPath\tType\tSize\tModified")
+		}
+
+		for _, rf := range files {
+			fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\n",
+				rf.file.Id,
+				truncateString(rf.relPath, int(args.PathWidth)),
+				filetype(rf.file),
+				formatSize(rf.file.Size, args.SizeInBytes),
+				formatDatetime(rf.file.ModifiedTime),
+			)
+		}
+
+		w.Flush()
 	}
-
-	for _, rf := range files {
-		fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\n",
-			rf.file.Id,
-			truncateString(rf.relPath, int(args.PathWidth)),
-			filetype(rf.file),
-			formatSize(rf.file.Size, args.SizeInBytes),
-			formatDatetime(rf.file.ModifiedTime),
-		)
-	}
-
-	w.Flush()
 }

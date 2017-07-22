@@ -1,10 +1,13 @@
 package drive
 
 import (
+	"encoding/json"
 	"fmt"
-	"google.golang.org/api/drive/v3"
 	"io"
+	"os"
 	"text/tabwriter"
+
+	"google.golang.org/api/drive/v3"
 )
 
 type ListChangesArgs struct {
@@ -14,6 +17,7 @@ type ListChangesArgs struct {
 	Now        bool
 	NameWidth  int64
 	SkipHeader bool
+	OutJSON    bool
 }
 
 func (self *Drive) ListChanges(args ListChangesArgs) error {
@@ -37,6 +41,7 @@ func (self *Drive) ListChanges(args ListChangesArgs) error {
 		ChangeList: changeList,
 		NameWidth:  int(args.NameWidth),
 		SkipHeader: args.SkipHeader,
+		OutJSON:    args.OutJSON,
 	})
 
 	return nil
@@ -56,41 +61,51 @@ type PrintChangesArgs struct {
 	ChangeList *drive.ChangeList
 	NameWidth  int
 	SkipHeader bool
+	OutJSON    bool
 }
 
 func PrintChanges(args PrintChangesArgs) {
-	w := new(tabwriter.Writer)
-	w.Init(args.Out, 0, 0, 3, ' ', 0)
 
-	if !args.SkipHeader {
-		fmt.Fprintln(w, "Id\tName\tAction\tTime")
-	}
+	if args.OutJSON {
+		enc := json.NewEncoder(os.Stdout)
 
-	for _, c := range args.ChangeList.Changes {
-		var name string
-		var action string
+		if err := enc.Encode(args.ChangeList); err != nil {
+			fmt.Println(err)
+		}
+	} else {
+		w := new(tabwriter.Writer)
+		w.Init(args.Out, 0, 0, 3, ' ', 0)
 
-		if c.Removed {
-			action = "remove"
-		} else {
-			name = c.File.Name
-			action = "update"
+		if !args.SkipHeader {
+			fmt.Fprintln(w, "Id\tName\tAction\tTime")
 		}
 
-		fmt.Fprintf(w, "%s\t%s\t%s\t%s\n",
-			c.FileId,
-			truncateString(name, args.NameWidth),
-			action,
-			formatDatetime(c.Time),
-		)
-	}
+		for _, c := range args.ChangeList.Changes {
+			var name string
+			var action string
 
-	if len(args.ChangeList.Changes) > 0 {
-		w.Flush()
-		pageToken, hasMore := nextChangesPageToken(args.ChangeList)
-		fmt.Fprintf(args.Out, "\nToken: %s, more: %t\n", pageToken, hasMore)
-	} else {
-		fmt.Fprintln(args.Out, "No changes")
+			if c.Removed {
+				action = "remove"
+			} else {
+				name = c.File.Name
+				action = "update"
+			}
+
+			fmt.Fprintf(w, "%s\t%s\t%s\t%s\n",
+				c.FileId,
+				truncateString(name, args.NameWidth),
+				action,
+				formatDatetime(c.Time),
+			)
+		}
+
+		if len(args.ChangeList.Changes) > 0 {
+			w.Flush()
+			pageToken, hasMore := nextChangesPageToken(args.ChangeList)
+			fmt.Fprintf(args.Out, "\nToken: %s, more: %t\n", pageToken, hasMore)
+		} else {
+			fmt.Fprintln(args.Out, "No changes")
+		}
 	}
 }
 

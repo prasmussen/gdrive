@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/prasmussen/gdrive/cli"
+	"cli"
 )
 
 const Name = "gdrive"
@@ -94,6 +94,12 @@ func main() {
 						Name:        "sizeInBytes",
 						Patterns:    []string{"--bytes"},
 						Description: "Size in bytes",
+						OmitValue:   true,
+					},
+					cli.BoolFlag{
+						Name:        "outjson",
+						Patterns:    []string{"--json"},
+						Description: "output in json",
 						OmitValue:   true,
 					},
 				),
@@ -371,6 +377,12 @@ func main() {
 						Description: "Show size in bytes",
 						OmitValue:   true,
 					},
+					cli.BoolFlag{
+						Name:        "outjson",
+						Patterns:    []string{"--json"},
+						Description: "output in json",
+						OmitValue:   true,
+					},
 				),
 			},
 		},
@@ -390,6 +402,12 @@ func main() {
 						Name:        "description",
 						Patterns:    []string{"--description"},
 						Description: "Directory description",
+					},
+					cli.BoolFlag{
+						Name:        "outjson",
+						Patterns:    []string{"--json"},
+						Description: "output in json",
+						OmitValue:   true,
 					},
 				),
 			},
@@ -467,6 +485,12 @@ func main() {
 						Description: "Delete directory and all it's content",
 						OmitValue:   true,
 					},
+					cli.BoolFlag{
+						Name:        "outjson",
+						Patterns:    []string{"--json"},
+						Description: "output in json",
+						OmitValue:   true,
+					},
 				),
 			},
 		},
@@ -481,6 +505,12 @@ func main() {
 						Name:        "skipHeader",
 						Patterns:    []string{"--no-header"},
 						Description: "Dont print the header",
+						OmitValue:   true,
+					},
+					cli.BoolFlag{
+						Name:        "outjson",
+						Patterns:    []string{"--json"},
+						Description: "output in json",
 						OmitValue:   true,
 					},
 				),
@@ -514,6 +544,12 @@ func main() {
 						Name:        "sizeInBytes",
 						Patterns:    []string{"--bytes"},
 						Description: "Size in bytes",
+						OmitValue:   true,
+					},
+					cli.BoolFlag{
+						Name:        "outjson",
+						Patterns:    []string{"--json"},
+						Description: "output in json",
 						OmitValue:   true,
 					},
 				),
@@ -666,6 +702,12 @@ func main() {
 						Description: "Dont print the header",
 						OmitValue:   true,
 					},
+					cli.BoolFlag{
+						Name:        "outjson",
+						Patterns:    []string{"--json"},
+						Description: "output in json",
+						OmitValue:   true,
+					},
 				),
 			},
 		},
@@ -692,6 +734,12 @@ func main() {
 						Name:        "sizeInBytes",
 						Patterns:    []string{"--bytes"},
 						Description: "Size in bytes",
+						OmitValue:   true,
+					},
+					cli.BoolFlag{
+						Name:        "outjson",
+						Patterns:    []string{"--json"},
+						Description: "output in json",
 						OmitValue:   true,
 					},
 				),
@@ -808,6 +856,12 @@ func main() {
 						Name:        "sizeInBytes",
 						Patterns:    []string{"--bytes"},
 						Description: "Show size in bytes",
+						OmitValue:   true,
+					},
+					cli.BoolFlag{
+						Name:        "outjson",
+						Patterns:    []string{"--json"},
+						Description: "output in json",
 						OmitValue:   true,
 					},
 				),

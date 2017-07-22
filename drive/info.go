@@ -1,15 +1,19 @@
 package drive
 
 import (
+	"encoding/json"
 	"fmt"
-	"google.golang.org/api/drive/v3"
 	"io"
+	"os"
+
+	"google.golang.org/api/drive/v3"
 )
 
 type FileInfoArgs struct {
 	Out         io.Writer
 	Id          string
 	SizeInBytes bool
+	OutJSON     bool
 }
 
 func (self *Drive) Info(args FileInfoArgs) error {
@@ -29,6 +33,7 @@ func (self *Drive) Info(args FileInfoArgs) error {
 		File:        f,
 		Path:        absPath,
 		SizeInBytes: args.SizeInBytes,
+		OutJSON:     args.OutJSON,
 	})
 
 	return nil
@@ -39,30 +44,38 @@ type PrintFileInfoArgs struct {
 	File        *drive.File
 	Path        string
 	SizeInBytes bool
+	OutJSON     bool
 }
 
 func PrintFileInfo(args PrintFileInfoArgs) {
 	f := args.File
 
-	items := []kv{
-		kv{"Id", f.Id},
-		kv{"Name", f.Name},
-		kv{"Path", args.Path},
-		kv{"Description", f.Description},
-		kv{"Mime", f.MimeType},
-		kv{"Size", formatSize(f.Size, args.SizeInBytes)},
-		kv{"Created", formatDatetime(f.CreatedTime)},
-		kv{"Modified", formatDatetime(f.ModifiedTime)},
-		kv{"Md5sum", f.Md5Checksum},
-		kv{"Shared", formatBool(f.Shared)},
-		kv{"Parents", formatList(f.Parents)},
-		kv{"ViewUrl", f.WebViewLink},
-		kv{"DownloadUrl", f.WebContentLink},
-	}
+	if args.OutJSON {
+		enc := json.NewEncoder(os.Stdout)
+		if err := enc.Encode(f); err != nil {
+			fmt.Println(err)
+		}
+	} else {
+		items := []kv{
+			kv{"Id", f.Id},
+			kv{"Name", f.Name},
+			kv{"Path", args.Path},
+			kv{"Description", f.Description},
+			kv{"Mime", f.MimeType},
+			kv{"Size", formatSize(f.Size, args.SizeInBytes)},
+			kv{"Created", formatDatetime(f.CreatedTime)},
+			kv{"Modified", formatDatetime(f.ModifiedTime)},
+			kv{"Md5sum", f.Md5Checksum},
+			kv{"Shared", formatBool(f.Shared)},
+			kv{"Parents", formatList(f.Parents)},
+			kv{"ViewUrl", f.WebViewLink},
+			kv{"DownloadUrl", f.WebContentLink},
+		}
 
-	for _, item := range items {
-		if item.value != "" {
-			fmt.Fprintf(args.Out, "%s: %s\n", item.key, item.value)
+		for _, item := range items {
+			if item.value != "" {
+				fmt.Fprintf(args.Out, "%s: %s\n", item.key, item.value)
+			}
 		}
 	}
 }
