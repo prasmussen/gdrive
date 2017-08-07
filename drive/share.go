@@ -52,6 +52,28 @@ func (self *Drive) RevokePermission(args RevokePermissionArgs) error {
 	return nil
 }
 
+type UpdatePermissionArgs struct {
+	Out          io.Writer
+	FileId       string
+	PermissionId string
+	Role         string
+}
+
+func (self *Drive) UpdatePermission(args UpdatePermissionArgs) error {
+	permission := &drive.Permission{
+		Role:               args.Role,
+	}
+
+	_, err := self.service.Permissions.Update(args.FileId, args.PermissionId, permission).Do()
+	if err != nil {
+		fmt.Errorf("Failed to update permission: %s", err)
+		return err
+	}
+
+	fmt.Fprintf(args.Out, "Permission updated\n")
+	return nil
+}
+
 type ListPermissionsArgs struct {
 	Out    io.Writer
 	FileId string
