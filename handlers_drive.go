@@ -28,6 +28,7 @@ func listHandler(ctx cli.Context) {
 		Query:       args.String("query"),
 		SortOrder:   args.String("sortOrder"),
 		SkipHeader:  args.Bool("skipHeader"),
+		Separator :  args.String("separator"),
 		SizeInBytes: args.Bool("sizeInBytes"),
 		AbsPath:     args.Bool("absPath"),
 	})
@@ -258,6 +259,8 @@ func shareListHandler(ctx cli.Context) {
 	args := ctx.Args()
 	err := newDrive(args).ListPermissions(drive.ListPermissionsArgs{
 		Out:    os.Stdout,
+		SkipHeader: args.Bool("skipHeader"),
+		Separator: args.String("separator"),
 		FileId: args.String("fileId"),
 	})
 	checkErr(err)

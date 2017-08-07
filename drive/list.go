@@ -16,6 +16,7 @@ type ListFilesArgs struct {
 	Query       string
 	SortOrder   string
 	SkipHeader  bool
+	Separator   string
 	SizeInBytes bool
 	AbsPath     bool
 }
@@ -49,6 +50,7 @@ func (self *Drive) List(args ListFilesArgs) (err error) {
 		Files:       files,
 		NameWidth:   int(args.NameWidth),
 		SkipHeader:  args.SkipHeader,
+		Separator :  args.Separator,
 		SizeInBytes: args.SizeInBytes,
 	})
 
@@ -102,6 +104,7 @@ type PrintFileListArgs struct {
 	Files       []*drive.File
 	NameWidth   int
 	SkipHeader  bool
+	Separator   string
 	SizeInBytes bool
 }
 
@@ -110,16 +113,17 @@ func PrintFileList(args PrintFileListArgs) {
 	w.Init(args.Out, 0, 0, 3, ' ', 0)
 
 	if !args.SkipHeader {
-		fmt.Fprintln(w, "Id\tName\tType\tSize\tCreated")
+		fmt.Fprintf(w, "Id%[1]sName%[1]sType%[1]sSize%[1]sCreated\n", args.Separator)
 	}
 
 	for _, f := range args.Files {
-		fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\n",
+		fmt.Fprintf(w, "%[1]s%[6]s%[2]s%[6]s%[3]s%[6]s%[4]s%[6]s%[5]s\n",
 			f.Id,
 			truncateString(f.Name, args.NameWidth),
 			filetype(f),
 			formatSize(f.Size, args.SizeInBytes),
 			formatDatetime(f.CreatedTime),
+			args.Separator,
 		)
 	}
 
