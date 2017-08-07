@@ -446,6 +446,14 @@ func main() {
 				cli.NewFlagGroup("global", globalFlags...),
 			},
 		},
+        &cli.Handler{
+			Pattern:     "[global] share update <fileId> <permissionId> <role>",
+			Description: "Update permission",
+			Callback:    shareUpdateHandler,
+			FlagGroups: cli.FlagGroups{
+				cli.NewFlagGroup("global", globalFlags...),
+			},
+		},
 		&cli.Handler{
 			Pattern:     "[global] share revoke <fileId> <permissionId>",
 			Description: "Revoke permission",
