@@ -26,7 +26,14 @@ func (self *Drive) Share(args ShareArgs) error {
 		Domain:             args.Domain,
 	}
 
-	_, err := self.service.Permissions.Create(args.FileId, permission).Do()
+	call := self.service.Permissions.Create(args.FileId, permission)
+
+	if permission.Role == "owner" {
+		call.TransferOwnership(true);
+	}
+
+	_, err := call.Do()
+
 	if err != nil {
 		return fmt.Errorf("Failed to share file: %s", err)
 	}
@@ -64,7 +71,14 @@ func (self *Drive) UpdatePermission(args UpdatePermissionArgs) error {
 		Role:               args.Role,
 	}
 
-	_, err := self.service.Permissions.Update(args.FileId, args.PermissionId, permission).Do()
+	call := self.service.Permissions.Update(args.FileId, args.PermissionId, permission)
+
+	if permission.Role == "owner" {
+		call.TransferOwnership(true);
+	}
+
+	_, err := call.Do()
+
 	if err != nil {
 		fmt.Errorf("Failed to update permission: %s", err)
 		return err
