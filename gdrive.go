@@ -45,6 +45,11 @@ func main() {
 			Patterns:    []string{"--service-account"},
 			Description: "Oauth service account filename, used for server to server communication without user interaction (filename path is relative to config dir)",
 		},
+		cli.StringFlag{
+			Name:        "serviceAccountSubject",
+			Patterns:    []string{"--service-account-subject"},
+			Description: "Connect to this user account GDrive instead of the service account GDrive. Useful only with the --service-account parameter. The service account must be domain-wide delegated.",
+		},
 	}
 
 	handlers := []*cli.Handler{
