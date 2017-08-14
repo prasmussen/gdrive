@@ -15,6 +15,7 @@ type ShareArgs struct {
 	Email        string
 	Domain       string
 	Discoverable bool
+	NotificationMessage string
 }
 
 func (self *Drive) Share(args ShareArgs) error {
@@ -26,7 +27,14 @@ func (self *Drive) Share(args ShareArgs) error {
 		Domain:             args.Domain,
 	}
 
-	_, err := self.service.Permissions.Create(args.FileId, permission).Do()
+	call := self.service.Permissions.Create(args.FileId, permission)
+
+	if args.NotificationMessage != "" {
+		call = call.EmailMessage(args.NotificationMessage);
+	}
+
+	_, err := call.Do()
+
 	if err != nil {
 		return fmt.Errorf("Failed to share file: %s", err)
 	}

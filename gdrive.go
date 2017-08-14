@@ -435,6 +435,11 @@ func main() {
 						Description: "Delete all sharing permissions (owner roles will be skipped)",
 						OmitValue:   true,
 					},
+					cli.StringFlag{
+						Name:        "notificationMessage",
+						Patterns:    []string{"--notification-message"},
+						Description: "A custom message to include in the notification email.",
+					},
 				),
 			},
 		},
