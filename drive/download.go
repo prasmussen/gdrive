@@ -124,6 +124,20 @@ func (self *Drive) downloadRecursive(args DownloadArgs) error {
 }
 
 func (self *Drive) downloadBinary(f *drive.File, args DownloadArgs) (int64, int64, error) {
+	// Path to file
+	fpath := filepath.Join(args.Path, f.Name)
+
+	// Check if file exists to force
+	if !args.Skip && !args.Force && fileExists(fpath) {
+		return 0, 0, fmt.Errorf("File '%s' already exists, use --force to overwrite or --skip to skip", fpath)
+	}
+
+	//Check if file exists to skip
+	if args.Skip && fileExists(fpath) {
+		fmt.Printf("File '%s' already exists, skipping\n", fpath)
+		return 0, 0, nil
+	}
+
 	// Get timeout reader wrapper and context
 	timeoutReaderWrapper, ctx := getTimeoutReaderWrapperContext(args.Timeout)
 
@@ -137,9 +151,6 @@ func (self *Drive) downloadBinary(f *drive.File, args DownloadArgs) (int64, int6
 
 	// Close body on function exit
 	defer res.Body.Close()
-
-	// Path to file
-	fpath := filepath.Join(args.Path, f.Name)
 
 	if !args.Stdout {
 		fmt.Fprintf(args.Out, "Downloading %s -> %s\n", f.Name, fpath)
@@ -176,17 +187,6 @@ func (self *Drive) saveFile(args saveFileArgs) (int64, int64, error) {
 		// Write file content to stdout
 		_, err := io.Copy(args.out, srcReader)
 		return 0, 0, err
-	}
-
-	// Check if file exists to force
-	if !args.skip && !args.force && fileExists(args.fpath) {
-		return 0, 0, fmt.Errorf("File '%s' already exists, use --force to overwrite or --skip to skip", args.fpath)
-	}
-
-	//Check if file exists to skip
-	if args.skip && fileExists(args.fpath) {
-		fmt.Printf("File '%s' already exists, skipping\n", args.fpath)
-		return 0, 0, nil
 	}
 
 	// Ensure any parent directories exists
