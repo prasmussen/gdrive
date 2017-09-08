@@ -2,6 +2,12 @@ gdrive
 ======
 
 
+## Note
+This tool is not being actively maintained at the moment, ymmv.
+For incremental and encrypted backup of unix systems [borg](https://github.com/borgbackup/borg)
+is a great alternative and [rsync.net](http://rsync.net/products/attic.html) provides
+a cheap and reliable backup target.
+
 ## Overview
 gdrive is a command line utility for interacting with Google Drive.
 
