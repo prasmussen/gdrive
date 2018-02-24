@@ -2,6 +2,7 @@ package auth
 
 import (
 	"fmt"
+	"golang.org/x/net/context"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	"net/http"
@@ -10,7 +11,7 @@ import (
 
 type authCodeFn func(string) func() string
 
-func NewFileSourceClient(clientId, clientSecret, tokenFile string, authFn authCodeFn) (*http.Client, error) {
+func NewFileSourceClient(clientId, clientSecret string, ctx context.Context, tokenFile string, authFn authCodeFn) (*http.Client, error) {
 	conf := getConfig(clientId, clientSecret)
 
 	// Read cached token
@@ -31,12 +32,12 @@ func NewFileSourceClient(clientId, clientSecret, tokenFile string, authFn authCo
 	}
 
 	return oauth2.NewClient(
-		oauth2.NoContext,
+		ctx,
 		FileSource(tokenFile, token, conf),
 	), nil
 }
 
-func NewRefreshTokenClient(clientId, clientSecret, refreshToken string) *http.Client {
+func NewRefreshTokenClient(clientId, clientSecret string, ctx context.Context, refreshToken string) *http.Client {
 	conf := getConfig(clientId, clientSecret)
 
 	token := &oauth2.Token{
@@ -46,12 +47,12 @@ func NewRefreshTokenClient(clientId, clientSecret, refreshToken string) *http.Cl
 	}
 
 	return oauth2.NewClient(
-		oauth2.NoContext,
+		ctx,
 		conf.TokenSource(oauth2.NoContext, token),
 	)
 }
 
-func NewAccessTokenClient(clientId, clientSecret, accessToken string) *http.Client {
+func NewAccessTokenClient(clientId, clientSecret string, ctx context.Context, accessToken string) *http.Client {
 	conf := getConfig(clientId, clientSecret)
 
 	token := &oauth2.Token{
@@ -60,12 +61,12 @@ func NewAccessTokenClient(clientId, clientSecret, accessToken string) *http.Clie
 	}
 
 	return oauth2.NewClient(
-		oauth2.NoContext,
+		ctx,
 		conf.TokenSource(oauth2.NoContext, token),
 	)
 }
 
-func NewServiceAccountClient(serviceAccountFile string) (*http.Client, error) {
+func NewServiceAccountClient(serviceAccountFile string, ctx context.Context) (*http.Client, error) {
 	content, exists, err := ReadFile(serviceAccountFile)
 	if(!exists) {
 		return nil, fmt.Errorf("Service account filename %q not found", serviceAccountFile)
@@ -79,7 +80,7 @@ func NewServiceAccountClient(serviceAccountFile string) (*http.Client, error) {
 	if(err != nil) {
 		return nil, err
 	}
-	return conf.Client(oauth2.NoContext), nil
+	return conf.Client(ctx), nil
 }
 
 func getConfig(clientId, clientSecret string) *oauth2.Config {

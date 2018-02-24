@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"golang.org/x/net/context"
+	"golang.org/x/oauth2"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -345,19 +347,25 @@ func getOauthClient(args cli.Arguments) (*http.Client, error) {
 		ExitF("Access token not needed when refresh token is provided")
 	}
 
+	oauth_context := context.TODO()
+	if args.Bool("disable-compression") {
+		oauth_context = context.WithValue(oauth_context, oauth2.HTTPClient,
+			&http.Client{Transport: &http.Transport{DisableCompression: true}})
+	}
+
 	if args.String("refreshToken") != "" {
-		return auth.NewRefreshTokenClient(ClientId, ClientSecret, args.String("refreshToken")), nil
+		return auth.NewRefreshTokenClient(ClientId, ClientSecret, oauth_context, args.String("refreshToken")), nil
 	}
 
 	if args.String("accessToken") != "" {
-		return auth.NewAccessTokenClient(ClientId, ClientSecret, args.String("accessToken")), nil
+		return auth.NewAccessTokenClient(ClientId, ClientSecret, oauth_context, args.String("accessToken")), nil
 	}
 
 	configDir := getConfigDir(args)
 
 	if args.String("serviceAccount") != "" {
 		serviceAccountPath := ConfigFilePath(configDir, args.String("serviceAccount"))
-		serviceAccountClient, err := auth.NewServiceAccountClient(serviceAccountPath)
+		serviceAccountClient, err := auth.NewServiceAccountClient(serviceAccountPath, oauth_context)
 		if err != nil {
 			return nil, err
 		}
@@ -365,7 +373,7 @@ func getOauthClient(args cli.Arguments) (*http.Client, error) {
 	}
 
 	tokenPath := ConfigFilePath(configDir, TokenFilename)
-	return auth.NewFileSourceClient(ClientId, ClientSecret, tokenPath, authCodePrompt)
+	return auth.NewFileSourceClient(ClientId, ClientSecret, oauth_context, tokenPath, authCodePrompt)
 }
 
 func getConfigDir(args cli.Arguments) string {

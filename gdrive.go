@@ -45,6 +45,11 @@ func main() {
 			Patterns:    []string{"--service-account"},
 			Description: "Oauth service account filename, used for server to server communication without user interaction (filename path is relative to config dir)",
 		},
+		cli.BoolFlag{
+			Name:        "disable-compression",
+			Patterns:    []string{"--disable-compression"},
+			Description: "Disable gzip compression in HTTP requests. This might be useful to trade higher bandwidth for reduced CPU.",
+			OmitValue:   true},
 	}
 
 	handlers := []*cli.Handler{
