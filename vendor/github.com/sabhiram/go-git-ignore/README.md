@@ -1,17 +1,15 @@
-# go-git-ignore
+# go-gitignore
 
-[![Build Status](https://travis-ci.org/sabhiram/go-git-ignore.svg)](https://travis-ci.org/sabhiram/go-git-ignore) [![Coverage Status](https://coveralls.io/repos/sabhiram/go-git-ignore/badge.png?branch=master)](https://coveralls.io/r/sabhiram/go-git-ignore?branch=master)
+[![Build Status](https://travis-ci.org/sabhiram/go-gitignore.svg)](https://travis-ci.org/sabhiram/go-gitignore) [![Coverage Status](https://coveralls.io/repos/github/sabhiram/go-gitignore/badge.svg?branch=master)](https://coveralls.io/github/sabhiram/go-gitignore?branch=master)
 
 A gitignore parser for `Go`
 
 ## Install
 
 ```shell
-go get github.com/sabhiram/go-git-ignore
+go get github.com/sabhiram/go-gitignore
 ```
 
 ## Usage
 
-```shell
-TODO
-```
+For a quick sample of how to use this library, check out the tests under `ignore_test.go`.

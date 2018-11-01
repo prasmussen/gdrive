@@ -1,11 +1,17 @@
 {
 	"ImportPath": "github.com/prasmussen/gdrive",
-	"GoVersion": "go1.6",
-	"GodepVersion": "v61",
+	"GoVersion": "go1.7",
+	"GodepVersion": "v80",
 	"Deps": [
 		{
+			"ImportPath": "cloud.google.com/go/compute/metadata",
+			"Comment": "v0.31.0-30-g5cf8da09",
+			"Rev": "5cf8da09f0a9d7503337490b32ee587a015e1de5"
+		},
+		{
 			"ImportPath": "github.com/sabhiram/go-git-ignore",
-			"Rev": "228fcfa2a06e870a3ef238d54c45ea847f492a37"
+			"Comment": "1.0.2",
+			"Rev": "d3107576ba9425fc1c85f4b3569c4631b805a02e"
 		},
 		{
 			"ImportPath": "github.com/soniakeys/graph",
@@ -14,35 +20,47 @@
 		},
 		{
 			"ImportPath": "golang.org/x/net/context",
-			"Rev": "fb93926129b8ec0056f2f458b1f519654814edf0"
+			"Rev": "e11730110bbd884bbf19550bfafe9d69519ce29e"
 		},
 		{
 			"ImportPath": "golang.org/x/net/context/ctxhttp",
-			"Rev": "fb93926129b8ec0056f2f458b1f519654814edf0"
+			"Rev": "e11730110bbd884bbf19550bfafe9d69519ce29e"
 		},
 		{
 			"ImportPath": "golang.org/x/oauth2",
-			"Rev": "7e9cd5d59563851383f8f81a7fbb01213709387c"
+			"Rev": "c453e0c757598fd055e170a3a359263c91e13153"
+		},
+		{
+			"ImportPath": "golang.org/x/oauth2/google",
+			"Rev": "c453e0c757598fd055e170a3a359263c91e13153"
 		},
 		{
 			"ImportPath": "golang.org/x/oauth2/internal",
-			"Rev": "7e9cd5d59563851383f8f81a7fbb01213709387c"
+			"Rev": "c453e0c757598fd055e170a3a359263c91e13153"
+		},
+		{
+			"ImportPath": "golang.org/x/oauth2/jws",
+			"Rev": "c453e0c757598fd055e170a3a359263c91e13153"
+		},
+		{
+			"ImportPath": "golang.org/x/oauth2/jwt",
+			"Rev": "c453e0c757598fd055e170a3a359263c91e13153"
 		},
 		{
 			"ImportPath": "google.golang.org/api/drive/v3",
-			"Rev": "9737cc9e103c00d06a8f3993361dec083df3d252"
+			"Rev": "799fe93f827439cfd251917066a18691dc6a7fc1"
 		},
 		{
 			"ImportPath": "google.golang.org/api/gensupport",
-			"Rev": "9737cc9e103c00d06a8f3993361dec083df3d252"
+			"Rev": "799fe93f827439cfd251917066a18691dc6a7fc1"
 		},
 		{
 			"ImportPath": "google.golang.org/api/googleapi",
-			"Rev": "9737cc9e103c00d06a8f3993361dec083df3d252"
+			"Rev": "799fe93f827439cfd251917066a18691dc6a7fc1"
 		},
 		{
 			"ImportPath": "google.golang.org/api/googleapi/internal/uritemplates",
-			"Rev": "9737cc9e103c00d06a8f3993361dec083df3d252"
+			"Rev": "799fe93f827439cfd251917066a18691dc6a7fc1"
 		}
 	]
 }
