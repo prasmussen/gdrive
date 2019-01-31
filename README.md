@@ -91,13 +91,30 @@ syncing many files. Currently only one file is uploaded at the time,
 the speed can be improved in the future by uploading several files concurrently.
 To learn more see usage and the examples below.
 
+## Client Credentials
+By default, gdrive uses OAuth2 client credentials (client id and secret) in
+order to allow it to use Google's Drive APIs on behalf of the user. The credentials
+are set inside gdrive by default. Unfortunately this means that the rate limit of
+API usage is shared amongst all gdrive users globally. It has become common for
+the rate limit to be exceeded, causing gdrive to stop stop working.
+
+To get around this, gdrive now supports loading external OAuth2 client credentials.
+
+Generate your new credentials in the Google API Console, name the credentials
+file `client_id.json` and move it to the gdrive config directory.
+Then delete `token_v2.json` to reauthenticate using the new credentials.
+
+One side effect to note is that existing sync directories will not work after the
+credentials change because sync sets credential specific properties on the files
+(appProperty).
+
 ### Service Account
-For server to server communication, where user interaction is not a viable option, 
+For server to server communication, where user interaction is not a viable option,
 is it possible to use a service account, as described in this [Google document](https://developers.google.com/identity/protocols/OAuth2ServiceAccount).
 If you want to use a service account, instead of being interactively prompted for
-authentication, you need to use the `--service-account <serviceAccountCredentials>` 
+authentication, you need to use the `--service-account <serviceAccountCredentials>`
 global option, where `serviceAccountCredentials` is a file in JSON format obtained
-through the Google API Console, and its location is relative to the config dir. 
+through the Google API Console, and its location is relative to the config dir.
 
 #### .gdriveignore
 Placing a .gdriveignore in the root of your sync directory can be used to
@@ -174,7 +191,7 @@ global:
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
   --service-account <accountFile>  Oauth service account filename, used for server to server communication without user interaction (file is relative to config dir)
-  
+
 options:
   -f, --force           Overwrite existing file
   -r, --recursive       Download directory recursively, documents will be skipped
@@ -194,7 +211,7 @@ global:
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
   --service-account <accountFile>  Oauth service account filename, used for server to server communication without user interaction (file is relative to config dir)
-  
+
 options:
   -f, --force       Overwrite existing file
   -r, --recursive   Download directories recursively, documents will be skipped
@@ -211,7 +228,7 @@ global:
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
   --service-account <accountFile>  Oauth service account filename, used for server to server communication without user interaction (file is relative to config dir)
-  
+
 options:
   -r, --recursive               Upload directory recursively
   -p, --parent <parent>         Parent id, used to upload file to a specific directory, can be specified multiple times to give many parents
@@ -234,7 +251,7 @@ global:
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
   --service-account <accountFile>  Oauth service account filename, used for server to server communication without user interaction (file is relative to config dir)
-  
+
 options:
   -p, --parent <parent>         Parent id, used to upload file to a specific directory, can be specified multiple times to give many parents
   --chunksize <chunksize>       Set chunk size in bytes, default: 8388608
@@ -254,7 +271,7 @@ global:
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
   --service-account <accountFile>  Oauth service account filename, used for server to server communication without user interaction (file is relative to config dir)
-  
+
 options:
   -p, --parent <parent>         Parent id, used to upload file to a specific directory, can be specified multiple times to give many parents
   --name <name>                 Filename
@@ -274,7 +291,7 @@ global:
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
   --service-account <accountFile>  Oauth service account filename, used for server to server communication without user interaction (file is relative to config dir)
-  
+
 options:
   --bytes   Show size in bytes
 ```
@@ -288,7 +305,7 @@ global:
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
   --service-account <accountFile>  Oauth service account filename, used for server to server communication without user interaction (file is relative to config dir)
-  
+
 options:
   -p, --parent <parent>         Parent id of created directory, can be specified multiple times to give many parents
   --description <description>   Directory description
@@ -303,7 +320,7 @@ global:
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
   --service-account <accountFile>  Oauth service account filename, used for server to server communication without user interaction (file is relative to config dir)
-  
+
 options:
   --role <role>     Share role: owner/writer/commenter/reader, default: reader
   --type <type>     Share type: user/group/domain/anyone, default: anyone
@@ -343,7 +360,7 @@ global:
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
   --service-account <accountFile>  Oauth service account filename, used for server to server communication without user interaction (file is relative to config dir)
-  
+
 options:
   -r, --recursive   Delete directory and all it's content
 ```
@@ -357,7 +374,7 @@ global:
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
   --service-account <accountFile>  Oauth service account filename, used for server to server communication without user interaction (file is relative to config dir)
-  
+
 options:
   --no-header   Dont print the header
 ```
@@ -371,7 +388,7 @@ global:
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
   --service-account <accountFile>  Oauth service account filename, used for server to server communication without user interaction (file is relative to config dir)
-  
+
 options:
   --order <sortOrder>        Sort order. See https://godoc.org/google.golang.org/api/drive/v3#FilesListCall.OrderBy
   --path-width <pathWidth>   Width of path column, default: 60, minimum: 9, use 0 for full width
@@ -388,7 +405,7 @@ global:
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
   --service-account <accountFile>  Oauth service account filename, used for server to server communication without user interaction (file is relative to config dir)
-  
+
 options:
   --keep-remote         Keep remote file when a conflict is encountered
   --keep-local          Keep local file when a conflict is encountered
@@ -408,7 +425,7 @@ global:
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
   --service-account <accountFile>  Oauth service account filename, used for server to server communication without user interaction (file is relative to config dir)
-  
+
 options:
   --keep-remote             Keep remote file when a conflict is encountered
   --keep-local              Keep local file when a conflict is encountered
@@ -429,7 +446,7 @@ global:
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
   --service-account <accountFile>  Oauth service account filename, used for server to server communication without user interaction (file is relative to config dir)
-  
+
 options:
   -m, --max <maxChanges>     Max changes to list, default: 100
   --since <pageToken>        Page token to start listing changes from
@@ -447,7 +464,7 @@ global:
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
   --service-account <accountFile>  Oauth service account filename, used for server to server communication without user interaction (file is relative to config dir)
-  
+
 options:
   --name-width <nameWidth>   Width of name column, default: 40, minimum: 9, use 0 for full width
   --no-header                Dont print the header
@@ -463,7 +480,7 @@ global:
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
   --service-account <accountFile>  Oauth service account filename, used for server to server communication without user interaction (file is relative to config dir)
-  
+
 options:
   -f, --force           Overwrite existing file
   --no-progress         Hide progress
@@ -492,7 +509,7 @@ global:
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
   --service-account <accountFile>  Oauth service account filename, used for server to server communication without user interaction (file is relative to config dir)
-  
+
 options:
   -p, --parent <parent>   Parent id, used to upload file to a specific directory, can be specified multiple times to give many parents
   --no-progress           Hide progress
@@ -507,7 +524,7 @@ global:
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
   --service-account <accountFile>  Oauth service account filename, used for server to server communication without user interaction (file is relative to config dir)
-  
+
 options:
   -f, --force     Overwrite existing file
   --mime <mime>   Mime type of exported file
@@ -523,7 +540,7 @@ global:
   --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
   --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
   --service-account <accountFile>  Oauth service account filename, used for server to server communication without user interaction (file is relative to config dir)
-  
+
 options:
   --bytes   Show size in bytes
 ```
