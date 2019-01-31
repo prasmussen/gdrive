@@ -10,8 +10,7 @@ import (
 
 type authCodeFn func(string) func() string
 
-func NewFileSourceClient(clientId, clientSecret, tokenFile string, authFn authCodeFn) (*http.Client, error) {
-	conf := getConfig(clientId, clientSecret)
+func NewFileSourceClient(conf *oauth2.Config, tokenFile string, authFn authCodeFn) (*http.Client, error) {
 
 	// Read cached token
 	token, exists, err := ReadToken(tokenFile)
@@ -36,8 +35,7 @@ func NewFileSourceClient(clientId, clientSecret, tokenFile string, authFn authCo
 	), nil
 }
 
-func NewRefreshTokenClient(clientId, clientSecret, refreshToken string) *http.Client {
-	conf := getConfig(clientId, clientSecret)
+func NewRefreshTokenClient(conf *oauth2.Config, refreshToken string) *http.Client {
 
 	token := &oauth2.Token{
 		TokenType:    "Bearer",
@@ -51,8 +49,7 @@ func NewRefreshTokenClient(clientId, clientSecret, refreshToken string) *http.Cl
 	)
 }
 
-func NewAccessTokenClient(clientId, clientSecret, accessToken string) *http.Client {
-	conf := getConfig(clientId, clientSecret)
+func NewAccessTokenClient(conf *oauth2.Config, accessToken string) *http.Client {
 
 	token := &oauth2.Token{
 		TokenType:   "Bearer",
@@ -82,7 +79,7 @@ func NewServiceAccountClient(serviceAccountFile string) (*http.Client, error) {
 	return conf.Client(oauth2.NoContext), nil
 }
 
-func getConfig(clientId, clientSecret string) *oauth2.Config {
+func AssembleClientCredentials(clientId, clientSecret string) *oauth2.Config {
 	return &oauth2.Config{
 		ClientID:     clientId,
 		ClientSecret: clientSecret,

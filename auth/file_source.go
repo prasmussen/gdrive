@@ -3,6 +3,7 @@ package auth
 import (
 	"encoding/json"
 	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/google"
 	"io/ioutil"
 	"os"
 )
@@ -43,6 +44,15 @@ func ReadFile(path string) ([]byte, bool, error) {
 	return content, true, nil
 }
 
+func ReadClientCredentials(path string) (*oauth2.Config, bool, error) {
+
+	content, exists, err := ReadFile(path)
+	if err != nil || exists == false {
+		return nil, exists, err
+	}
+	conf, err := google.ConfigFromJSON(content)
+	return conf, exists, err
+}
 
 func ReadToken(path string) (*oauth2.Token, bool, error) {
 
