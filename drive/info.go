@@ -12,9 +12,14 @@ type FileInfoArgs struct {
 	SizeInBytes bool
 }
 
-func (self *Drive) Info(args FileInfoArgs) error {
+func (self *Drive) Info(args FileInfoArgs, try int) error {
 	f, err := self.service.Files.Get(args.Id).Fields("id", "name", "size", "createdTime", "modifiedTime", "md5Checksum", "mimeType", "parents", "shared", "description", "webContentLink", "webViewLink").Do()
 	if err != nil {
+		if isBackendOrRateLimitError(err) && try < MaxErrorRetries {
+			exponentialBackoffSleep(try)
+			try++
+			return self.Info(args, try)
+		}
 		return fmt.Errorf("Failed to get file: %s", err)
 	}
 

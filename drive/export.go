@@ -24,9 +24,14 @@ type ExportArgs struct {
 	Force      bool
 }
 
-func (self *Drive) Export(args ExportArgs) error {
+func (self *Drive) Export(args ExportArgs, try int) error {
 	f, err := self.service.Files.Get(args.Id).Fields("name", "mimeType").Do()
 	if err != nil {
+		if isBackendOrRateLimitError(err) && try < MaxErrorRetries {
+			exponentialBackoffSleep(try)
+			try++
+			return self.Export(args, try)
+		}
 		return fmt.Errorf("Failed to get file: %s", err)
 	}
 
@@ -43,6 +48,11 @@ func (self *Drive) Export(args ExportArgs) error {
 
 	res, err := self.service.Files.Export(args.Id, exportMime).Download()
 	if err != nil {
+		if isBackendOrRateLimitError(err) && try < MaxErrorRetries {
+			exponentialBackoffSleep(try)
+			try++
+			return self.Export(args, try)
+		}
 		return fmt.Errorf("Failed to download file: %s", err)
 	}
 

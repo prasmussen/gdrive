@@ -16,7 +16,7 @@ type MkdirArgs struct {
 }
 
 func (self *Drive) Mkdir(args MkdirArgs) error {
-	f, err := self.mkdir(args)
+	f, err := self.mkdir(args, 1)
 	if err != nil {
 		return err
 	}
@@ -24,7 +24,7 @@ func (self *Drive) Mkdir(args MkdirArgs) error {
 	return nil
 }
 
-func (self *Drive) mkdir(args MkdirArgs) (*drive.File, error) {
+func (self *Drive) mkdir(args MkdirArgs, try int) (*drive.File, error) {
 	dstFile := &drive.File{
 		Name:        args.Name,
 		Description: args.Description,
@@ -37,6 +37,12 @@ func (self *Drive) mkdir(args MkdirArgs) (*drive.File, error) {
 	// Create directory
 	f, err := self.service.Files.Create(dstFile).Do()
 	if err != nil {
+		if isBackendOrRateLimitError(err) && try < MaxErrorRetries {
+			exponentialBackoffSleep(try)
+			try++
+			return self.mkdir(args, try)
+		}
+
 		return nil, fmt.Errorf("Failed to create directory: %s", err)
 	}
 

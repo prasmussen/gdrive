@@ -24,7 +24,7 @@ type UpdateArgs struct {
 	Timeout     time.Duration
 }
 
-func (self *Drive) Update(args UpdateArgs) error {
+func (self *Drive) Update(args UpdateArgs, try int) error {
 	srcFile, srcFileInfo, err := openFile(args.Path)
 	if err != nil {
 		return fmt.Errorf("Failed to open file: %s", err)
@@ -66,7 +66,11 @@ func (self *Drive) Update(args UpdateArgs) error {
 
 	f, err := self.service.Files.Update(args.Id, dstFile).Fields("id", "name", "size").Context(ctx).Media(reader, chunkSize).Do()
 	if err != nil {
-		if isTimeoutError(err) {
+		if isBackendOrRateLimitError(err) && try < MaxErrorRetries {
+			exponentialBackoffSleep(try)
+			try++
+			return self.Update(args, try)
+		} else if isTimeoutError(err) {
 			return fmt.Errorf("Failed to upload file: timeout, no data was transferred for %v", args.Timeout)
 		}
 		return fmt.Errorf("Failed to upload file: %s", err)

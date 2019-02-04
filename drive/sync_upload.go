@@ -34,7 +34,7 @@ func (self *Drive) UploadSync(args UploadSyncArgs) error {
 	started := time.Now()
 
 	// Create root directory if it does not exist
-	rootDir, err := self.prepareSyncRoot(args)
+	rootDir, err := self.prepareSyncRoot(args, 1)
 	if err != nil {
 		return err
 	}
@@ -94,10 +94,15 @@ func (self *Drive) UploadSync(args UploadSyncArgs) error {
 	return nil
 }
 
-func (self *Drive) prepareSyncRoot(args UploadSyncArgs) (*drive.File, error) {
+func (self *Drive) prepareSyncRoot(args UploadSyncArgs, try int) (*drive.File, error) {
 	fields := []googleapi.Field{"id", "name", "mimeType", "appProperties"}
 	f, err := self.service.Files.Get(args.RootId).Fields(fields...).Do()
 	if err != nil {
+		if isBackendOrRateLimitError(err) && try < MaxErrorRetries {
+			exponentialBackoffSleep(try)
+			try++
+			return self.prepareSyncRoot(args, try)
+		}
 		return nil, fmt.Errorf("Failed to find root dir: %s", err)
 	}
 
@@ -113,7 +118,7 @@ func (self *Drive) prepareSyncRoot(args UploadSyncArgs) (*drive.File, error) {
 
 	// This is the first time this directory have been used for sync
 	// Check if the directory is empty
-	isEmpty, err := self.dirIsEmpty(f.Id)
+	isEmpty, err := self.dirIsEmpty(f.Id, 1)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to check if root dir is empty: %s", err)
 	}
@@ -130,6 +135,11 @@ func (self *Drive) prepareSyncRoot(args UploadSyncArgs) (*drive.File, error) {
 
 	f, err = self.service.Files.Update(f.Id, dstFile).Fields(fields...).Do()
 	if err != nil {
+		if isBackendOrRateLimitError(err) && try < MaxErrorRetries {
+			exponentialBackoffSleep(try)
+			try++
+			return self.prepareSyncRoot(args, try)
+		}
 		return nil, fmt.Errorf("Failed to update root directory: %s", err)
 	}
 
@@ -387,10 +397,15 @@ func (self *Drive) deleteRemoteFile(rf *RemoteFile, args UploadSyncArgs, try int
 	return nil
 }
 
-func (self *Drive) dirIsEmpty(id string) (bool, error) {
+func (self *Drive) dirIsEmpty(id string, try int) (bool, error) {
 	query := fmt.Sprintf("'%s' in parents", id)
 	fileList, err := self.service.Files.List().Q(query).Do()
 	if err != nil {
+		if isBackendOrRateLimitError(err) && try < MaxErrorRetries {
+			exponentialBackoffSleep(try)
+			try++
+			return self.dirIsEmpty(id, try)
+		}
 		return false, fmt.Errorf("Empty dir check failed: ", err)
 	}
 

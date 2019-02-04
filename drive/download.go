@@ -24,13 +24,18 @@ type DownloadArgs struct {
 	Timeout   time.Duration
 }
 
-func (self *Drive) Download(args DownloadArgs) error {
+func (self *Drive) Download(args DownloadArgs, try int) error {
 	if args.Recursive {
-		return self.downloadRecursive(args)
+		return self.downloadRecursive(args, 1)
 	}
 
 	f, err := self.service.Files.Get(args.Id).Fields("id", "name", "size", "mimeType", "md5Checksum").Do()
 	if err != nil {
+		if isBackendOrRateLimitError(err) && try < MaxErrorRetries {
+			exponentialBackoffSleep(try)
+			try++
+			return self.Download(args, try)
+		}
 		return fmt.Errorf("Failed to get file: %s", err)
 	}
 
@@ -42,7 +47,7 @@ func (self *Drive) Download(args DownloadArgs) error {
 		return fmt.Errorf("'%s' is a google document and must be exported, see the export command", f.Name)
 	}
 
-	bytes, rate, err := self.downloadBinary(f, args)
+	bytes, rate, err := self.downloadBinary(f, args, 1)
 	if err != nil {
 		return err
 	}
@@ -52,7 +57,7 @@ func (self *Drive) Download(args DownloadArgs) error {
 	}
 
 	if args.Delete {
-		err = self.deleteFile(args.Id)
+		err = self.deleteFile(args.Id, 1)
 		if err != nil {
 			return fmt.Errorf("Failed to delete file: %s", err)
 		}
@@ -79,7 +84,7 @@ func (self *Drive) DownloadQuery(args DownloadQueryArgs) error {
 		query:  args.Query,
 		fields: []googleapi.Field{"nextPageToken", "files(id,name,mimeType,size,md5Checksum)"},
 	}
-	files, err := self.listAllFiles(listArgs)
+	files, err := self.listAllFiles(listArgs, 1)
 	if err != nil {
 		return fmt.Errorf("Failed to list files: %s", err)
 	}
@@ -96,7 +101,7 @@ func (self *Drive) DownloadQuery(args DownloadQueryArgs) error {
 		if isDir(f) && args.Recursive {
 			err = self.downloadDirectory(f, downloadArgs)
 		} else if isBinary(f) {
-			_, _, err = self.downloadBinary(f, downloadArgs)
+			_, _, err = self.downloadBinary(f, downloadArgs, 1)
 		}
 
 		if err != nil {
@@ -107,29 +112,38 @@ func (self *Drive) DownloadQuery(args DownloadQueryArgs) error {
 	return nil
 }
 
-func (self *Drive) downloadRecursive(args DownloadArgs) error {
+func (self *Drive) downloadRecursive(args DownloadArgs, try int) error {
 	f, err := self.service.Files.Get(args.Id).Fields("id", "name", "size", "mimeType", "md5Checksum").Do()
 	if err != nil {
+		if isBackendOrRateLimitError(err) && try < MaxErrorRetries {
+			exponentialBackoffSleep(try)
+			try++
+			return self.downloadRecursive(args, try)
+		}
 		return fmt.Errorf("Failed to get file: %s", err)
 	}
 
 	if isDir(f) {
 		return self.downloadDirectory(f, args)
 	} else if isBinary(f) {
-		_, _, err = self.downloadBinary(f, args)
+		_, _, err = self.downloadBinary(f, args, 1)
 		return err
 	}
 
 	return nil
 }
 
-func (self *Drive) downloadBinary(f *drive.File, args DownloadArgs) (int64, int64, error) {
+func (self *Drive) downloadBinary(f *drive.File, args DownloadArgs, try int) (int64, int64, error) {
 	// Get timeout reader wrapper and context
 	timeoutReaderWrapper, ctx := getTimeoutReaderWrapperContext(args.Timeout)
 
 	res, err := self.service.Files.Get(f.Id).Context(ctx).Download()
 	if err != nil {
-		if isTimeoutError(err) {
+		if isBackendOrRateLimitError(err) && try < MaxErrorRetries {
+			exponentialBackoffSleep(try)
+			try++
+			return self.downloadBinary(f, args, try)
+		} else if isTimeoutError(err) {
 			return 0, 0, fmt.Errorf("Failed to download file: timeout, no data was transferred for %v", args.Timeout)
 		}
 		return 0, 0, fmt.Errorf("Failed to download file: %s", err)
@@ -228,7 +242,7 @@ func (self *Drive) downloadDirectory(parent *drive.File, args DownloadArgs) erro
 		query:  fmt.Sprintf("'%s' in parents", parent.Id),
 		fields: []googleapi.Field{"nextPageToken", "files(id,name)"},
 	}
-	files, err := self.listAllFiles(listArgs)
+	files, err := self.listAllFiles(listArgs, 1)
 	if err != nil {
 		return fmt.Errorf("Failed listing files: %s", err)
 	}
@@ -242,7 +256,7 @@ func (self *Drive) downloadDirectory(parent *drive.File, args DownloadArgs) erro
 		newArgs.Id = f.Id
 		newArgs.Stdout = false
 
-		err = self.downloadRecursive(newArgs)
+		err = self.downloadRecursive(newArgs, 1)
 		if err != nil {
 			return err
 		}

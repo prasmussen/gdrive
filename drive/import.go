@@ -42,7 +42,7 @@ func (self *Drive) Import(args ImportArgs) error {
 		Path:     args.Path,
 		Parents:  args.Parents,
 		Mime:     toMimes[0],
-	})
+	}, 1)
 	if err != nil {
 		return err
 	}

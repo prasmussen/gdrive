@@ -19,7 +19,7 @@ func (self *Drive) ListSync(args ListSyncArgs) error {
 		query:  "appProperties has {key='syncRoot' and value='true'}",
 		fields: []googleapi.Field{"nextPageToken", "files(id,name,mimeType,createdTime)"},
 	}
-	files, err := self.listAllFiles(listArgs)
+	files, err := self.listAllFiles(listArgs, 1)
 	if err != nil {
 		return err
 	}
@@ -37,7 +37,7 @@ type ListRecursiveSyncArgs struct {
 }
 
 func (self *Drive) ListRecursiveSync(args ListRecursiveSyncArgs) error {
-	rootDir, err := self.getSyncRoot(args.RootId)
+	rootDir, err := self.getSyncRoot(args.RootId, 1)
 	if err != nil {
 		return err
 	}

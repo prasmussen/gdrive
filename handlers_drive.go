@@ -61,7 +61,7 @@ func downloadHandler(ctx cli.Context) {
 		Stdout:    args.Bool("stdout"),
 		Progress:  progressWriter(args.Bool("noProgress")),
 		Timeout:   durationInSeconds(args.Int64("timeout")),
-	})
+	}, 1)
 	checkErr(err)
 }
 
@@ -127,7 +127,7 @@ func uploadHandler(ctx cli.Context) {
 		Delete:      args.Bool("delete"),
 		ChunkSize:   args.Int64("chunksize"),
 		Timeout:     durationInSeconds(args.Int64("timeout")),
-	})
+	}, 1)
 	checkErr(err)
 }
 
@@ -144,7 +144,7 @@ func uploadStdinHandler(ctx cli.Context) {
 		ChunkSize:   args.Int64("chunksize"),
 		Timeout:     durationInSeconds(args.Int64("timeout")),
 		Progress:    progressWriter(args.Bool("noProgress")),
-	})
+	}, 1)
 	checkErr(err)
 }
 
@@ -179,7 +179,7 @@ func updateHandler(ctx cli.Context) {
 		Progress:    progressWriter(args.Bool("noProgress")),
 		ChunkSize:   args.Int64("chunksize"),
 		Timeout:     durationInSeconds(args.Int64("timeout")),
-	})
+	}, 1)
 	checkErr(err)
 }
 
@@ -189,7 +189,7 @@ func infoHandler(ctx cli.Context) {
 		Out:         os.Stdout,
 		Id:          args.String("fileId"),
 		SizeInBytes: args.Bool("sizeInBytes"),
-	})
+	}, 1)
 	checkErr(err)
 }
 
@@ -213,7 +213,7 @@ func exportHandler(ctx cli.Context) {
 		Mime:       args.String("mime"),
 		PrintMimes: args.Bool("printMimes"),
 		Force:      args.Bool("force"),
-	})
+	}, 1)
 	checkErr(err)
 }
 
@@ -279,7 +279,7 @@ func deleteHandler(ctx cli.Context) {
 		Out:       os.Stdout,
 		Id:        args.String("fileId"),
 		Recursive: args.Bool("recursive"),
-	})
+	}, 1)
 	checkErr(err)
 }
 

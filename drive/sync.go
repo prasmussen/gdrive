@@ -85,9 +85,14 @@ func (self *Drive) prepareSyncFiles(localPath string, root *drive.File, cmp File
 	}, nil
 }
 
-func (self *Drive) isSyncFile(id string) (bool, error) {
+func (self *Drive) isSyncFile(id string, try int) (bool, error) {
 	f, err := self.service.Files.Get(id).Fields("appProperties").Do()
 	if err != nil {
+		if isBackendOrRateLimitError(err) && try < MaxErrorRetries {
+			exponentialBackoffSleep(try)
+			try++
+			return self.isSyncFile(id, try)
+		}
 		return false, fmt.Errorf("Failed to get file: %s", err)
 	}
 
@@ -159,7 +164,7 @@ func (self *Drive) prepareRemoteFiles(rootDir *drive.File, sortOrder string) ([]
 		fields:    []googleapi.Field{"nextPageToken", "files(id,name,parents,md5Checksum,mimeType,size,modifiedTime)"},
 		sortOrder: sortOrder,
 	}
-	files, err := self.listAllFiles(listArgs)
+	files, err := self.listAllFiles(listArgs, 1)
 	if err != nil {
 		return nil, fmt.Errorf("Failed listing files: %s", err)
 	}
