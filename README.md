@@ -17,6 +17,9 @@ If you want to compile from source you need the [go toolchain](http://golang.org
 Version 1.5 or higher.
 
 ## Installation
+Warning, compiling from source code may overwhelm API due to number of users usins the same credentials from developer
+   SEE tutorials for install !
+   
 ### With [Homebrew](http://brew.sh) on Mac
 ```
 brew install gdrive
