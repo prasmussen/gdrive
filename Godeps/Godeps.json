@@ -1,8 +1,31 @@
 {
 	"ImportPath": "github.com/prasmussen/gdrive",
-	"GoVersion": "go1.6",
+	"GoVersion": "go1.10",
 	"GodepVersion": "v80",
+	"Packages": [
+		"./..."
+	],
 	"Deps": [
+		{
+			"ImportPath": "cloud.google.com/go/compute/metadata",
+			"Comment": "v0.35.1-5-gb2f67320",
+			"Rev": "b2f67320b4ef8ea4a3b762e54394254d11fa2844"
+		},
+		{
+			"ImportPath": "github.com/sabhiram/go-git-ignore",
+			"Comment": "1.0.2",
+			"Rev": "d3107576ba9425fc1c85f4b3569c4631b805a02e"
+		},
+		{
+			"ImportPath": "github.com/soniakeys/bits",
+			"Comment": "v1.0.0",
+			"Rev": "6d078272e8c4c60e9a39dbd1415f6ca61ee30be7"
+		},
+		{
+			"ImportPath": "github.com/soniakeys/graph",
+			"Comment": "v0.0.0-27-g7b5d1f6",
+			"Rev": "7b5d1f6e4fe06231cf5c9a55229321b73e167913"
+		},
 		{
 			"ImportPath": "golang.org/x/net/context",
 			"Rev": "d26f9f9a57f3fab6a695bec0d84433c2c50f8bbf"
@@ -16,8 +39,40 @@
 			"Rev": "99b60b757ec124ebb7d6b7e97f153b19c10ce163"
 		},
 		{
+			"ImportPath": "golang.org/x/oauth2/google",
+			"Rev": "99b60b757ec124ebb7d6b7e97f153b19c10ce163"
+		},
+		{
 			"ImportPath": "golang.org/x/oauth2/internal",
 			"Rev": "99b60b757ec124ebb7d6b7e97f153b19c10ce163"
+		},
+		{
+			"ImportPath": "golang.org/x/oauth2/jws",
+			"Rev": "99b60b757ec124ebb7d6b7e97f153b19c10ce163"
+		},
+		{
+			"ImportPath": "golang.org/x/oauth2/jwt",
+			"Rev": "99b60b757ec124ebb7d6b7e97f153b19c10ce163"
+		},
+		{
+			"ImportPath": "google.golang.org/api/drive/v3",
+			"Comment": "v0.1.0-17-gd236112f5",
+			"Rev": "d236112f57134c870530b511f69766d9805df835"
+		},
+		{
+			"ImportPath": "google.golang.org/api/gensupport",
+			"Comment": "v0.1.0-17-gd236112f5",
+			"Rev": "d236112f57134c870530b511f69766d9805df835"
+		},
+		{
+			"ImportPath": "google.golang.org/api/googleapi",
+			"Comment": "v0.1.0-17-gd236112f5",
+			"Rev": "d236112f57134c870530b511f69766d9805df835"
+		},
+		{
+			"ImportPath": "google.golang.org/api/googleapi/internal/uritemplates",
+			"Comment": "v0.1.0-17-gd236112f5",
+			"Rev": "d236112f57134c870530b511f69766d9805df835"
 		}
 	]
 }

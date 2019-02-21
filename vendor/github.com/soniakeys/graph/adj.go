@@ -11,33 +11,32 @@ package graph
 // be left near their use.
 
 import (
-	"math"
 	"sort"
+
+	"github.com/soniakeys/bits"
 )
 
-// HasParallelSort identifies if a graph contains parallel arcs, multiple arcs
+// AnyParallel identifies if a graph contains parallel arcs, multiple arcs
 // that lead from a node to the same node.
 //
 // If the graph has parallel arcs, the results fr and to represent an example
-// where there are parallel arcs from node fr to node to.
+// where there are parallel arcs from node `fr` to node `to`.
 //
 // If there are no parallel arcs, the method returns false -1 -1.
 //
 // Multiple loops on a node count as parallel arcs.
 //
-// "Sort" in the method name indicates that sorting is used to detect parallel
-// arcs.  Compared to method HasParallelMap, this may give better performance
-// for small or sparse graphs but will have asymtotically worse performance for
-// large dense graphs.
-func (g AdjacencyList) HasParallelSort() (has bool, fr, to NI) {
-	var t NodeList
+// See also alt.AnyParallelMap, which can perform better for some large
+// or dense graphs.
+func (g AdjacencyList) AnyParallel() (has bool, fr, to NI) {
+	var t []NI
 	for n, to := range g {
 		if len(to) == 0 {
 			continue
 		}
 		// different code in the labeled version, so no code gen.
 		t = append(t[:0], to...)
-		sort.Sort(t)
+		sort.Slice(t, func(i, j int) bool { return t[i] < t[j] })
 		t0 := t[0]
 		for _, to := range t[1:] {
 			if to == t0 {
@@ -47,6 +46,33 @@ func (g AdjacencyList) HasParallelSort() (has bool, fr, to NI) {
 		}
 	}
 	return false, -1, -1
+}
+
+// Complement returns the arc-complement of a simple graph.
+//
+// The result will have an arc for every pair of distinct nodes where there
+// is not an arc in g.  The complement is valid for both directed and
+// undirected graphs.  If g is undirected, the complement will be undirected.
+// The result will always be a simple graph, having no loops or parallel arcs.
+func (g AdjacencyList) Complement() AdjacencyList {
+	c := make(AdjacencyList, len(g))
+	b := bits.New(len(g))
+	for n, to := range g {
+		b.ClearAll()
+		for _, to := range to {
+			b.SetBit(int(to), 1)
+		}
+		b.SetBit(n, 1)
+		ct := make([]NI, len(g)-b.OnesCount())
+		i := 0
+		b.IterateZeros(func(to int) bool {
+			ct[i] = NI(to)
+			i++
+			return true
+		})
+		c[n] = ct
+	}
+	return c
 }
 
 // IsUndirected returns true if g represents an undirected graph.
@@ -84,13 +110,25 @@ func (g AdjacencyList) IsUndirected() (u bool, from, to NI) {
 	return true, -1, -1
 }
 
-// Edgelist constructs the edge list rerpresentation of a graph.
+// SortArcLists sorts the arc lists of each node of receiver g.
 //
-// An edge is returned for each arc of the graph.  For undirected graphs
-// this includes reciprocal edges.
+// Nodes are not relabeled and the graph remains equivalent.
+func (g AdjacencyList) SortArcLists() {
+	for _, to := range g {
+		sort.Slice(to, func(i, j int) bool { return to[i] < to[j] })
+	}
+}
+
+// ------- Labeled methods below -------
+
+// ArcsAsEdges constructs an edge list with an edge for each arc, including
+// reciprocals.
 //
-// See also WeightedEdgeList method.
-func (g LabeledAdjacencyList) EdgeList() (el []LabeledEdge) {
+// This is a simple way to construct an edge list for algorithms that allow
+// the duplication represented by the reciprocal arcs.  (e.g. Kruskal)
+//
+// See also LabeledUndirected.Edges for the edge list without this duplication.
+func (g LabeledAdjacencyList) ArcsAsEdges() (el []LabeledEdge) {
 	for fr, to := range g {
 		for _, to := range to {
 			el = append(el, LabeledEdge{Edge{NI(fr), to.To}, to.Label})
@@ -99,60 +137,34 @@ func (g LabeledAdjacencyList) EdgeList() (el []LabeledEdge) {
 	return
 }
 
-// FloydWarshall finds all pairs shortest distances for a simple weighted
-// graph without negative cycles.
+// DistanceMatrix constructs a distance matrix corresponding to the arcs
+// of graph g and weight function w.
 //
-// In result array d, d[i][j] will be the shortest distance from node i
-// to node j.  Any diagonal element < 0 indicates a negative cycle exists.
+// An arc from f to t with WeightFunc return w is represented by d[f][t] == w.
+// In case of parallel arcs, the lowest weight is stored.  The distance from
+// any node to itself d[n][n] is 0, unless the node has a loop with a negative
+// weight.  If g has no arc from f to distinct t, +Inf is stored for d[f][t].
 //
-// If g is an undirected graph with no negative edge weights, the result
-// array will be a distance matrix, for example as used by package
-// github.com/soniakeys/cluster.
-func (g LabeledAdjacencyList) FloydWarshall(w WeightFunc) (d [][]float64) {
-	d = newFWd(len(g))
+// The returned DistanceMatrix is suitable for DistanceMatrix.FloydWarshall.
+func (g LabeledAdjacencyList) DistanceMatrix(w WeightFunc) (d DistanceMatrix) {
+	d = newDM(len(g))
 	for fr, to := range g {
 		for _, to := range to {
-			d[fr][to.To] = w(to.Label)
+			// < to pick min of parallel arcs (also nicely ignores NaN)
+			if wt := w(to.Label); wt < d[fr][to.To] {
+				d[fr][to.To] = wt
+			}
 		}
 	}
-	solveFW(d)
 	return
 }
 
-// little helper function, makes a blank matrix for FloydWarshall.
-func newFWd(n int) [][]float64 {
-	d := make([][]float64, n)
-	for i := range d {
-		di := make([]float64, n)
-		for j := range di {
-			if j != i {
-				di[j] = math.Inf(1)
-			}
-		}
-		d[i] = di
-	}
-	return d
-}
-
-// Floyd Warshall solver, once the matrix d is initialized by arc weights.
-func solveFW(d [][]float64) {
-	for k, dk := range d {
-		for _, di := range d {
-			dik := di[k]
-			for j := range d {
-				if d2 := dik + dk[j]; d2 < di[j] {
-					di[j] = d2
-				}
-			}
-		}
-	}
-}
-
-// HasArcLabel returns true if g has any arc from node fr to node to
-// with label l.
+// HasArcLabel returns true if g has any arc from node `fr` to node `to`
+// with label `l`.
 //
-// Also returned is the index within the slice of arcs from node fr.
-// If no arc from fr to to is present, HasArcLabel returns false, -1.
+// Also returned is the index within the slice of arcs from node `fr`.
+// If no arc from `fr` to `to` with label `l` is present, HasArcLabel returns
+// false, -1.
 func (g LabeledAdjacencyList) HasArcLabel(fr, to NI, l LI) (bool, int) {
 	t := Half{to, l}
 	for x, h := range g[fr] {
@@ -163,22 +175,20 @@ func (g LabeledAdjacencyList) HasArcLabel(fr, to NI, l LI) (bool, int) {
 	return false, -1
 }
 
-// HasParallelSort identifies if a graph contains parallel arcs, multiple arcs
+// AnyParallel identifies if a graph contains parallel arcs, multiple arcs
 // that lead from a node to the same node.
 //
 // If the graph has parallel arcs, the results fr and to represent an example
-// where there are parallel arcs from node fr to node to.
+// where there are parallel arcs from node `fr` to node `to`.
 //
 // If there are no parallel arcs, the method returns -1 -1.
 //
 // Multiple loops on a node count as parallel arcs.
 //
-// "Sort" in the method name indicates that sorting is used to detect parallel
-// arcs.  Compared to method HasParallelMap, this may give better performance
-// for small or sparse graphs but will have asymtotically worse performance for
-// large dense graphs.
-func (g LabeledAdjacencyList) HasParallelSort() (has bool, fr, to NI) {
-	var t NodeList
+// See also alt.AnyParallelMap, which can perform better for some large
+// or dense graphs.
+func (g LabeledAdjacencyList) AnyParallel() (has bool, fr, to NI) {
+	var t []NI
 	for n, to := range g {
 		if len(to) == 0 {
 			continue
@@ -188,7 +198,7 @@ func (g LabeledAdjacencyList) HasParallelSort() (has bool, fr, to NI) {
 		for _, to := range to {
 			t = append(t, to.To)
 		}
-		sort.Sort(t)
+		sort.Slice(t, func(i, j int) bool { return t[i] < t[j] })
 		t0 := t[0]
 		for _, to := range t[1:] {
 			if to == t0 {
@@ -200,6 +210,42 @@ func (g LabeledAdjacencyList) HasParallelSort() (has bool, fr, to NI) {
 	return false, -1, -1
 }
 
+// AnyParallelLabel identifies if a graph contains parallel arcs with the same
+// label.
+//
+// If the graph has parallel arcs with the same label, the results fr and to
+// represent an example where there are parallel arcs from node `fr`
+// to node `to`.
+//
+// If there are no parallel arcs, the method returns false -1 Half{}.
+//
+// Multiple loops on a node count as parallel arcs.
+func (g LabeledAdjacencyList) AnyParallelLabel() (has bool, fr NI, to Half) {
+	var t []Half
+	for n, to := range g {
+		if len(to) == 0 {
+			continue
+		}
+		// slightly different code needed here compared to AdjacencyList
+		t = t[:0]
+		for _, to := range to {
+			t = append(t, to)
+		}
+		sort.Slice(t, func(i, j int) bool {
+			return t[i].To < t[j].To ||
+				t[i].To == t[j].To && t[i].Label < t[j].Label
+		})
+		t0 := t[0]
+		for _, to := range t[1:] {
+			if to == t0 {
+				return true, NI(n), t0
+			}
+			t0 = to
+		}
+	}
+	return false, -1, Half{}
+}
+
 // IsUndirected returns true if g represents an undirected graph.
 //
 // Returns true when all non-loop arcs are paired in reciprocal pairs with
@@ -209,6 +255,7 @@ func (g LabeledAdjacencyList) HasParallelSort() (has bool, fr, to NI) {
 // an additional test not present in the otherwise equivalent unlabeled version
 // of IsUndirected.
 func (g LabeledAdjacencyList) IsUndirected() (u bool, from NI, to Half) {
+	// similar code in LabeledAdjacencyList.Edges
 	unpaired := make(LabeledAdjacencyList, len(g))
 	for fr, to := range g {
 	arc: // for each arc in g
@@ -238,6 +285,17 @@ func (g LabeledAdjacencyList) IsUndirected() (u bool, from NI, to Half) {
 	return true, -1, to
 }
 
+// ArcLabels constructs the multiset of LIs present in g.
+func (g LabeledAdjacencyList) ArcLabels() map[LI]int {
+	s := map[LI]int{}
+	for _, to := range g {
+		for _, to := range to {
+			s[to.Label]++
+		}
+	}
+	return s
+}
+
 // NegativeArc returns true if the receiver graph contains a negative arc.
 func (g LabeledAdjacencyList) NegativeArc(w WeightFunc) bool {
 	for _, nbs := range g {
@@ -248,6 +306,23 @@ func (g LabeledAdjacencyList) NegativeArc(w WeightFunc) bool {
 		}
 	}
 	return false
+}
+
+// ParallelArcsLabel identifies all arcs from node `fr` to node `to` with label `l`.
+//
+// The returned slice contains an element for each arc from node `fr` to node `to`
+// with label `l`.  The element value is the index within the slice of arcs from node
+// `fr`.
+//
+// See also the method HasArcLabel, which stops after finding a single arc.
+func (g LabeledAdjacencyList) ParallelArcsLabel(fr, to NI, l LI) (p []int) {
+	t := Half{to, l}
+	for x, h := range g[fr] {
+		if h == t {
+			p = append(p, x)
+		}
+	}
+	return
 }
 
 // Unlabeled constructs the unlabeled graph corresponding to g.
@@ -263,16 +338,15 @@ func (g LabeledAdjacencyList) Unlabeled() AdjacencyList {
 	return a
 }
 
-// WeightedEdgeList constructs a WeightedEdgeList object from a
-// LabeledAdjacencyList.
+// WeightedArcsAsEdges constructs a WeightedEdgeList object from the receiver.
 //
-// Internally it calls g.EdgeList() to obtain the Edges member.
-// See LabeledAdjacencyList.EdgeList().
-func (g LabeledAdjacencyList) WeightedEdgeList(w WeightFunc) *WeightedEdgeList {
+// Internally it calls g.ArcsAsEdges() to obtain the Edges member.
+// See LabeledAdjacencyList.ArcsAsEdges().
+func (g LabeledAdjacencyList) WeightedArcsAsEdges(w WeightFunc) *WeightedEdgeList {
 	return &WeightedEdgeList{
-		Order:      len(g),
+		Order:      g.Order(),
 		WeightFunc: w,
-		Edges:      g.EdgeList(),
+		Edges:      g.ArcsAsEdges(),
 	}
 }
 

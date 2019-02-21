@@ -3,40 +3,97 @@
 
 package graph
 
+import (
+	"errors"
+	"fmt"
+
+	"github.com/soniakeys/bits"
+)
+
 // undir_RO.go is code generated from undir_cg.go by directives in graph.go.
 // Editing undir_cg.go is okay.  It is the code generation source.
 // DO NOT EDIT undir_RO.go.
 // The RO means read only and it is upper case RO to slow you down a bit
 // in case you start to edit the file.
+//-------------------
 
-// Bipartite determines if a connected component of an undirected graph
-// is bipartite, a component where nodes can be partitioned into two sets
-// such that every edge in the component goes from one set to the other.
+// Bipartite constructs an object indexing the bipartite structure of a graph.
 //
-// Argument n can be any representative node of the component.
+// In a bipartite component, nodes can be partitioned into two sets, or
+// "colors," such that every edge in the component goes from one set to the
+// other.
 //
-// If the component is bipartite, Bipartite returns true and a two-coloring
-// of the component.  Each color set is returned as a bitmap.  If the component
-// is not bipartite, Bipartite returns false and a representative odd cycle.
+// If the graph is bipartite, the method constructs and returns a new
+// Bipartite object as b and returns ok = true.
+//
+// If the component is not bipartite, a representative odd cycle as oc and
+// returns ok = false.
+//
+// In the case of a graph with mulitiple connected components, this method
+// provides no control over the color orientation by component.  See
+// Undirected.BipartiteComponent if this control is needed.
 //
 // There are equivalent labeled and unlabeled versions of this method.
-func (g LabeledUndirected) Bipartite(n NI) (b bool, c1, c2 Bits, oc []NI) {
+func (g LabeledUndirected) Bipartite() (b *LabeledBipartite, oc []NI, ok bool) {
+	c1 := bits.New(g.Order())
+	c2 := bits.New(g.Order())
+	r, _, _ := g.ConnectedComponentReps()
+	// accumulate n2 number of zero bits in c2 as number of one bits in n1
+	var n, n2 int
+	for _, r := range r {
+		ok, n, _, oc = g.BipartiteComponent(r, c1, c2)
+		if !ok {
+			return
+		}
+		n2 += n
+	}
+	return &LabeledBipartite{g, c2, n2}, nil, true
+}
+
+// BipartiteComponent analyzes the bipartite structure of a connected component
+// of an undirected graph.
+//
+// In a bipartite component, nodes can be partitioned into two sets, or
+// "colors," such that every edge in the component goes from one set to the
+// other.
+//
+// Argument n can be any representative node of the component to be analyzed.
+// Arguments c1 and c2 must be separate bits.Bits objects constructed to be
+// of length of the number of nodes of g.  These bitmaps are used in the
+// component traversal and the bits of the component must be zero when the
+// method is called.
+//
+// If the component is bipartite, BipartiteComponent populates bitmaps
+// c1 and c2 with the two-coloring of the component, always assigning the set
+// with representative node n to bitmap c1.  It returns b = true,
+// and also returns the number of bits set in c1 and c2 as n1 and n2
+// respectively.
+//
+// If the component is not bipartite, BipartiteComponent returns b = false
+// and a representative odd cycle as oc.
+//
+// See also method Bipartite.
+//
+// There are equivalent labeled and unlabeled versions of this method.
+func (g LabeledUndirected) BipartiteComponent(n NI, c1, c2 bits.Bits) (b bool, n1, n2 int, oc []NI) {
+	a := g.LabeledAdjacencyList
 	b = true
 	var open bool
-	var df func(n NI, c1, c2 *Bits)
-	df = func(n NI, c1, c2 *Bits) {
-		c1.SetBit(n, 1)
-		for _, nb := range g.LabeledAdjacencyList[n] {
-			if c1.Bit(nb.To) == 1 {
+	var df func(n NI, c1, c2 *bits.Bits, n1, n2 *int)
+	df = func(n NI, c1, c2 *bits.Bits, n1, n2 *int) {
+		c1.SetBit(int(n), 1)
+		*n1++
+		for _, nb := range a[n] {
+			if c1.Bit(int(nb.To)) == 1 {
 				b = false
 				oc = []NI{nb.To, n}
 				open = true
 				return
 			}
-			if c2.Bit(nb.To) == 1 {
+			if c2.Bit(int(nb.To)) == 1 {
 				continue
 			}
-			df(nb.To, c2, c1)
+			df(nb.To, c2, c1, n2, n1)
 			if b {
 				continue
 			}
@@ -50,11 +107,11 @@ func (g LabeledUndirected) Bipartite(n NI) (b bool, c1, c2 Bits, oc []NI) {
 			return
 		}
 	}
-	df(n, &c1, &c2)
+	df(n, &c1, &c2, &n1, &n2)
 	if b {
-		return b, c1, c2, nil
+		return b, n1, n2, nil
 	}
-	return b, Bits{}, Bits{}, oc
+	return b, 0, 0, oc
 }
 
 // BronKerbosch1 finds maximal cliques in an undirected graph.
@@ -74,44 +131,49 @@ func (g LabeledUndirected) Bipartite(n NI) (b bool, c1, c2 Bits, oc []NI) {
 // There are equivalent labeled and unlabeled versions of this method.
 //
 // See also more sophisticated variants BronKerbosch2 and BronKerbosch3.
-func (g LabeledUndirected) BronKerbosch1(emit func([]NI) bool) {
+func (g LabeledUndirected) BronKerbosch1(emit func(bits.Bits) bool) {
 	a := g.LabeledAdjacencyList
-	var f func(R, P, X *Bits) bool
-	f = func(R, P, X *Bits) bool {
+	var f func(R, P, X bits.Bits) bool
+	f = func(R, P, X bits.Bits) bool {
 		switch {
-		case !P.Zero():
-			var r2, p2, x2 Bits
-			pf := func(n NI) bool {
-				r2.Set(*R)
+		case !P.AllZeros():
+			r2 := bits.New(len(a))
+			p2 := bits.New(len(a))
+			x2 := bits.New(len(a))
+			pf := func(n int) bool {
+				r2.Set(R)
 				r2.SetBit(n, 1)
-				p2.Clear()
-				x2.Clear()
+				p2.ClearAll()
+				x2.ClearAll()
 				for _, to := range a[n] {
-					if P.Bit(to.To) == 1 {
-						p2.SetBit(to.To, 1)
+					if P.Bit(int(to.To)) == 1 {
+						p2.SetBit(int(to.To), 1)
 					}
-					if X.Bit(to.To) == 1 {
-						x2.SetBit(to.To, 1)
+					if X.Bit(int(to.To)) == 1 {
+						x2.SetBit(int(to.To), 1)
 					}
 				}
-				if !f(&r2, &p2, &x2) {
+				if !f(r2, p2, x2) {
 					return false
 				}
 				P.SetBit(n, 0)
 				X.SetBit(n, 1)
 				return true
 			}
-			if !P.Iterate(pf) {
+			if !P.IterateOnes(pf) {
 				return false
 			}
-		case X.Zero():
-			return emit(R.Slice())
+		case X.AllZeros():
+			return emit(R)
 		}
 		return true
 	}
-	var R, P, X Bits
-	P.SetAll(len(a))
-	f(&R, &P, &X)
+	var R, P, X bits.Bits
+	R = bits.New(len(a))
+	P = bits.New(len(a))
+	X = bits.New(len(a))
+	P.SetAll()
+	f(R, P, X)
 }
 
 // BKPivotMaxDegree is a strategy for BronKerbosch methods.
@@ -124,20 +186,20 @@ func (g LabeledUndirected) BronKerbosch1(emit func([]NI) bool) {
 // in P.
 //
 // There are equivalent labeled and unlabeled versions of this method.
-func (g LabeledUndirected) BKPivotMaxDegree(P, X *Bits) (p NI) {
+func (g LabeledUndirected) BKPivotMaxDegree(P, X bits.Bits) (p NI) {
 	// choose pivot u as highest degree node from P or X
 	a := g.LabeledAdjacencyList
 	maxDeg := -1
-	P.Iterate(func(n NI) bool { // scan P
+	P.IterateOnes(func(n int) bool { // scan P
 		if d := len(a[n]); d > maxDeg {
-			p = n
+			p = NI(n)
 			maxDeg = d
 		}
 		return true
 	})
-	X.Iterate(func(n NI) bool { // scan X
+	X.IterateOnes(func(n int) bool { // scan X
 		if d := len(a[n]); d > maxDeg {
-			p = n
+			p = NI(n)
 			maxDeg = d
 		}
 		return true
@@ -153,8 +215,8 @@ func (g LabeledUndirected) BKPivotMaxDegree(P, X *Bits) (p NI) {
 // The strategy is to simply pick the first node in P.
 //
 // There are equivalent labeled and unlabeled versions of this method.
-func (g LabeledUndirected) BKPivotMinP(P, X *Bits) NI {
-	return P.From(0)
+func (g LabeledUndirected) BKPivotMinP(P, X bits.Bits) NI {
+	return NI(P.OneFrom(0))
 }
 
 // BronKerbosch2 finds maximal cliques in an undirected graph.
@@ -179,50 +241,55 @@ func (g LabeledUndirected) BKPivotMinP(P, X *Bits) NI {
 //
 // See also simpler variant BronKerbosch1 and more sophisticated variant
 // BronKerbosch3.
-func (g LabeledUndirected) BronKerbosch2(pivot func(P, X *Bits) NI, emit func([]NI) bool) {
+func (g LabeledUndirected) BronKerbosch2(pivot func(P, X bits.Bits) NI, emit func(bits.Bits) bool) {
 	a := g.LabeledAdjacencyList
-	var f func(R, P, X *Bits) bool
-	f = func(R, P, X *Bits) bool {
+	var f func(R, P, X bits.Bits) bool
+	f = func(R, P, X bits.Bits) bool {
 		switch {
-		case !P.Zero():
-			var r2, p2, x2, pnu Bits
+		case !P.AllZeros():
+			r2 := bits.New(len(a))
+			p2 := bits.New(len(a))
+			x2 := bits.New(len(a))
+			pnu := bits.New(len(a))
 			// compute P \ N(u).  next 5 lines are only difference from BK1
-			pnu.Set(*P)
+			pnu.Set(P)
 			for _, to := range a[pivot(P, X)] {
-				pnu.SetBit(to.To, 0)
+				pnu.SetBit(int(to.To), 0)
 			}
 			// remaining code like BK1
-			pf := func(n NI) bool {
-				r2.Set(*R)
+			pf := func(n int) bool {
+				r2.Set(R)
 				r2.SetBit(n, 1)
-				p2.Clear()
-				x2.Clear()
+				p2.ClearAll()
+				x2.ClearAll()
 				for _, to := range a[n] {
-					if P.Bit(to.To) == 1 {
-						p2.SetBit(to.To, 1)
+					if P.Bit(int(to.To)) == 1 {
+						p2.SetBit(int(to.To), 1)
 					}
-					if X.Bit(to.To) == 1 {
-						x2.SetBit(to.To, 1)
+					if X.Bit(int(to.To)) == 1 {
+						x2.SetBit(int(to.To), 1)
 					}
 				}
-				if !f(&r2, &p2, &x2) {
+				if !f(r2, p2, x2) {
 					return false
 				}
 				P.SetBit(n, 0)
 				X.SetBit(n, 1)
 				return true
 			}
-			if !pnu.Iterate(pf) {
+			if !pnu.IterateOnes(pf) {
 				return false
 			}
-		case X.Zero():
-			return emit(R.Slice())
+		case X.AllZeros():
+			return emit(R)
 		}
 		return true
 	}
-	var R, P, X Bits
-	P.SetAll(len(a))
-	f(&R, &P, &X)
+	R := bits.New(len(a))
+	P := bits.New(len(a))
+	X := bits.New(len(a))
+	P.SetAll()
+	f(R, P, X)
 }
 
 // BronKerbosch3 finds maximal cliques in an undirected graph.
@@ -246,150 +313,196 @@ func (g LabeledUndirected) BronKerbosch2(pivot func(P, X *Bits) NI, emit func([]
 // There are equivalent labeled and unlabeled versions of this method.
 //
 // See also simpler variants BronKerbosch1 and BronKerbosch2.
-func (g LabeledUndirected) BronKerbosch3(pivot func(P, X *Bits) NI, emit func([]NI) bool) {
+func (g LabeledUndirected) BronKerbosch3(pivot func(P, X bits.Bits) NI, emit func(bits.Bits) bool) {
 	a := g.LabeledAdjacencyList
-	var f func(R, P, X *Bits) bool
-	f = func(R, P, X *Bits) bool {
+	var f func(R, P, X bits.Bits) bool
+	f = func(R, P, X bits.Bits) bool {
 		switch {
-		case !P.Zero():
-			var r2, p2, x2, pnu Bits
+		case !P.AllZeros():
+			r2 := bits.New(len(a))
+			p2 := bits.New(len(a))
+			x2 := bits.New(len(a))
+			pnu := bits.New(len(a))
 			// compute P \ N(u).  next lines are only difference from BK1
-			pnu.Set(*P)
+			pnu.Set(P)
 			for _, to := range a[pivot(P, X)] {
-				pnu.SetBit(to.To, 0)
+				pnu.SetBit(int(to.To), 0)
 			}
 			// remaining code like BK2
-			pf := func(n NI) bool {
-				r2.Set(*R)
+			pf := func(n int) bool {
+				r2.Set(R)
 				r2.SetBit(n, 1)
-				p2.Clear()
-				x2.Clear()
+				p2.ClearAll()
+				x2.ClearAll()
 				for _, to := range a[n] {
-					if P.Bit(to.To) == 1 {
-						p2.SetBit(to.To, 1)
+					if P.Bit(int(to.To)) == 1 {
+						p2.SetBit(int(to.To), 1)
 					}
-					if X.Bit(to.To) == 1 {
-						x2.SetBit(to.To, 1)
+					if X.Bit(int(to.To)) == 1 {
+						x2.SetBit(int(to.To), 1)
 					}
 				}
-				if !f(&r2, &p2, &x2) {
+				if !f(r2, p2, x2) {
 					return false
 				}
 				P.SetBit(n, 0)
 				X.SetBit(n, 1)
 				return true
 			}
-			if !pnu.Iterate(pf) {
+			if !pnu.IterateOnes(pf) {
 				return false
 			}
-		case X.Zero():
-			return emit(R.Slice())
+		case X.AllZeros():
+			return emit(R)
 		}
 		return true
 	}
-	var R, P, X Bits
-	P.SetAll(len(a))
+	R := bits.New(len(a))
+	P := bits.New(len(a))
+	X := bits.New(len(a))
+	P.SetAll()
 	// code above same as BK2
 	// code below new to BK3
-	_, ord, _ := g.Degeneracy()
-	var p2, x2 Bits
+	ord, _ := g.DegeneracyOrdering()
+	p2 := bits.New(len(a))
+	x2 := bits.New(len(a))
 	for _, n := range ord {
-		R.SetBit(n, 1)
-		p2.Clear()
-		x2.Clear()
+		R.SetBit(int(n), 1)
+		p2.ClearAll()
+		x2.ClearAll()
 		for _, to := range a[n] {
-			if P.Bit(to.To) == 1 {
-				p2.SetBit(to.To, 1)
+			if P.Bit(int(to.To)) == 1 {
+				p2.SetBit(int(to.To), 1)
 			}
-			if X.Bit(to.To) == 1 {
-				x2.SetBit(to.To, 1)
+			if X.Bit(int(to.To)) == 1 {
+				x2.SetBit(int(to.To), 1)
 			}
 		}
-		if !f(&R, &p2, &x2) {
+		if !f(R, p2, x2) {
 			return
 		}
-		R.SetBit(n, 0)
-		P.SetBit(n, 0)
-		X.SetBit(n, 1)
+		R.SetBit(int(n), 0)
+		P.SetBit(int(n), 0)
+		X.SetBit(int(n), 1)
 	}
 }
 
 // ConnectedComponentBits returns a function that iterates over connected
 // components of g, returning a member bitmap for each.
 //
-// Each call of the returned function returns the order (number of nodes)
-// and bits of a connected component.  The returned function returns zeros
-// after returning all connected components.
+// Each call of the returned function returns the order, arc size,
+// and bits of a connected component.  The underlying bits allocation is
+// the same for each call and is overwritten on subsequent calls.  Use or
+// save the bits before calling the function again.  The function returns
+// zeros after returning all connected components.
 //
 // There are equivalent labeled and unlabeled versions of this method.
 //
-// See also ConnectedComponentReps, which has lighter weight return values.
-func (g LabeledUndirected) ConnectedComponentBits() func() (order int, bits Bits) {
+// See also ConnectedComponentInts, ConnectedComponentReps, and
+// ConnectedComponentReps.
+func (g LabeledUndirected) ConnectedComponentBits() func() (order, arcSize int, bits bits.Bits) {
 	a := g.LabeledAdjacencyList
-	var vg Bits  // nodes visited in graph
-	var vc *Bits // nodes visited in current component
-	var nc int
+	vg := bits.New(len(a)) // nodes visited in graph
+	vc := bits.New(len(a)) // nodes visited in current component
+	var order, arcSize int
 	var df func(NI)
 	df = func(n NI) {
-		vg.SetBit(n, 1)
-		vc.SetBit(n, 1)
-		nc++
+		vg.SetBit(int(n), 1)
+		vc.SetBit(int(n), 1)
+		order++
+		arcSize += len(a[n])
 		for _, nb := range a[n] {
-			if vg.Bit(nb.To) == 0 {
+			if vg.Bit(int(nb.To)) == 0 {
 				df(nb.To)
 			}
 		}
 		return
 	}
-	var n NI
-	return func() (o int, bits Bits) {
-		for ; n < NI(len(a)); n++ {
+	var n int
+	return func() (o, ma int, b bits.Bits) {
+		for ; n < len(a); n++ {
 			if vg.Bit(n) == 0 {
-				vc = &bits
-				nc = 0
-				df(n)
-				return nc, bits
+				vc.ClearAll()
+				order, arcSize = 0, 0
+				df(NI(n))
+				return order, arcSize, vc
+			}
+		}
+		return // return zeros signalling no more components
+	}
+}
+
+// ConnectedComponenInts returns a list of component numbers (ints) for each
+// node of graph g.
+//
+// The method assigns numbers to components 1-based, 1 through the number of
+// components.  Return value ci contains the component number for each node.
+// Return value nc is the number of components.
+//
+// There are equivalent labeled and unlabeled versions of this method.
+//
+// See also ConnectedComponentBits, ConnectedComponentLists, and
+// ConnectedComponentReps.
+func (g LabeledUndirected) ConnectedComponentInts() (ci []int, nc int) {
+	a := g.LabeledAdjacencyList
+	ci = make([]int, len(a))
+	var df func(NI)
+	df = func(nd NI) {
+		ci[nd] = nc
+		for _, to := range a[nd] {
+			if ci[to.To] == 0 {
+				df(to.To)
 			}
 		}
 		return
 	}
+	for nd := range a {
+		if ci[nd] == 0 {
+			nc++
+			df(NI(nd))
+		}
+	}
+	return
 }
 
 // ConnectedComponentLists returns a function that iterates over connected
 // components of g, returning the member list of each.
 //
 // Each call of the returned function returns a node list of a connected
-// component.  The returned function returns nil after returning all connected
-// components.
+// component and the arc size of the component.  The returned function returns
+// nil, 0 after returning all connected components.
 //
 // There are equivalent labeled and unlabeled versions of this method.
 //
-// See also ConnectedComponentReps, which has lighter weight return values.
-func (g LabeledUndirected) ConnectedComponentLists() func() []NI {
+// See also ConnectedComponentBits, ConnectedComponentInts, and
+// ConnectedComponentReps.
+func (g LabeledUndirected) ConnectedComponentLists() func() (nodes []NI, arcSize int) {
 	a := g.LabeledAdjacencyList
-	var vg Bits // nodes visited in graph
-	var m []NI  // members of current component
+	vg := bits.New(len(a)) // nodes visited in graph
+	var l []NI             // accumulated node list of current component
+	var ma int             // accumulated arc size of current component
 	var df func(NI)
 	df = func(n NI) {
-		vg.SetBit(n, 1)
-		m = append(m, n)
+		vg.SetBit(int(n), 1)
+		l = append(l, n)
+		ma += len(a[n])
 		for _, nb := range a[n] {
-			if vg.Bit(nb.To) == 0 {
+			if vg.Bit(int(nb.To)) == 0 {
 				df(nb.To)
 			}
 		}
 		return
 	}
-	var n NI
-	return func() []NI {
-		for ; n < NI(len(a)); n++ {
+	var n int
+	return func() ([]NI, int) {
+		for ; n < len(a); n++ {
 			if vg.Bit(n) == 0 {
-				m = nil
-				df(n)
-				return m
+				l, ma = nil, 0
+				df(NI(n))
+				return l, ma
 			}
 		}
-		return nil
+		return nil, 0
 	}
 }
 
@@ -397,8 +510,8 @@ func (g LabeledUndirected) ConnectedComponentLists() func() []NI {
 // component of g.
 //
 // Returned is a slice with a single representative node from each connected
-// component and also a parallel slice with the order, or number of nodes,
-// in the corresponding component.
+// component and also parallel slices with the orders and arc sizes
+// in the corresponding components.
 //
 // This is fairly minimal information describing connected components.
 // From a representative node, other nodes in the component can be reached
@@ -409,27 +522,29 @@ func (g LabeledUndirected) ConnectedComponentLists() func() []NI {
 // See also ConnectedComponentBits and ConnectedComponentLists which can
 // collect component members in a single traversal, and IsConnected which
 // is an even simpler boolean test.
-func (g LabeledUndirected) ConnectedComponentReps() (reps []NI, orders []int) {
+func (g LabeledUndirected) ConnectedComponentReps() (reps []NI, orders, arcSizes []int) {
 	a := g.LabeledAdjacencyList
-	var c Bits
-	var o int
+	c := bits.New(len(a))
+	var o, ma int
 	var df func(NI)
 	df = func(n NI) {
-		c.SetBit(n, 1)
+		c.SetBit(int(n), 1)
 		o++
+		ma += len(a[n])
 		for _, nb := range a[n] {
-			if c.Bit(nb.To) == 0 {
+			if c.Bit(int(nb.To)) == 0 {
 				df(nb.To)
 			}
 		}
 		return
 	}
 	for n := range a {
-		if c.Bit(NI(n)) == 0 {
-			reps = append(reps, NI(n))
-			o = 0
+		if c.Bit(n) == 0 {
+			o, ma = 0, 0
 			df(NI(n))
+			reps = append(reps, NI(n))
 			orders = append(orders, o)
+			arcSizes = append(arcSizes, ma)
 		}
 	}
 	return
@@ -444,16 +559,18 @@ func (g LabeledUndirected) Copy() (c LabeledUndirected, ma int) {
 	return LabeledUndirected{l}, s
 }
 
-// Degeneracy computes k-degeneracy, vertex ordering and k-cores.
+// Degeneracy is a measure of dense subgraphs within a graph.
 //
 // See Wikipedia https://en.wikipedia.org/wiki/Degeneracy_(graph_theory)
 //
+// See also method DegeneracyOrdering which returns a degeneracy node
+// ordering and k-core breaks.
+//
 // There are equivalent labeled and unlabeled versions of this method.
-func (g LabeledUndirected) Degeneracy() (k int, ordering []NI, cores []int) {
+func (g LabeledUndirected) Degeneracy() (k int) {
 	a := g.LabeledAdjacencyList
-	// WP algorithm
-	ordering = make([]NI, len(a))
-	var L Bits
+	// WP algorithm, attributed to Matula and Beck.
+	L := bits.New(len(a))
 	d := make([]int, len(a))
 	var D [][]NI
 	for v, nb := range a {
@@ -464,7 +581,7 @@ func (g LabeledUndirected) Degeneracy() (k int, ordering []NI, cores []int) {
 		}
 		D[dv] = append(D[dv], NI(v))
 	}
-	for ox := range a {
+	for range a {
 		// find a non-empty D
 		i := 0
 		for len(D[i]) == 0 {
@@ -472,10 +589,6 @@ func (g LabeledUndirected) Degeneracy() (k int, ordering []NI, cores []int) {
 		}
 		// k is max(i, k)
 		if i > k {
-			for len(cores) <= i {
-				cores = append(cores, 0)
-			}
-			cores[k] = ox
 			k = i
 		}
 		// select from D[i]
@@ -483,12 +596,11 @@ func (g LabeledUndirected) Degeneracy() (k int, ordering []NI, cores []int) {
 		last := len(Di) - 1
 		v := Di[last]
 		// Add v to ordering, remove from Di
-		ordering[ox] = v
-		L.SetBit(v, 1)
+		L.SetBit(int(v), 1)
 		D[i] = Di[:last]
 		// move neighbors
 		for _, nb := range a[v] {
-			if L.Bit(nb.To) == 1 {
+			if L.Bit(int(nb.To)) == 1 {
 				continue
 			}
 			dn := d[nb.To] // old number of neighbors of nb
@@ -507,7 +619,92 @@ func (g LabeledUndirected) Degeneracy() (k int, ordering []NI, cores []int) {
 			D[dn] = append(D[dn], nb.To)
 		}
 	}
-	cores[k] = len(ordering)
+	return
+}
+
+// DegeneracyOrdering computes degeneracy node ordering and k-core breaks.
+//
+// See Wikipedia https://en.wikipedia.org/wiki/Degeneracy_(graph_theory)
+//
+// In return value ordering, nodes are ordered by their "coreness" as
+// defined at https://en.wikipedia.org/wiki/Degeneracy_(graph_theory)#k-Cores.
+//
+// Return value kbreaks indexes ordering by coreness number.  len(kbreaks)
+// will be one more than the graph degeneracy as returned by the Degeneracy
+// method.  If degeneracy is d, d = len(kbreaks) - 1, kbreaks[d] is the last
+// value in kbreaks and ordering[:kbreaks[d]] contains nodes of the d-cores
+// of the graph.  kbreaks[0] is always the number of nodes in g as all nodes
+// are in in a 0-core.
+//
+// Note that definitions of "k-core" differ on whether a k-core must be a
+// single connected component.  This method does not resolve individual
+// connected components.
+//
+// See also method Degeneracy which returns just the degeneracy number.
+//
+// There are equivalent labeled and unlabeled versions of this method.
+func (g LabeledUndirected) DegeneracyOrdering() (ordering []NI, kbreaks []int) {
+	a := g.LabeledAdjacencyList
+	// WP algorithm
+	k := 0
+	ordering = make([]NI, len(a))
+	kbreaks = []int{len(a)}
+	L := bits.New(len(a))
+	d := make([]int, len(a))
+	var D [][]NI
+	for v, nb := range a {
+		dv := len(nb)
+		d[v] = dv
+		for len(D) <= dv {
+			D = append(D, nil)
+		}
+		D[dv] = append(D[dv], NI(v))
+	}
+	for ox := len(a) - 1; ox >= 0; ox-- {
+		// find a non-empty D
+		i := 0
+		for len(D[i]) == 0 {
+			i++
+		}
+		// k is max(i, k)
+		if i > k {
+			for len(kbreaks) <= i {
+				kbreaks = append(kbreaks, ox+1)
+			}
+			k = i
+		}
+		// select from D[i]
+		Di := D[i]
+		last := len(Di) - 1
+		v := Di[last]
+		// Add v to ordering, remove from Di
+		ordering[ox] = v
+		L.SetBit(int(v), 1)
+		D[i] = Di[:last]
+		// move neighbors
+		for _, nb := range a[v] {
+			if L.Bit(int(nb.To)) == 1 {
+				continue
+			}
+			dn := d[nb.To] // old number of neighbors of nb
+			Ddn := D[dn]   // nb is in this list
+			// remove it from the list
+			for wx, w := range Ddn {
+				if w == nb.To {
+					last := len(Ddn) - 1
+					Ddn[wx], Ddn[last] = Ddn[last], Ddn[wx]
+					D[dn] = Ddn[:last]
+				}
+			}
+			dn-- // new number of neighbors
+			d[nb.To] = dn
+			// re--add it to it's new list
+			D[dn] = append(D[dn], nb.To)
+		}
+	}
+	//for i, j := 0, k; i < j; i, j = i+1, j-1 {
+	//	kbreaks[i], kbreaks[j] = kbreaks[j], kbreaks[i]
+	//}
 	return
 }
 
@@ -531,57 +728,291 @@ func (g LabeledUndirected) Degree(n NI) int {
 	return d
 }
 
-// FromList constructs a FromList representing the tree reachable from
-// the given root.
+// DegreeCentralization returns the degree centralization metric of a graph.
 //
-// The connected component containing root should represent a simple graph,
-// connected as a tree.
+// Degree of a node is one measure of node centrality and is directly
+// available from the adjacency list representation.  This allows degree
+// centralization for the graph to be very efficiently computed.
 //
-// For nodes connected as a tree, the Path member of the returned FromList
-// will be populated with both From and Len values.  The MaxLen member will be
-// set but Leaves will be left a zero value.  Return value cycle will be -1.
-//
-// If the connected component containing root is not connected as a tree,
-// a cycle will be detected.  The returned FromList will be a zero value and
-// return value cycle will be a node involved in the cycle.
-//
-// Loops and parallel edges will be detected as cycles, however only in the
-// connected component containing root.  If g is not fully connected, nodes
-// not reachable from root will have PathEnd values of {From: -1, Len: 0}.
+// The value returned is from 0 to 1 inclusive for simple graphs of three or
+// more nodes.  As a special case, 0 is returned for graphs of two or fewer
+// nodes.  The value returned can be > 1 for graphs with loops or parallel
+// edges.
 //
 // There are equivalent labeled and unlabeled versions of this method.
-func (g LabeledUndirected) FromList(root NI) (f FromList, cycle NI) {
-	p := make([]PathEnd, len(g.LabeledAdjacencyList))
-	for i := range p {
-		p[i].From = -1
+func (g LabeledUndirected) DegreeCentralization() float64 {
+	a := g.LabeledAdjacencyList
+	if len(a) <= 2 {
+		return 0
 	}
-	ml := 0
-	var df func(NI, NI) bool
-	df = func(fr, n NI) bool {
-		l := p[n].Len + 1
-		for _, to := range g.LabeledAdjacencyList[n] {
-			if to.To == fr {
-				continue
-			}
-			if p[to.To].Len > 0 {
-				cycle = to.To
-				return false
-			}
-			p[to.To] = PathEnd{From: n, Len: l}
-			if l > ml {
-				ml = l
-			}
-			if !df(n, to.To) {
-				return false
-			}
+	var max, sum int
+	for _, to := range a {
+		if len(to) > max {
+			max = len(to)
 		}
-		return true
+		sum += len(to)
 	}
-	p[root].Len = 1
-	if !df(-1, root) {
-		return
+	return float64(len(a)*max-sum) / float64((len(a)-1)*(len(a)-2))
+}
+
+// Density returns density for a simple graph.
+//
+// See also Density function.
+//
+// There are equivalent labeled and unlabeled versions of this method.
+func (g LabeledUndirected) Density() float64 {
+	return Density(g.Order(), g.Size())
+}
+
+// Eulerian scans an undirected graph to determine if it is Eulerian.
+//
+// If the graph represents an Eulerian cycle, it returns -1, -1, nil.
+//
+// If the graph does not represent an Eulerian cycle but does represent an
+// Eulerian path, it returns the two end nodes of the path, and nil.
+//
+// Otherwise it returns an error.
+//
+// See also method EulerianStart, which short-circuits as soon as it finds
+// a node that must be a start or end node of an Eulerian path.
+//
+// There are equivalent labeled and unlabeled versions of this method.
+func (g LabeledUndirected) Eulerian() (end1, end2 NI, err error) {
+	end1 = -1
+	end2 = -1
+	for n := range g.LabeledAdjacencyList {
+		switch {
+		case g.Degree(NI(n))%2 == 0:
+		case end1 < 0:
+			end1 = NI(n)
+		case end2 < 0:
+			end2 = NI(n)
+		default:
+			err = errors.New("non-Eulerian")
+			return
+		}
 	}
-	return FromList{Paths: p, MaxLen: ml}, -1
+	return
+}
+
+// EulerianCycle finds an Eulerian cycle in an undirected multigraph.
+//
+// * If g has no nodes, result is nil, nil.
+//
+// * If g is Eulerian, result is an Eulerian cycle with err = nil.
+// The first element of the result represents only a start node.
+// The remaining elements represent the half arcs of the cycle.
+//
+// * Otherwise, result is nil, with a non-nil error giving a reason the graph
+// is not Eulerian.
+//
+// Internally, EulerianCycle copies the entire graph g.
+// See EulerianCycleD for a more space efficient version.
+//
+// There are equivalent labeled and unlabeled versions of this method.
+func (g LabeledUndirected) EulerianCycle() ([]Half, error) {
+	c, _ := g.Copy()
+	return c.EulerianCycleD(c.Size())
+}
+
+// EulerianCycleD finds an Eulerian cycle in an undirected multigraph.
+//
+// EulerianCycleD is destructive on its receiver g.  See EulerianCycle for
+// a non-destructive version.
+//
+// Parameter m must be the size of the undirected graph -- the
+// number of edges.  Use Undirected.Size if the size is unknown.
+//
+// * If g has no nodes, result is nil, nil.
+//
+// * If g is Eulerian, result is an Eulerian cycle with err = nil.
+// The first element of the result represents only a start node.
+// The remaining elements represent the half arcs of the cycle.
+//
+// * Otherwise, result is nil, with a non-nil error giving a reason the graph
+// is not Eulerian.
+//
+// There are equivalent labeled and unlabeled versions of this method.
+func (g LabeledUndirected) EulerianCycleD(m int) ([]Half, error) {
+	if g.Order() == 0 {
+		return nil, nil
+	}
+	e := newLabEulerian(g.LabeledAdjacencyList, m)
+	e.p[0] = Half{0, -1}
+	for e.s >= 0 {
+		v := e.top()
+		if err := e.pushUndir(); err != nil {
+			return nil, err
+		}
+		if e.top().To != v.To {
+			return nil, errors.New("not Eulerian")
+		}
+		e.keep()
+	}
+	if !e.uv.AllZeros() {
+		return nil, errors.New("not strongly connected")
+	}
+	return e.p, nil
+}
+
+// EulerianPath finds an Eulerian path in an undirected multigraph.
+//
+// * If g has no nodes, result is nil, nil.
+//
+// * If g has an Eulerian path, result is an Eulerian path with err = nil.
+// The first element of the result represents only a start node.
+// The remaining elements represent the half arcs of the path.
+//
+// * Otherwise, result is nil, with a non-nil error giving a reason the graph
+// is not Eulerian.
+//
+// Internally, EulerianPath copies the entire graph g.
+// See EulerianPathD for a more space efficient version.
+//
+// There are equivalent labeled and unlabeled versions of this method.
+func (g LabeledUndirected) EulerianPath() ([]Half, error) {
+	c, _ := g.Copy()
+	start := c.EulerianStart()
+	if start < 0 {
+		start = 0
+	}
+	return c.EulerianPathD(c.Size(), start)
+}
+
+// EulerianPathD finds an Eulerian path in a undirected multigraph.
+//
+// EulerianPathD is destructive on its receiver g.  See EulerianPath for
+// a non-destructive version.
+//
+// Argument m must be the correct size, or number of edges in g.
+// Argument start must be a valid start node for the path.
+//
+// * If g has no nodes, result is nil, nil.
+//
+// * If g has an Eulerian path starting at start, result is an Eulerian path
+// with err = nil.
+// The first element of the result represents only a start node.
+// The remaining elements represent the half arcs of the path.
+//
+// * Otherwise, result is nil, with a non-nil error giving a reason the graph
+// is not Eulerian.
+//
+// There are equivalent labeled and unlabeled versions of this method.
+func (g LabeledUndirected) EulerianPathD(m int, start NI) ([]Half, error) {
+	if g.Order() == 0 {
+		return nil, nil
+	}
+	e := newLabEulerian(g.LabeledAdjacencyList, m)
+	e.p[0] = Half{start, -1}
+	// unlike EulerianCycle, the first path doesn't have to be a cycle.
+	if err := e.pushUndir(); err != nil {
+		return nil, err
+	}
+	e.keep()
+	for e.s >= 0 {
+		start = e.top().To
+		e.push()
+		// paths after the first must be cycles though
+		// (as long as there are nodes on the stack)
+		if e.top().To != start {
+			return nil, errors.New("no Eulerian path")
+		}
+		e.keep()
+	}
+	if !e.uv.AllZeros() {
+		return nil, errors.New("no Eulerian path")
+	}
+	return e.p, nil
+}
+
+// EulerianStart finds a candidate start node for an Eulerian path.
+//
+// A graph representing an Eulerian path can have two nodes with odd degree.
+// If it does, these must be the end nodes of the path.  EulerianEnd scans
+// for a node with an odd degree, returning immediately with the first one
+// it finds.
+//
+// If the scan completes without finding a node with odd degree the method
+// returns -1.
+//
+// See also method Eulerian, which completely validates a graph as representing
+// an Eulerian path.
+//
+// There are equivalent labeled and unlabeled versions of this method.
+func (g LabeledUndirected) EulerianStart() NI {
+	for n := range g.LabeledAdjacencyList {
+		if g.Degree(NI(n))%2 != 0 {
+			return NI(n)
+		}
+	}
+	return -1
+}
+
+// AddNode maps a node in a supergraph to a subgraph node.
+//
+// Argument p must be an NI in supergraph s.Super.  AddNode panics if
+// p is not a valid node index of s.Super.
+//
+// AddNode is idempotent in that it does not add a new node to the subgraph if
+// a subgraph node already exists mapped to supergraph node p.
+//
+// The mapped subgraph NI is returned.
+func (s *LabeledUndirectedSubgraph) AddNode(p NI) (b NI) {
+	if int(p) < 0 || int(p) >= s.Super.Order() {
+		panic(fmt.Sprint("AddNode: NI ", p, " not in supergraph"))
+	}
+	if b, ok := s.SubNI[p]; ok {
+		return b
+	}
+	a := s.LabeledUndirected.LabeledAdjacencyList
+	b = NI(len(a))
+	s.LabeledUndirected.LabeledAdjacencyList = append(a, nil)
+	s.SuperNI = append(s.SuperNI, p)
+	s.SubNI[p] = b
+	return
+}
+
+// InduceList constructs a node-induced subgraph.
+//
+// The subgraph is induced on receiver graph g.  Argument l must be a list of
+// NIs in receiver graph g.  Receiver g becomes the supergraph of the induced
+// subgraph.
+//
+// Duplicate NIs are allowed in list l.  The duplicates are effectively removed
+// and only a single corresponding node is created in the subgraph.  Subgraph
+// NIs are mapped in the order of list l, execpt for ignoring duplicates.
+// NIs in l that are not in g will panic.
+//
+// Returned is the constructed Subgraph object containing the induced subgraph
+// and the mappings to the supergraph.
+func (g *LabeledUndirected) InduceList(l []NI) *LabeledUndirectedSubgraph {
+	sub, sup := mapList(l)
+	return &LabeledUndirectedSubgraph{
+		Super:   g,
+		SubNI:   sub,
+		SuperNI: sup,
+		LabeledUndirected: LabeledUndirected{
+			g.LabeledAdjacencyList.induceArcs(sub, sup),
+		}}
+}
+
+// InduceBits constructs a node-induced subgraph.
+//
+// The subgraph is induced on receiver graph g.  Argument t must be a bitmap
+// representing NIs in receiver graph g.  Receiver g becomes the supergraph
+// of the induced subgraph.  NIs in t that are not in g will panic.
+//
+// Returned is the constructed Subgraph object containing the induced subgraph
+// and the mappings to the supergraph.
+func (g *LabeledUndirected) InduceBits(t bits.Bits) *LabeledUndirectedSubgraph {
+	sub, sup := mapBits(t)
+	return &LabeledUndirectedSubgraph{
+		Super:   g,
+		SubNI:   sub,
+		SuperNI: sup,
+		LabeledUndirected: LabeledUndirected{
+			g.LabeledAdjacencyList.induceArcs(sub, sup),
+		}}
 }
 
 // IsConnected tests if an undirected graph is a single connected component.
@@ -594,19 +1025,18 @@ func (g LabeledUndirected) IsConnected() bool {
 	if len(a) == 0 {
 		return true
 	}
-	var b Bits
-	b.SetAll(len(a))
+	b := bits.New(len(a))
 	var df func(NI)
 	df = func(n NI) {
-		b.SetBit(n, 0)
+		b.SetBit(int(n), 1)
 		for _, to := range a[n] {
-			if b.Bit(to.To) == 1 {
+			if b.Bit(int(to.To)) == 0 {
 				df(to.To)
 			}
 		}
 	}
 	df(0)
-	return b.Zero()
+	return b.AllOnes()
 }
 
 // IsTree identifies trees in undirected graphs.
@@ -618,14 +1048,14 @@ func (g LabeledUndirected) IsConnected() bool {
 // There are equivalent labeled and unlabeled versions of this method.
 func (g LabeledUndirected) IsTree(root NI) (isTree, allTree bool) {
 	a := g.LabeledAdjacencyList
-	var v Bits
-	v.SetAll(len(a))
+	v := bits.New(len(a))
+	v.SetAll()
 	var df func(NI, NI) bool
 	df = func(fr, n NI) bool {
-		if v.Bit(n) == 0 {
+		if v.Bit(int(n)) == 0 {
 			return false
 		}
-		v.SetBit(n, 0)
+		v.SetBit(int(n), 0)
 		for _, to := range a[n] {
 			if to.To != fr && !df(n, to.To) {
 				return false
@@ -633,18 +1063,18 @@ func (g LabeledUndirected) IsTree(root NI) (isTree, allTree bool) {
 		}
 		return true
 	}
-	v.SetBit(root, 0)
+	v.SetBit(int(root), 0)
 	for _, to := range a[root] {
 		if !df(root, to.To) {
 			return false, false
 		}
 	}
-	return true, v.Zero()
+	return true, v.AllZeros()
 }
 
 // Size returns the number of edges in g.
 //
-// See also ArcSize and HasLoop.
+// See also ArcSize and AnyLoop.
 func (g LabeledUndirected) Size() int {
 	m2 := 0
 	for fr, to := range g.LabeledAdjacencyList {
@@ -656,4 +1086,53 @@ func (g LabeledUndirected) Size() int {
 		}
 	}
 	return m2 / 2
+}
+
+// Density returns edge density of a bipartite graph.
+//
+// Edge density is number of edges over maximum possible number of edges.
+// Maximum possible number of edges in a bipartite graph is number of
+// nodes of one color times number of nodes of the other color.
+func (g LabeledBipartite) Density() float64 {
+	a := g.LabeledUndirected.LabeledAdjacencyList
+	s := 0
+	g.Color.IterateOnes(func(n int) bool {
+		s += len(a[n])
+		return true
+	})
+	return float64(s) / float64(g.N0*(len(a)-g.N0))
+}
+
+// PermuteBiadjacency permutes a bipartite graph in place so that a prefix
+// of the adjacency list encodes a biadjacency matrix.
+//
+// The permutation applied is returned.  This would be helpful in referencing
+// any externally stored node information.
+//
+// The biadjacency matrix is encoded as the prefix AdjacencyList[:g.N0].
+// Note though that this slice does not represent a valid complete
+// AdjacencyList.  BoundsOk would return false, for example.
+//
+// In adjacency list terms, the result of the permutation is that nodes of
+// the prefix only have arcs to the suffix and nodes of the suffix only have
+// arcs to the prefix.
+func (g LabeledBipartite) PermuteBiadjacency() []int {
+	p := make([]int, g.Order())
+	i := 0
+	g.Color.IterateZeros(func(n int) bool {
+		p[n] = i
+		i++
+		return true
+	})
+	g.Color.IterateOnes(func(n int) bool {
+		p[n] = i
+		i++
+		return true
+	})
+	g.Permute(p)
+	g.Color.ClearAll()
+	for i := g.N0; i < g.Order(); i++ {
+		g.Color.SetBit(i, 1)
+	}
+	return p
 }

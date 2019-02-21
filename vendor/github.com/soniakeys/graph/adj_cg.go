@@ -8,9 +8,21 @@ package graph
 // DO NOT EDIT adj_RO.go.  The RO is for Read Only.
 
 import (
+	"errors"
+	"fmt"
 	"math/rand"
-	"time"
+
+	"github.com/soniakeys/bits"
 )
+
+// ArcDensity returns density for an simple directed graph.
+//
+// See also ArcDensity function.
+//
+// There are equivalent labeled and unlabeled versions of this method.
+func (g LabeledAdjacencyList) ArcDensity() float64 {
+	return ArcDensity(len(g), g.ArcSize())
+}
 
 // ArcSize returns the number of arcs in g.
 //
@@ -50,98 +62,34 @@ func (g LabeledAdjacencyList) BoundsOk() (ok bool, fr NI, to Half) {
 	return true, -1, to
 }
 
-// BreadthFirst traverses a directed or undirected graph in breadth first order.
+// BreadthFirst traverses a directed or undirected graph in breadth
+// first order.
 //
-// Argument start is the start node for the traversal.  If r is nil, nodes are
-// visited in deterministic order.  If a random number generator is supplied,
-// nodes at each level are visited in random order.
-//
-// Argument f can be nil if you have no interest in the FromList path result.
-// If FromList f is non-nil, the method populates f.Paths and sets f.MaxLen.
-// It does not set f.Leaves.  For convenience argument f can be a zero value
-// FromList.  If f.Paths is nil, the FromList is initialized first.  If f.Paths
-// is non-nil however, the FromList is  used as is.  The method uses a value of
-// PathEnd.Len == 0 to indentify unvisited nodes.  Existing non-zero values
-// will limit the traversal.
-//
-// Traversal calls the visitor function v for each node starting with node
-// start.  If v returns true, traversal continues.  If v returns false, the
-// traversal terminates immediately.  PathEnd Len and From values are updated
-// before calling the visitor function.
-//
-// On return f.Paths and f.MaxLen are set but not f.Leaves.
-//
-// Returned is the number of nodes visited and ok = true if the traversal
-// ran to completion or ok = false if it was terminated by the visitor
-// function returning false.
+// Traversal starts at node start and visits the nodes reachable from
+// start.  The function visit is called for each node visited.  Nodes
+// not reachable from start are not visited.
 //
 // There are equivalent labeled and unlabeled versions of this method.
-func (g LabeledAdjacencyList) BreadthFirst(start NI, r *rand.Rand, f *FromList, v OkNodeVisitor) (visited int, ok bool) {
-	switch {
-	case f == nil:
-		e := NewFromList(len(g))
-		f = &e
-	case f.Paths == nil:
-		*f = NewFromList(len(g))
-	}
-	rp := f.Paths
-	// the frontier consists of nodes all at the same level
-	frontier := []NI{start}
-	level := 1
-	// assign path when node is put on frontier,
-	rp[start] = PathEnd{Len: level, From: -1}
-	for {
-		f.MaxLen = level
-		level++
-		var next []NI
-		if r == nil {
-			for _, n := range frontier {
-				visited++
-				if !v(n) { // visit nodes as they come off frontier
-					return
-				}
-				for _, nb := range g[n] {
-					if rp[nb.To].Len == 0 {
-						next = append(next, nb.To)
-						rp[nb.To] = PathEnd{From: n, Len: level}
-					}
-				}
-			}
-		} else { // take nodes off frontier at random
-			for _, i := range r.Perm(len(frontier)) {
-				n := frontier[i]
-				// remainder of block same as above
-				visited++
-				if !v(n) {
-					return
-				}
-				for _, nb := range g[n] {
-					if rp[nb.To].Len == 0 {
-						next = append(next, nb.To)
-						rp[nb.To] = PathEnd{From: n, Len: level}
-					}
+//
+// See also alt.BreadthFirst, a variant with more options, and
+// alt.BreadthFirst2, a direction optimizing variant.
+func (g LabeledAdjacencyList) BreadthFirst(start NI, visit func(NI)) {
+	v := bits.New(len(g))
+	v.SetBit(int(start), 1)
+	visit(start)
+	var next []NI
+	for frontier := []NI{start}; len(frontier) > 0; {
+		for _, n := range frontier {
+			for _, nb := range g[n] {
+				if v.Bit(int(nb.To)) == 0 {
+					v.SetBit(int(nb.To), 1)
+					visit(nb.To)
+					next = append(next, nb.To)
 				}
 			}
 		}
-		if len(next) == 0 {
-			break
-		}
-		frontier = next
+		frontier, next = next, frontier[:0]
 	}
-	return visited, true
-}
-
-// BreadthFirstPath finds a single path from start to end with a minimum
-// number of nodes.
-//
-// Returned is the path as list of nodes.
-// The result is nil if no path was found.
-//
-// There are equivalent labeled and unlabeled versions of this method.
-func (g LabeledAdjacencyList) BreadthFirstPath(start, end NI) []NI {
-	var f FromList
-	g.BreadthFirst(start, nil, &f, func(n NI) bool { return n != end })
-	return f.PathTo(end, nil)
 }
 
 // Copy makes a deep copy of g.
@@ -157,99 +105,68 @@ func (g LabeledAdjacencyList) Copy() (c LabeledAdjacencyList, ma int) {
 	return
 }
 
-// DepthFirst traverses a graph depth first.
+// DepthFirst traverses a directed or undirected graph in depth
+// first order.
 //
-// As it traverses it calls visitor function v for each node.  If v returns
-// false at any point, the traversal is terminated immediately and DepthFirst
-// returns false.  Otherwise DepthFirst returns true.
-//
-// DepthFirst uses argument bm is used as a bitmap to guide the traversal.
-// For a complete traversal, bm should be 0 initially.  During the
-// traversal, bits are set corresponding to each node visited.
-// The bit is set before calling the visitor function.
-//
-// Argument bm can be nil if you have no need for it.
-// In this case a bitmap is created internally for one-time use.
-//
-// Alternatively v can be nil.  In this case traversal still proceeds and
-// updates the bitmap, which can be a useful result.
-// DepthFirst always returns true in this case.
-//
-// It makes no sense for both bm and v to be nil.  In this case DepthFirst
-// returns false immediately.
+// Traversal starts at node start and visits the nodes reachable from
+// start.  The function visit is called for each node visited.  Nodes
+// not reachable from start are not visited.
 //
 // There are equivalent labeled and unlabeled versions of this method.
-func (g LabeledAdjacencyList) DepthFirst(start NI, bm *Bits, v OkNodeVisitor) (ok bool) {
-	if bm == nil {
-		if v == nil {
-			return false
+//
+// See also alt.DepthFirst, a variant with more options.
+func (g LabeledAdjacencyList) DepthFirst(start NI, visit func(NI)) {
+	v := bits.New(len(g))
+	var f func(NI)
+	f = func(n NI) {
+		visit(n)
+		v.SetBit(int(n), 1)
+		for _, to := range g[n] {
+			if v.Bit(int(to.To)) == 0 {
+				f(to.To)
+			}
 		}
-		bm = &Bits{}
 	}
-	var df func(n NI) bool
-	df = func(n NI) bool {
-		if bm.Bit(n) == 1 {
-			return true
+	f(start)
+}
+
+// Equal compares two graphs for equality.
+//
+// Note this is simple equality, not isomorphism.  Graphs are equal if
+// they have the same order and if corresponding nodes have the same
+// arcs, although they do not need to be in the same order.
+//
+// There are equivalent labeled and unlabeled versions of this method.
+func (g LabeledAdjacencyList) Equal(h LabeledAdjacencyList) bool {
+	if len(g) != len(h) {
+		return false
+	}
+	for n, gn := range g {
+		m := map[Half]int{}
+		for _, to := range gn {
+			m[to]++
 		}
-		bm.SetBit(n, 1)
-		if v != nil && !v(n) {
-			return false
+		for _, to := range h[n] {
+			m[to]--
 		}
-		for _, nb := range g[n] {
-			if !df(nb.To) {
+		for _, c := range m {
+			if c != 0 {
 				return false
 			}
 		}
-		return true
 	}
-	return df(start)
+	return true
 }
 
-// DepthFirstRandom traverses a graph depth first, but following arcs in
-// random order among arcs from a single node.
+// HasArc returns true if g has any arc from node `fr` to node `to`.
 //
-// If Rand r is nil, the method creates a new source and generator for
-// one-time use.
-//
-// Usage is otherwise like the DepthFirst method.  See DepthFirst.
+// Also returned is the index within the slice of arcs from node `fr`.
+// If no arc from `fr` to `to` is present, HasArc returns false, -1.
 //
 // There are equivalent labeled and unlabeled versions of this method.
-func (g LabeledAdjacencyList) DepthFirstRandom(start NI, bm *Bits, v OkNodeVisitor, r *rand.Rand) (ok bool) {
-	if bm == nil {
-		if v == nil {
-			return false
-		}
-		bm = &Bits{}
-	}
-	if r == nil {
-		r = rand.New(rand.NewSource(time.Now().UnixNano()))
-	}
-	var df func(n NI) bool
-	df = func(n NI) bool {
-		if bm.Bit(n) == 1 {
-			return true
-		}
-		bm.SetBit(n, 1)
-		if v != nil && !v(n) {
-			return false
-		}
-		to := g[n]
-		for _, i := range r.Perm(len(to)) {
-			if !df(to[i].To) {
-				return false
-			}
-		}
-		return true
-	}
-	return df(start)
-}
-
-// HasArc returns true if g has any arc from node fr to node to.
 //
-// Also returned is the index within the slice of arcs from node fr.
-// If no arc from fr to to is present, HasArc returns false, -1.
-//
-// There are equivalent labeled and unlabeled versions of this method.
+// See also the method ParallelArcs, which finds all parallel arcs from
+// `fr` to `to`.
 func (g LabeledAdjacencyList) HasArc(fr, to NI) (bool, int) {
 	for x, h := range g[fr] {
 		if h.To == to {
@@ -259,16 +176,14 @@ func (g LabeledAdjacencyList) HasArc(fr, to NI) (bool, int) {
 	return false, -1
 }
 
-// HasLoop identifies if a graph contains a loop, an arc that leads from a
+// AnyLoop identifies if a graph contains a loop, an arc that leads from a
 // a node back to the same node.
-//
-// If the graph has a loop, the result is an example node that has a loop.
 //
 // If g contains a loop, the method returns true and an example of a node
 // with a loop.  If there are no loops in g, the method returns false, -1.
 //
 // There are equivalent labeled and unlabeled versions of this method.
-func (g LabeledAdjacencyList) HasLoop() (bool, NI) {
+func (g LabeledAdjacencyList) AnyLoop() (bool, NI) {
 	for fr, to := range g {
 		for _, to := range to {
 			if NI(fr) == to.To {
@@ -279,37 +194,138 @@ func (g LabeledAdjacencyList) HasLoop() (bool, NI) {
 	return false, -1
 }
 
-// HasParallelMap identifies if a graph contains parallel arcs, multiple arcs
-// that lead from a node to the same node.
+// AddNode maps a node in a supergraph to a subgraph node.
 //
-// If the graph has parallel arcs, the method returns true and
-// results fr and to represent an example where there are parallel arcs
-// from node fr to node to.
+// Argument p must be an NI in supergraph s.Super.  AddNode panics if
+// p is not a valid node index of s.Super.
 //
-// If there are no parallel arcs, the method returns false, -1 -1.
+// AddNode is idempotent in that it does not add a new node to the subgraph if
+// a subgraph node already exists mapped to supergraph node p.
 //
-// Multiple loops on a node count as parallel arcs.
+// The mapped subgraph NI is returned.
+func (s *LabeledSubgraph) AddNode(p NI) (b NI) {
+	if int(p) < 0 || int(p) >= s.Super.Order() {
+		panic(fmt.Sprint("AddNode: NI ", p, " not in supergraph"))
+	}
+	if b, ok := s.SubNI[p]; ok {
+		return b
+	}
+	a := s.LabeledAdjacencyList
+	b = NI(len(a))
+	s.LabeledAdjacencyList = append(a, nil)
+	s.SuperNI = append(s.SuperNI, p)
+	s.SubNI[p] = b
+	return
+}
+
+// AddArc adds an arc to a subgraph.
 //
-// "Map" in the method name indicates that a Go map is used to detect parallel
-// arcs.  Compared to method HasParallelSort, this gives better asymtotic
-// performance for large dense graphs but may have increased overhead for
-// small or sparse graphs.
+// Arguments fr, to must be NIs in supergraph s.Super.  As with AddNode,
+// AddArc panics if fr and to are not valid node indexes of s.Super.
 //
-// There are equivalent labeled and unlabeled versions of this method.
-func (g LabeledAdjacencyList) HasParallelMap() (has bool, fr, to NI) {
-	for n, to := range g {
-		if len(to) == 0 {
-			continue
-		}
-		m := map[NI]struct{}{}
-		for _, to := range to {
-			if _, ok := m[to.To]; ok {
-				return true, NI(n), to.To
+// The arc specfied by fr, to must exist in s.Super.  Further, the number of
+// parallel arcs in the subgraph cannot exceed the number of corresponding
+// parallel arcs in the supergraph.  That is, each arc already added to the
+// subgraph counts against the arcs available in the supergraph.  If a matching
+// arc is not available, AddArc returns an error.
+//
+// If a matching arc is available, subgraph nodes are added as needed, the
+// subgraph arc is added, and the method returns nil.
+func (s *LabeledSubgraph) AddArc(fr NI, to Half) error {
+	// verify supergraph NIs first, but without adding subgraph nodes just yet.
+	if int(fr) < 0 || int(fr) >= s.Super.Order() {
+		panic(fmt.Sprint("AddArc: NI ", fr, " not in supergraph"))
+	}
+	if int(to.To) < 0 || int(to.To) >= s.Super.Order() {
+		panic(fmt.Sprint("AddArc: NI ", to.To, " not in supergraph"))
+	}
+	// count existing matching arcs in subgraph
+	n := 0
+	a := s.LabeledAdjacencyList
+	if bf, ok := s.SubNI[fr]; ok {
+		if bt, ok := s.SubNI[to.To]; ok {
+			// both NIs already exist in subgraph, need to count arcs
+			bTo := to
+			bTo.To = bt
+			for _, t := range a[bf] {
+				if t == bTo {
+					n++
+				}
 			}
-			m[to.To] = struct{}{}
 		}
 	}
-	return false, -1, -1
+	// verify matching arcs are available in supergraph
+	for _, t := range (*s.Super)[fr] {
+		if t == to {
+			if n > 0 {
+				n-- // match existing arc
+				continue
+			}
+			// no more existing arcs need to be matched.  nodes can finally
+			// be added as needed and then the arc can be added.
+			bf := s.AddNode(fr)
+			to.To = s.AddNode(to.To)
+			s.LabeledAdjacencyList[bf] = append(s.LabeledAdjacencyList[bf], to)
+			return nil // success
+		}
+	}
+	return errors.New("arc not available in supergraph")
+}
+
+func (super LabeledAdjacencyList) induceArcs(sub map[NI]NI, sup []NI) LabeledAdjacencyList {
+	s := make(LabeledAdjacencyList, len(sup))
+	for b, p := range sup {
+		var a []Half
+		for _, to := range super[p] {
+			if bt, ok := sub[to.To]; ok {
+				to.To = bt
+				a = append(a, to)
+			}
+		}
+		s[b] = a
+	}
+	return s
+}
+
+// InduceList constructs a node-induced subgraph.
+//
+// The subgraph is induced on receiver graph g.  Argument l must be a list of
+// NIs in receiver graph g.  Receiver g becomes the supergraph of the induced
+// subgraph.
+//
+// Duplicate NIs are allowed in list l.  The duplicates are effectively removed
+// and only a single corresponding node is created in the subgraph.  Subgraph
+// NIs are mapped in the order of list l, execpt for ignoring duplicates.
+// NIs in l that are not in g will panic.
+//
+// Returned is the constructed Subgraph object containing the induced subgraph
+// and the mappings to the supergraph.
+func (g *LabeledAdjacencyList) InduceList(l []NI) *LabeledSubgraph {
+	sub, sup := mapList(l)
+	return &LabeledSubgraph{
+		Super:   g,
+		SubNI:   sub,
+		SuperNI: sup,
+
+		LabeledAdjacencyList: g.induceArcs(sub, sup)}
+}
+
+// InduceBits constructs a node-induced subgraph.
+//
+// The subgraph is induced on receiver graph g.  Argument t must be a bitmap
+// representing NIs in receiver graph g.  Receiver g becomes the supergraph
+// of the induced subgraph.  NIs in t that are not in g will panic.
+//
+// Returned is the constructed Subgraph object containing the induced subgraph
+// and the mappings to the supergraph.
+func (g *LabeledAdjacencyList) InduceBits(t bits.Bits) *LabeledSubgraph {
+	sub, sup := mapBits(t)
+	return &LabeledSubgraph{
+		Super:   g,
+		SubNI:   sub,
+		SuperNI: sup,
+
+		LabeledAdjacencyList: g.induceArcs(sub, sup)}
 }
 
 // IsSimple checks for loops and parallel arcs.
@@ -320,14 +336,14 @@ func (g LabeledAdjacencyList) HasParallelMap() (has bool, fr, to NI) {
 // found, simple returns false and a node that represents a counterexample
 // to the graph being simple.
 //
-// See also separate methods HasLoop and HasParallel.
+// See also separate methods AnyLoop and AnyParallel.
 //
 // There are equivalent labeled and unlabeled versions of this method.
 func (g LabeledAdjacencyList) IsSimple() (ok bool, n NI) {
-	if lp, n := g.HasLoop(); lp {
+	if lp, n := g.AnyLoop(); lp {
 		return false, n
 	}
-	if pa, n, _ := g.HasParallelSort(); pa {
+	if pa, n, _ := g.AnyParallel(); pa {
 		return false, n
 	}
 	return true, -1
@@ -338,50 +354,92 @@ func (g LabeledAdjacencyList) IsSimple() (ok bool, n NI) {
 // An isolated node is one with no arcs going to or from it.
 //
 // There are equivalent labeled and unlabeled versions of this method.
-func (g LabeledAdjacencyList) IsolatedNodes() (i Bits) {
-	i.SetAll(len(g))
+func (g LabeledAdjacencyList) IsolatedNodes() (i bits.Bits) {
+	i = bits.New(len(g))
+	i.SetAll()
 	for fr, to := range g {
 		if len(to) > 0 {
-			i.SetBit(NI(fr), 0)
+			i.SetBit(fr, 0)
 			for _, to := range to {
-				i.SetBit(to.To, 0)
+				i.SetBit(int(to.To), 0)
 			}
 		}
 	}
 	return
 }
 
-/*
-MaxmimalClique finds a maximal clique containing the node n.
+// Order is the number of nodes in receiver g.
+//
+// It is simply a wrapper method for the Go builtin len().
+//
+// There are equivalent labeled and unlabeled versions of this method.
+func (g LabeledAdjacencyList) Order() int {
+	// Why a wrapper for len()?  Mostly for Directed and Undirected.
+	// u.Order() is a little nicer than len(u.LabeledAdjacencyList).
+	return len(g)
+}
 
-Not sure this is good for anything.  It produces a single maximal clique
-but there can be multiple maximal cliques containing a given node.
-This algorithm just returns one of them, not even necessarily the
-largest one.
-
-func (g LabeledAdjacencyList) MaximalClique(n int) []int {
-	c := []int{n}
-	var m bitset.BitSet
-	m.Set(uint(n))
-	for fr, to := range g {
-		if fr == n {
-			continue
-		}
-		if len(to) < len(c) {
-			continue
-		}
-		f := 0
-		for _, to := range to {
-			if m.Test(uint(to.To)) {
-				f++
-				if f == len(c) {
-					c = append(c, to.To)
-					m.Set(uint(to.To))
-					break
-				}
-			}
+// ParallelArcs identifies all arcs from node `fr` to node `to`.
+//
+// The returned slice contains an element for each arc from node `fr` to node `to`.
+// The element value is the index within the slice of arcs from node `fr`.
+//
+// There are equivalent labeled and unlabeled versions of this method.
+//
+// See also the method HasArc, which stops after finding a single arc.
+func (g LabeledAdjacencyList) ParallelArcs(fr, to NI) (p []int) {
+	for x, h := range g[fr] {
+		if h.To == to {
+			p = append(p, x)
 		}
 	}
-	return c
+	return
 }
-*/
+
+// Permute permutes the node labeling of receiver g.
+//
+// Argument p must be a permutation of the node numbers of the graph,
+// 0 through len(g)-1.  A permutation returned by rand.Perm(len(g)) for
+// example is acceptable.
+//
+// The graph is permuted in place.  The graph keeps the same underlying
+// memory but values of the graph representation are permuted to produce
+// an isomorphic graph.  The node previously labeled 0 becomes p[0] and so on.
+// See example (or the code) for clarification.
+//
+// There are equivalent labeled and unlabeled versions of this method.
+func (g LabeledAdjacencyList) Permute(p []int) {
+	old := append(LabeledAdjacencyList{}, g...) // shallow copy
+	for fr, arcs := range old {
+		for i, to := range arcs {
+			arcs[i].To = NI(p[to.To])
+		}
+		g[p[fr]] = arcs
+	}
+}
+
+// ShuffleArcLists shuffles the arc lists of each node of receiver g.
+//
+// For example a node with arcs leading to nodes 3 and 7 might have an
+// arc list of either [3 7] or [7 3] after calling this method.  The
+// connectivity of the graph is not changed.  The resulting graph stays
+// equivalent but a traversal will encounter arcs in a different
+// order.
+//
+// If Rand r is nil, the rand package default shared source is used.
+//
+// There are equivalent labeled and unlabeled versions of this method.
+func (g LabeledAdjacencyList) ShuffleArcLists(r *rand.Rand) {
+	ri := rand.Intn
+	if r != nil {
+		ri = r.Intn
+	}
+	// Knuth-Fisher-Yates
+	for _, to := range g {
+		for i := len(to); i > 1; {
+			j := ri(i)
+			i--
+			to[i], to[j] = to[j], to[i]
+		}
+	}
+}

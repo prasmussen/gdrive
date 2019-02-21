@@ -7,6 +7,8 @@ import (
 	"container/heap"
 	"fmt"
 	"math"
+
+	"github.com/soniakeys/bits"
 )
 
 // rNode holds data for a "reached" node
@@ -60,7 +62,7 @@ func (h Heuristic) Admissible(g LabeledAdjacencyList, w WeightFunc, end NI) (boo
 	// run dijkstra
 	// Dijkstra.AllPaths takes a start node but after inverting the graph
 	// argument end now represents the start node of the inverted graph.
-	f, dist, _ := inv.Dijkstra(end, -1, w)
+	f, _, dist, _ := inv.Dijkstra(end, -1, w)
 	// compare h to found shortest paths
 	for n := range inv {
 		if f.Paths[n].Len == 0 {
@@ -204,9 +206,9 @@ func (g LabeledAdjacencyList) AStarA(w WeightFunc, start, end NI, h Heuristic) (
 //
 // If a path is found, the non-nil node path is returned with the total path
 // distance.  Otherwise the returned path will be nil.
-func (g LabeledAdjacencyList) AStarAPath(start, end NI, h Heuristic, w WeightFunc) ([]NI, float64) {
-	f, _, d, _ := g.AStarA(w, start, end, h)
-	return f.PathTo(end, nil), d
+func (g LabeledAdjacencyList) AStarAPath(start, end NI, h Heuristic, w WeightFunc) (LabeledPath, float64) {
+	f, labels, d, _ := g.AStarA(w, start, end, h)
+	return f.PathToLabeled(end, labels, nil), d
 }
 
 // AStarM is AStarA optimized for monotonic heuristic estimates.
@@ -305,9 +307,9 @@ func (g LabeledAdjacencyList) AStarM(w WeightFunc, start, end NI, h Heuristic) (
 //
 // If a path is found, the non-nil node path is returned with the total path
 // distance.  Otherwise the returned path will be nil.
-func (g LabeledAdjacencyList) AStarMPath(start, end NI, h Heuristic, w WeightFunc) ([]NI, float64) {
-	f, _, d, _ := g.AStarM(w, start, end, h)
-	return f.PathTo(end, nil), d
+func (g LabeledAdjacencyList) AStarMPath(start, end NI, h Heuristic, w WeightFunc) (LabeledPath, float64) {
+	f, labels, d, _ := g.AStarM(w, start, end, h)
+	return f.PathToLabeled(end, labels, nil), d
 }
 
 // implement container/heap
@@ -342,8 +344,8 @@ func (p *openHeap) Pop() interface{} {
 // Loops and parallel arcs are allowed.
 //
 // If the algorithm completes without encountering a negative cycle the method
-// returns shortest paths encoded in a FromList, path distances indexed by
-// node, and return value end = -1.
+// returns shortest paths encoded in a FromList, labels and path distances
+// indexed by node, and return value end = -1.
 //
 // If it encounters a negative cycle reachable from start it returns end >= 0.
 // In this case the cycle can be obtained by calling f.BellmanFordCycle(end).
@@ -352,11 +354,13 @@ func (p *openHeap) Pop() interface{} {
 // cycle not reachable from start will not prevent the algorithm from finding
 // shortest paths from start.
 //
-// See also NegativeCycle to find a cycle anywhere in the graph, and see
+// See also NegativeCycle to find a cycle anywhere in the graph, see
+// NegativeCycles for enumerating all negative cycles, and see
 // HasNegativeCycle for lighter-weight negative cycle detection,
-func (g LabeledDirected) BellmanFord(w WeightFunc, start NI) (f FromList, dist []float64, end NI) {
+func (g LabeledDirected) BellmanFord(w WeightFunc, start NI) (f FromList, labels []LI, dist []float64, end NI) {
 	a := g.LabeledAdjacencyList
 	f = NewFromList(len(a))
+	labels = make([]LI, len(a))
 	dist = make([]float64, len(a))
 	inf := math.Inf(1)
 	for i := range dist {
@@ -376,6 +380,7 @@ func (g LabeledDirected) BellmanFord(w WeightFunc, start NI) (f FromList, dist [
 				// TODO improve to break ties
 				if fp.Len > 0 && d2 < dist[nb.To] {
 					*to = PathEnd{From: NI(from), Len: fp.Len + 1}
+					labels[nb.To] = nb.Label
 					dist[nb.To] = d2
 					imp = true
 				}
@@ -390,11 +395,11 @@ func (g LabeledDirected) BellmanFord(w WeightFunc, start NI) (f FromList, dist [
 		for _, nb := range nbs {
 			if d1+w(nb.Label) < dist[nb.To] {
 				// return nb as end of a path with negative cycle at root
-				return f, dist, NI(from)
+				return f, labels, dist, NI(from)
 			}
 		}
 	}
-	return f, dist, -1
+	return f, labels, dist, -1
 }
 
 // BellmanFordCycle decodes a negative cycle detected by BellmanFord.
@@ -402,14 +407,14 @@ func (g LabeledDirected) BellmanFord(w WeightFunc, start NI) (f FromList, dist [
 // Receiver f and argument end must be results returned from BellmanFord.
 func (f FromList) BellmanFordCycle(end NI) (c []NI) {
 	p := f.Paths
-	var b Bits
-	for b.Bit(end) == 0 {
-		b.SetBit(end, 1)
+	b := bits.New(len(p))
+	for b.Bit(int(end)) == 0 {
+		b.SetBit(int(end), 1)
 		end = p[end].From
 	}
-	for b.Bit(end) == 1 {
+	for b.Bit(int(end)) == 1 {
 		c = append(c, end)
-		b.SetBit(end, 0)
+		b.SetBit(int(end), 0)
 		end = p[end].From
 	}
 	for i, j := 0, len(c)-1; i < j; i, j = i+1, j-1 {
@@ -424,8 +429,9 @@ func (f FromList) BellmanFordCycle(end NI) (c []NI) {
 // cycles anywhere in the graph.  Also path information is not computed,
 // reducing memory use somewhat compared to BellmanFord.
 //
-// See also NegativeCycle to obtain the cycle, and see BellmanFord for
-// single source shortest path searches.
+// See also NegativeCycle to obtain the cycle, see NegativeCycles for
+// enumerating all negative cycles, and see BellmanFord for single source
+// shortest path searches with negative cycle detection.
 func (g LabeledDirected) HasNegativeCycle(w WeightFunc) bool {
 	a := g.LabeledAdjacencyList
 	dist := make([]float64, len(a))
@@ -462,15 +468,18 @@ func (g LabeledDirected) HasNegativeCycle(w WeightFunc) bool {
 // cycles anywhere in the graph.  If a negative cycle exists, one will be
 // returned.  The result is nil if no negative cycle exists.
 //
-// See also HasNegativeCycle for lighter-weight cycle detection, and see
-// BellmanFord for single source shortest paths.
-func (g LabeledDirected) NegativeCycle(w WeightFunc) (c []NI) {
+// See also NegativeCycles for enumerating all negative cycles, see
+// HasNegativeCycle for lighter-weight cycle detection, and see
+// BellmanFord for single source shortest paths, also with negative cycle
+// detection.
+func (g LabeledDirected) NegativeCycle(w WeightFunc) (c []Half) {
 	a := g.LabeledAdjacencyList
 	f := NewFromList(len(a))
 	p := f.Paths
 	for n := range p {
 		p[n] = PathEnd{From: -1, Len: 1}
 	}
+	labels := make([]LI, len(a))
 	dist := make([]float64, len(a))
 	for _ = range a {
 		imp := false
@@ -482,6 +491,7 @@ func (g LabeledDirected) NegativeCycle(w WeightFunc) (c []NI) {
 				to := &p[nb.To]
 				if fp.Len > 0 && d2 < dist[nb.To] {
 					*to = PathEnd{From: NI(from), Len: fp.Len + 1}
+					labels[nb.To] = nb.Label
 					dist[nb.To] = d2
 					imp = true
 				}
@@ -491,26 +501,26 @@ func (g LabeledDirected) NegativeCycle(w WeightFunc) (c []NI) {
 			return nil
 		}
 	}
-	var vis Bits
+	vis := bits.New(len(a))
 a:
 	for n := range a {
-		end := NI(n)
-		var b Bits
+		end := n
+		b := bits.New(len(a))
 		for b.Bit(end) == 0 {
 			if vis.Bit(end) == 1 {
 				continue a
 			}
 			vis.SetBit(end, 1)
 			b.SetBit(end, 1)
-			end = p[end].From
+			end = int(p[end].From)
 			if end < 0 {
 				continue a
 			}
 		}
 		for b.Bit(end) == 1 {
-			c = append(c, end)
+			c = append(c, Half{NI(end), labels[end]})
 			b.SetBit(end, 0)
-			end = p[end].From
+			end = int(p[end].From)
 		}
 		for i, j := 0, len(c)-1; i < j; i, j = i+1, j-1 {
 			c[i], c[j] = c[j], c[i]
@@ -520,147 +530,6 @@ a:
 	return nil // no negative cycle
 }
 
-// A NodeVisitor is an argument to some graph traversal methods.
-//
-// Graph traversal methods call the visitor function for each node visited.
-// Argument n is the node being visited.
-type NodeVisitor func(n NI)
-
-// An OkNodeVisitor function is an argument to some graph traversal methods.
-//
-// Graph traversal methods call the visitor function for each node visited.
-// The argument n is the node being visited.  If the visitor function
-// returns true, the traversal will continue.  If the visitor function
-// returns false, the traversal will terminate immediately.
-type OkNodeVisitor func(n NI) (ok bool)
-
-// BreadthFirst2 traverses a graph breadth first using a direction
-// optimizing algorithm.
-//
-// The code is experimental and currently seems no faster than the
-// conventional breadth first code.
-//
-// Use AdjacencyList.BreadthFirst instead.
-func BreadthFirst2(g, tr AdjacencyList, ma int, start NI, f *FromList, v OkNodeVisitor) int {
-	if tr == nil {
-		var d Directed
-		d, ma = Directed{g}.Transpose()
-		tr = d.AdjacencyList
-	}
-	switch {
-	case f == nil:
-		e := NewFromList(len(g))
-		f = &e
-	case f.Paths == nil:
-		*f = NewFromList(len(g))
-	}
-	if ma <= 0 {
-		ma = g.ArcSize()
-	}
-	rp := f.Paths
-	level := 1
-	rp[start] = PathEnd{Len: level, From: -1}
-	if !v(start) {
-		f.MaxLen = level
-		return -1
-	}
-	nReached := 1 // accumulated for a return value
-	// the frontier consists of nodes all at the same level
-	frontier := []NI{start}
-	mf := len(g[start])     // number of arcs leading out from frontier
-	ctb := ma / 10          // threshold change from top-down to bottom-up
-	k14 := 14 * ma / len(g) // 14 * mean degree
-	cbt := len(g) / k14     // threshold change from bottom-up to top-down
-	//	var fBits, nextb big.Int
-	fBits := make([]bool, len(g))
-	nextb := make([]bool, len(g))
-	zBits := make([]bool, len(g))
-	for {
-		// top down step
-		level++
-		var next []NI
-		for _, n := range frontier {
-			for _, nb := range g[n] {
-				if rp[nb].Len == 0 {
-					rp[nb] = PathEnd{From: n, Len: level}
-					if !v(nb) {
-						f.MaxLen = level
-						return -1
-					}
-					next = append(next, nb)
-					nReached++
-				}
-			}
-		}
-		if len(next) == 0 {
-			break
-		}
-		frontier = next
-		if mf > ctb {
-			// switch to bottom up!
-		} else {
-			// stick with top down
-			continue
-		}
-		// convert frontier representation
-		nf := 0 // number of vertices on the frontier
-		for _, n := range frontier {
-			//			fBits.SetBit(&fBits, n, 1)
-			fBits[n] = true
-			nf++
-		}
-	bottomUpLoop:
-		level++
-		nNext := 0
-		for n := range tr {
-			if rp[n].Len == 0 {
-				for _, nb := range tr[n] {
-					//					if fBits.Bit(nb) == 1 {
-					if fBits[nb] {
-						rp[n] = PathEnd{From: nb, Len: level}
-						if !v(nb) {
-							f.MaxLen = level
-							return -1
-						}
-						//						nextb.SetBit(&nextb, n, 1)
-						nextb[n] = true
-						nReached++
-						nNext++
-						break
-					}
-				}
-			}
-		}
-		if nNext == 0 {
-			break
-		}
-		fBits, nextb = nextb, fBits
-		//		nextb.SetInt64(0)
-		copy(nextb, zBits)
-		nf = nNext
-		if nf < cbt {
-			// switch back to top down!
-		} else {
-			// stick with bottom up
-			goto bottomUpLoop
-		}
-		// convert frontier representation
-		mf = 0
-		frontier = frontier[:0]
-		for n := range g {
-			//			if fBits.Bit(n) == 1 {
-			if fBits[n] {
-				frontier = append(frontier, NI(n))
-				mf += len(g[n])
-				fBits[n] = false
-			}
-		}
-		//		fBits.SetInt64(0)
-	}
-	f.MaxLen = level - 1
-	return nReached
-}
-
 // DAGMinDistPath finds a single shortest path.
 //
 // Shortest means minimum sum of arc weights.
@@ -668,7 +537,7 @@ func BreadthFirst2(g, tr AdjacencyList, ma int, start NI, f *FromList, v OkNodeV
 // Returned is the path and distance as returned by FromList.PathTo.
 //
 // This is a convenience method.  See DAGOptimalPaths for more options.
-func (g LabeledDirected) DAGMinDistPath(start, end NI, w WeightFunc) ([]NI, float64, error) {
+func (g LabeledDirected) DAGMinDistPath(start, end NI, w WeightFunc) (LabeledPath, float64, error) {
 	return g.dagPath(start, end, w, false)
 }
 
@@ -679,20 +548,20 @@ func (g LabeledDirected) DAGMinDistPath(start, end NI, w WeightFunc) ([]NI, floa
 // Returned is the path and distance as returned by FromList.PathTo.
 //
 // This is a convenience method.  See DAGOptimalPaths for more options.
-func (g LabeledDirected) DAGMaxDistPath(start, end NI, w WeightFunc) ([]NI, float64, error) {
+func (g LabeledDirected) DAGMaxDistPath(start, end NI, w WeightFunc) (LabeledPath, float64, error) {
 	return g.dagPath(start, end, w, true)
 }
 
-func (g LabeledDirected) dagPath(start, end NI, w WeightFunc, longest bool) ([]NI, float64, error) {
+func (g LabeledDirected) dagPath(start, end NI, w WeightFunc, longest bool) (LabeledPath, float64, error) {
 	o, _ := g.Topological()
 	if o == nil {
-		return nil, 0, fmt.Errorf("not a DAG")
+		return LabeledPath{}, 0, fmt.Errorf("not a DAG")
 	}
-	f, dist, _ := g.DAGOptimalPaths(start, end, o, w, longest)
+	f, labels, dist, _ := g.DAGOptimalPaths(start, end, o, w, longest)
 	if f.Paths[end].Len == 0 {
-		return nil, 0, fmt.Errorf("no path from %d to %d", start, end)
+		return LabeledPath{}, 0, fmt.Errorf("no path from %d to %d", start, end)
 	}
-	return f.PathTo(end, nil), dist[end], nil
+	return f.PathToLabeled(end, labels, nil), dist[end], nil
 }
 
 // DAGOptimalPaths finds either longest or shortest distance paths in a
@@ -712,11 +581,13 @@ func (g LabeledDirected) dagPath(start, end NI, w WeightFunc, longest bool) ([]N
 // is a valid node number, the method returns as soon as the optimal path
 // to end is found.  If end is -1, all optimal paths from start are found.
 //
-// Paths and path distances are encoded in the returned FromList and dist
-// slice.   The number of nodes reached is returned as nReached.
-func (g LabeledDirected) DAGOptimalPaths(start, end NI, ordering []NI, w WeightFunc, longest bool) (f FromList, dist []float64, nReached int) {
+// Paths and path distances are encoded in the returned FromList, labels,
+// and dist slices.   The number of nodes reached is returned as nReached.
+func (g LabeledDirected) DAGOptimalPaths(start, end NI, ordering []NI, w WeightFunc, longest bool) (f FromList, labels []LI, dist []float64, nReached int) {
 	a := g.LabeledAdjacencyList
 	f = NewFromList(len(a))
+	f.Leaves = bits.New(len(a))
+	labels = make([]LI, len(a))
 	dist = make([]float64, len(a))
 	if ordering == nil {
 		ordering, _ = g.Topological()
@@ -739,14 +610,14 @@ func (g LabeledDirected) DAGOptimalPaths(start, end NI, ordering []NI, w WeightF
 	p[start] = PathEnd{From: -1, Len: 1}
 	f.MaxLen = 1
 	leaves := &f.Leaves
-	leaves.SetBit(start, 1)
+	leaves.SetBit(int(start), 1)
 	nReached = 1
 	for n := start; n != end; n = ordering[o] {
 		if p[n].Len > 0 && len(a[n]) > 0 {
 			nDist := dist[n]
 			candLen := p[n].Len + 1 // len for any candidate arc followed from n
 			for _, to := range a[n] {
-				leaves.SetBit(to.To, 1)
+				leaves.SetBit(int(to.To), 1)
 				candDist := nDist + w(to.Label)
 				switch {
 				case p[to.To].Len == 0: // first path to node to.To
@@ -758,11 +629,12 @@ func (g LabeledDirected) DAGOptimalPaths(start, end NI, ordering []NI, w WeightF
 				}
 				dist[to.To] = candDist
 				p[to.To] = PathEnd{From: n, Len: candLen}
+				labels[to.To] = to.Label
 				if candLen > f.MaxLen {
 					f.MaxLen = candLen
 				}
 			}
-			leaves.SetBit(n, 0)
+			leaves.SetBit(int(n), 0)
 		}
 		o++
 		if o == len(ordering) {
@@ -781,12 +653,17 @@ func (g LabeledDirected) DAGOptimalPaths(start, end NI, ordering []NI, w WeightF
 // As usual for Dijkstra's algorithm, arc weights must be non-negative.
 // Graphs may be directed or undirected.  Loops and parallel arcs are
 // allowed.
-func (g LabeledAdjacencyList) Dijkstra(start, end NI, w WeightFunc) (f FromList, dist []float64, reached int) {
+//
+// Paths and path distances are encoded in the returned FromList and dist
+// slice.   Returned labels are the labels of arcs followed to each node.
+// The number of nodes reached is returned as nReached.
+func (g LabeledAdjacencyList) Dijkstra(start, end NI, w WeightFunc) (f FromList, labels []LI, dist []float64, nReached int) {
 	r := make([]tentResult, len(g))
 	for i := range r {
 		r[i].nx = NI(i)
 	}
 	f = NewFromList(len(g))
+	labels = make([]LI, len(g))
 	dist = make([]float64, len(g))
 	current := start
 	rp := f.Paths
@@ -822,6 +699,7 @@ func (g LabeledAdjacencyList) Dijkstra(start, end NI, w WeightFunc) (f FromList,
 			hr.dist = dist
 			rp[nb.To].Len = nextLen
 			rp[nb.To].From = current
+			labels[nb.To] = nb.Label
 			if visited {
 				heap.Fix(&t, hr.fx)
 			} else {
@@ -830,7 +708,8 @@ func (g LabeledAdjacencyList) Dijkstra(start, end NI, w WeightFunc) (f FromList,
 		}
 		//d.ndVis++
 		if len(t) == 0 {
-			return f, dist, nDone // no more reachable nodes. AllPaths normal return
+			// no more reachable nodes. AllPaths normal return
+			return f, labels, dist, nDone
 		}
 		// new current is node with smallest tentative distance
 		cr = heap.Pop(&t).(*tentResult)
@@ -840,15 +719,16 @@ func (g LabeledAdjacencyList) Dijkstra(start, end NI, w WeightFunc) (f FromList,
 		dist[current] = cr.dist // store final distance
 	}
 	// normal return for single shortest path search
-	return f, dist, -1
+	return f, labels, dist, -1
 }
 
 // DijkstraPath finds a single shortest path.
 //
-// Returned is the path and distance as returned by FromList.PathTo.
-func (g LabeledAdjacencyList) DijkstraPath(start, end NI, w WeightFunc) ([]NI, float64) {
-	f, dist, _ := g.Dijkstra(start, end, w)
-	return f.PathTo(end, nil), dist[end]
+// Returned is the path as returned by FromList.LabeledPathTo and the total
+// path distance.
+func (g LabeledAdjacencyList) DijkstraPath(start, end NI, w WeightFunc) (LabeledPath, float64) {
+	f, labels, dist, _ := g.Dijkstra(start, end, w)
+	return f.PathToLabeled(end, labels, nil), dist[end]
 }
 
 // tent implements container/heap
