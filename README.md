@@ -2,11 +2,21 @@ gdrive
 ======
 
 
-## Note
-This tool is not being actively maintained at the moment, ymmv.
-For incremental and encrypted backup of unix systems [borg](https://github.com/borgbackup/borg)
-is a great alternative and [rsync.net](http://rsync.net/products/attic.html) provides
-a cheap and reliable backup target.
+## Note maintenance !
+This tool is not being actively maintained at the moment, by the original developer github.com/prasmussen
+I have forked his repo, to further foster interest in this tool.
+My android build team use this extensivly to upload our android builds to our developer google drive accounts. 
+
+Please pull request any guides and work arounds. 
+
+## Warning, API errors while uploading is being flooded due to the popular use !
+work arounds
+/bin/bash work around
+Credit github.com/ripee 
+
+while ! gdrive upload --parent <command string>; do sleep 1; done
+
+Will post examples next
 
 ## Overview
 gdrive is a command line utility for interacting with Google Drive.
@@ -17,6 +27,9 @@ If you want to compile from source you need the [go toolchain](http://golang.org
 Version 1.5 or higher.
 
 ## Installation
+Warning, compiling from source code may overwhelm API due to number of users usins the same credentials from developer
+   SEE tutorials for install !
+   
 ### With [Homebrew](http://brew.sh) on Mac
 ```
 brew install gdrive
