@@ -1,7 +1,6 @@
 package drive
 
 import (
-	"encoding/json"
 	"fmt"
 	"golang.org/x/net/context"
 	"google.golang.org/api/drive/v3"
@@ -124,11 +123,8 @@ func OutputFileList(args OutputFileListArgs) error {
 			"created": formatDatetime(f.CreatedTime),
 		})
 	}
-	enc := json.NewEncoder(args.Out)
-	if args.JsonOutput == 2 {
-		enc.SetIndent("", "  ")
-	}
-	return enc.Encode(&data);
+
+	return jsonOutput(args.Out, args.JsonOutput == 2, data)
 }
 
 type PrintFileListArgs struct {

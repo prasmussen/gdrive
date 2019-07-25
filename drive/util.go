@@ -1,7 +1,9 @@
 package drive
 
 import (
+	"encoding/json"
 	"fmt"
+	"io"
 	"math"
 	"os"
 	"path/filepath"
@@ -54,6 +56,14 @@ func round(n float64) int64 {
 		return int64(math.Ceil(n - 0.5))
 	}
 	return int64(math.Floor(n + 0.5))
+}
+
+func jsonOutput(out io.Writer, indent bool, data interface{}) error {
+	enc := json.NewEncoder(out)
+	if indent {
+		enc.SetIndent("", "  ")
+	}
+	return enc.Encode(&data);
 }
 
 func formatBool(b bool) string {

@@ -1,7 +1,6 @@
 package drive
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"text/tabwriter"
@@ -31,11 +30,7 @@ func (self *Drive) About(args AboutArgs) (err error) {
 			"total":         quota.Limit,
 			"maxuploadsize": about.MaxUploadSize,
 		}
-		enc := json.NewEncoder(args.Out)
-		if args.JsonOutput == 2 {
-			enc.SetIndent("", "  ")
-		}
-		return enc.Encode(&data);
+		return jsonOutput(args.Out, args.JsonOutput == 2, data)
 	}
 
 	fmt.Fprintf(args.Out, "User: %s, %s\n", user.DisplayName, user.EmailAddress)
