@@ -190,6 +190,7 @@ func infoHandler(ctx cli.Context) {
 		Out:         os.Stdout,
 		Id:          args.String("fileId"),
 		SizeInBytes: args.Bool("sizeInBytes"),
+		JsonOutput:  args.Int64("jsonOutput"),
 	})
 	checkErr(err)
 }

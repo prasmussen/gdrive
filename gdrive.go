@@ -378,6 +378,12 @@ func main() {
 						Description: "Show size in bytes",
 						OmitValue:   true,
 					},
+					cli.IntFlag{
+						Name:         "jsonOutput",
+						Patterns:     []string{"--jsonOutput"},
+						Description:  "Print json output (1: normal, 2: pretty)",
+						DefaultValue: DefaultJsonOutput,
+					},
 				),
 			},
 		},
