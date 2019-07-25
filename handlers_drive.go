@@ -227,6 +227,7 @@ func listRevisionsHandler(ctx cli.Context) {
 		NameWidth:   args.Int64("nameWidth"),
 		SizeInBytes: args.Bool("sizeInBytes"),
 		SkipHeader:  args.Bool("skipHeader"),
+		JsonOutput:  args.Int64("jsonOutput"),
 	})
 	checkErr(err)
 }
