@@ -1,6 +1,7 @@
 package drive
 
 import (
+	"encoding/json"
 	"fmt"
 	"golang.org/x/net/context"
 	"google.golang.org/api/drive/v3"
@@ -18,6 +19,7 @@ type ListFilesArgs struct {
 	SkipHeader  bool
 	SizeInBytes bool
 	AbsPath     bool
+	JsonOutput  int64
 }
 
 func (self *Drive) List(args ListFilesArgs) (err error) {
@@ -44,6 +46,13 @@ func (self *Drive) List(args ListFilesArgs) (err error) {
 		}
 	}
 
+	if args.JsonOutput > 0 {
+		return OutputFileList(OutputFileListArgs{
+			Out:        args.Out,
+			Files:      files,
+			JsonOutput: args.JsonOutput,
+		})
+	}
 	PrintFileList(PrintFileListArgs{
 		Out:         args.Out,
 		Files:       files,
@@ -95,6 +104,31 @@ func (self *Drive) listAllFiles(args listAllFilesArgs) ([]*drive.File, error) {
 	}
 
 	return files, nil
+}
+
+type OutputFileListArgs struct {
+	Out        io.Writer
+	Files      []*drive.File
+	JsonOutput int64
+}
+
+func OutputFileList(args OutputFileListArgs) error {
+	var data []map[string]interface{}
+
+	for _, f := range args.Files {
+		data = append(data, map[string]interface{}{
+			"id":      f.Id,
+			"name":    f.Name,
+			"type":    filetype(f),
+			"size":    f.Size,
+			"created": formatDatetime(f.CreatedTime),
+		})
+	}
+	enc := json.NewEncoder(args.Out)
+	if args.JsonOutput == 2 {
+		enc.SetIndent("", "  ")
+	}
+	return enc.Encode(&data);
 }
 
 type PrintFileListArgs struct {

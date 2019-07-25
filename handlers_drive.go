@@ -30,6 +30,7 @@ func listHandler(ctx cli.Context) {
 		SkipHeader:  args.Bool("skipHeader"),
 		SizeInBytes: args.Bool("sizeInBytes"),
 		AbsPath:     args.Bool("absPath"),
+		JsonOutput:  args.Int64("jsonOutput"),
 	})
 	checkErr(err)
 }
@@ -320,6 +321,7 @@ func aboutHandler(ctx cli.Context) {
 	err := newDrive(args).About(drive.AboutArgs{
 		Out:         os.Stdout,
 		SizeInBytes: args.Bool("sizeInBytes"),
+		JsonOutput:  args.Int64("jsonOutput"),
 	})
 	checkErr(err)
 }

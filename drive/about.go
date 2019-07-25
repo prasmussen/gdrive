@@ -1,6 +1,7 @@
 package drive
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"text/tabwriter"
@@ -9,6 +10,7 @@ import (
 type AboutArgs struct {
 	Out         io.Writer
 	SizeInBytes bool
+	JsonOutput  int64
 }
 
 func (self *Drive) About(args AboutArgs) (err error) {
@@ -19,6 +21,22 @@ func (self *Drive) About(args AboutArgs) (err error) {
 
 	user := about.User
 	quota := about.StorageQuota
+
+	if args.JsonOutput > 0 {
+		data := map[string]interface{}{
+			"username":      user.DisplayName,
+			"email":         user.EmailAddress,
+			"used":          quota.Usage,
+			"free":          quota.Limit - quota.Usage,
+			"total":         quota.Limit,
+			"maxuploadsize": about.MaxUploadSize,
+		}
+		enc := json.NewEncoder(args.Out)
+		if args.JsonOutput == 2 {
+			enc.SetIndent("", "  ")
+		}
+		return enc.Encode(&data);
+	}
 
 	fmt.Fprintf(args.Out, "User: %s, %s\n", user.DisplayName, user.EmailAddress)
 	fmt.Fprintf(args.Out, "Used: %s\n", formatSize(quota.Usage, args.SizeInBytes))
