@@ -29,7 +29,7 @@ func (self *Drive) Download(args DownloadArgs) error {
 		return self.downloadRecursive(args)
 	}
 
-	f, err := self.service.Files.Get(args.Id).Fields("id", "name", "size", "mimeType", "md5Checksum").Do()
+	f, err := self.service.Files.Get(args.Id).SupportsAllDrives(true).Fields("id", "name", "size", "mimeType", "md5Checksum").Do()
 	if err != nil {
 		return fmt.Errorf("Failed to get file: %s", err)
 	}
@@ -108,7 +108,8 @@ func (self *Drive) DownloadQuery(args DownloadQueryArgs) error {
 }
 
 func (self *Drive) downloadRecursive(args DownloadArgs) error {
-	f, err := self.service.Files.Get(args.Id).Fields("id", "name", "size", "mimeType", "md5Checksum").Do()
+	fmt.Println("jeff_debug downloadRecursive")
+	f, err := self.service.Files.Get(args.Id).SupportsAllDrives(true).Fields("id", "name", "size", "mimeType", "md5Checksum").Do()
 	if err != nil {
 		return fmt.Errorf("Failed to get file: %s", err)
 	}
@@ -126,8 +127,8 @@ func (self *Drive) downloadRecursive(args DownloadArgs) error {
 func (self *Drive) downloadBinary(f *drive.File, args DownloadArgs) (int64, int64, error) {
 	// Get timeout reader wrapper and context
 	timeoutReaderWrapper, ctx := getTimeoutReaderWrapperContext(args.Timeout)
-
-	res, err := self.service.Files.Get(f.Id).Context(ctx).Download()
+	fmt.Println("jeff_debug downloadBinary")
+	res, err := self.service.Files.Get(f.Id).SupportsAllDrives(true).Context(ctx).Download()
 	if err != nil {
 		if isTimeoutError(err) {
 			return 0, 0, fmt.Errorf("Failed to download file: timeout, no data was transferred for %v", args.Timeout)
@@ -140,6 +141,7 @@ func (self *Drive) downloadBinary(f *drive.File, args DownloadArgs) (int64, int6
 
 	// Path to file
 	fpath := filepath.Join(args.Path, f.Name)
+	fmt.Println("fpath:", fpath)
 
 	if !args.Stdout {
 		fmt.Fprintf(args.Out, "Downloading %s -> %s\n", f.Name, fpath)
@@ -197,6 +199,8 @@ func (self *Drive) saveFile(args saveFileArgs) (int64, int64, error) {
 	// Download to tmp file
 	tmpPath := args.fpath + ".incomplete"
 
+	fmt.Println("tmpPath:", tmpPath)
+
 	// Create new file
 	outFile, err := os.Create(tmpPath)
 	if err != nil {
@@ -224,6 +228,7 @@ func (self *Drive) saveFile(args saveFileArgs) (int64, int64, error) {
 }
 
 func (self *Drive) downloadDirectory(parent *drive.File, args DownloadArgs) error {
+	fmt.Println("jeff_debug downloadDirectory")
 	listArgs := listAllFilesArgs{
 		query:  fmt.Sprintf("'%s' in parents", parent.Id),
 		fields: []googleapi.Field{"nextPageToken", "files(id,name)"},

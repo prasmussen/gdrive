@@ -2,16 +2,17 @@ package drive
 
 import (
 	"fmt"
-	"github.com/sabhiram/go-git-ignore"
-	"github.com/soniakeys/graph"
-	"google.golang.org/api/drive/v3"
-	"google.golang.org/api/googleapi"
 	"io"
 	"os"
 	"path/filepath"
 	"strings"
 	"text/tabwriter"
 	"time"
+
+	"github.com/sabhiram/go-git-ignore"
+	"github.com/soniakeys/graph"
+	"google.golang.org/api/drive/v3"
+	"google.golang.org/api/googleapi"
 )
 
 const DefaultIgnoreFile = ".gdriveignore"
@@ -86,7 +87,7 @@ func (self *Drive) prepareSyncFiles(localPath string, root *drive.File, cmp File
 }
 
 func (self *Drive) isSyncFile(id string) (bool, error) {
-	f, err := self.service.Files.Get(id).Fields("appProperties").Do()
+	f, err := self.service.Files.Get(id).SupportsAllDrives(true).Fields("appProperties").Do()
 	if err != nil {
 		return false, fmt.Errorf("Failed to get file: %s", err)
 	}
