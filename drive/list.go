@@ -77,10 +77,7 @@ func (self *Drive) listAllFiles(args listAllFilesArgs) ([]*drive.File, error) {
 	fmt.Println(args.query)
 	err := self.service.Files.List().Corpora("allDrives").IncludeItemsFromAllDrives(true).SupportsAllDrives(true).Q(args.query).Fields(args.fields...).OrderBy(args.sortOrder).PageSize(pageSize).Pages(context.TODO(), func(fl *drive.FileList) error {
 		files = append(files, fl.Files...)
-		fmt.Println("jeff_debug listAllFiles")
-		fmt.Println(fl.Files)
 
-		fmt.Println(files)
 		// Stop when we have all the files we need
 		if args.maxFiles > 0 && len(files) >= int(args.maxFiles) {
 			return controlledStop

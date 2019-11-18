@@ -111,7 +111,6 @@ func (self *Drive) DownloadQuery(args DownloadQueryArgs) error {
 }
 
 func (self *Drive) downloadRecursive(args DownloadArgs) error {
-	fmt.Println("jeff_debug downloadRecursive")
 	f, err := self.service.Files.Get(args.Id).SupportsAllDrives(true).Fields("id", "name", "size", "mimeType", "md5Checksum").Do()
 	if err != nil {
 		return fmt.Errorf("Failed to get file: %s", err)
@@ -130,7 +129,6 @@ func (self *Drive) downloadRecursive(args DownloadArgs) error {
 func (self *Drive) downloadBinary(f *drive.File, args DownloadArgs) (int64, int64, error) {
 	// Get timeout reader wrapper and context
 	timeoutReaderWrapper, ctx := getTimeoutReaderWrapperContext(args.Timeout)
-	fmt.Println("jeff_debug downloadBinary")
 	res, err := self.service.Files.Get(f.Id).SupportsAllDrives(true).Context(ctx).Download()
 	if err != nil {
 		if isTimeoutError(err) {
@@ -231,7 +229,6 @@ func (self *Drive) saveFile(args saveFileArgs) (int64, int64, error) {
 }
 
 func (self *Drive) downloadDirectory(parent *drive.File, args DownloadArgs) error {
-	fmt.Println("jeff_debug downloadDirectory")
 	listArgs := listAllFilesArgs{
 		query:  fmt.Sprintf("'%s' in parents %s", parent.Id, args.RecursiveExtraQuery),
 		fields: []googleapi.Field{"nextPageToken", "files(id,name)"},
