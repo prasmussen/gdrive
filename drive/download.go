@@ -27,12 +27,14 @@ type DownloadArgs struct {
 
 func (self *Drive) Download(args DownloadArgs) error {
 	if args.Recursive {
-		return self.downloadRecursive(args)
+		self.downloadRecursive(args)
+		self.waitGroup.Wait()
+		return self.downloadErr
 	}
 
 	f, err := self.service.Files.Get(args.Id).SupportsAllDrives(true).Fields("id", "name", "size", "mimeType", "md5Checksum").Do()
 	if err != nil {
-		return fmt.Errorf("Failed to get file: %s", err)
+		return fmt.Errorf("Failed to get file: %s, err:", args.Id, err)
 	}
 
 	if isDir(f) {
@@ -107,21 +109,33 @@ func (self *Drive) DownloadQuery(args DownloadQueryArgs) error {
 		}
 	}
 
-	return nil
+	self.waitGroup.Wait()
+
+	return self.downloadErr
 }
 
 func (self *Drive) downloadRecursive(args DownloadArgs) error {
 	f, err := self.service.Files.Get(args.Id).SupportsAllDrives(true).Fields("id", "name", "size", "mimeType", "md5Checksum").Do()
 	if err != nil {
-		return fmt.Errorf("Failed to get file: %s", err)
+		return fmt.Errorf("Failed to get file: %s, err:", args.Id, err)
 	}
 
-	if isDir(f) {
-		return self.downloadDirectory(f, args)
-	} else if isBinary(f) {
-		_, _, err = self.downloadBinary(f, args)
-		return err
-	}
+	self.waitGroup.Add(1)
+	go func() {
+		if isDir(f) {
+			err = self.downloadDirectory(f, args)
+		} else if isBinary(f) {
+			_, _, err = self.downloadBinary(f, args)
+		}
+
+		if err != nil {
+			fmt.Errorf("%s \n %s", self.downloadErr, err.Error())
+			//fmt.Println("Failed to download:", err)
+		}
+
+		self.waitGroup.Done()
+
+	}()
 
 	return nil
 }

@@ -1,12 +1,16 @@
 package drive
 
 import (
-	"google.golang.org/api/drive/v3"
 	"net/http"
+	"sync"
+
+	"google.golang.org/api/drive/v3"
 )
 
 type Drive struct {
-	service *drive.Service
+	service     *drive.Service
+	waitGroup   sync.WaitGroup
+	downloadErr error
 }
 
 func New(client *http.Client) (*Drive, error) {
@@ -15,5 +19,5 @@ func New(client *http.Client) (*Drive, error) {
 		return nil, err
 	}
 
-	return &Drive{service}, nil
+	return &Drive{service, sync.WaitGroup{}, nil}, nil
 }
