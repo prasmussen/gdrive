@@ -23,6 +23,7 @@ type DownloadArgs struct {
 	Stdout              bool
 	Timeout             time.Duration
 	RecursiveExtraQuery string // add extra query
+	IsAsyncDownload     bool
 }
 
 func (self *Drive) Download(args DownloadArgs) error {
@@ -76,6 +77,7 @@ type DownloadQueryArgs struct {
 	Skip                bool
 	Recursive           bool
 	RecursiveExtraQuery string
+	IsAsyncDownload     bool
 }
 
 func (self *Drive) DownloadQuery(args DownloadQueryArgs) error {
@@ -95,6 +97,7 @@ func (self *Drive) DownloadQuery(args DownloadQueryArgs) error {
 		Force:               args.Force,
 		Skip:                args.Skip,
 		RecursiveExtraQuery: args.RecursiveExtraQuery,
+		IsAsyncDownload:     args.IsAsyncDownload,
 	}
 
 	for _, f := range files {
@@ -120,24 +123,31 @@ func (self *Drive) downloadRecursive(args DownloadArgs) error {
 		return fmt.Errorf("Failed to get file: %s, err:", args.Id, err)
 	}
 
-	self.waitGroup.Add(1)
-	go func() {
-		if isDir(f) {
-			err = self.downloadDirectory(f, args)
-		} else if isBinary(f) {
-			_, _, err = self.downloadBinary(f, args)
-		}
-
-		if err != nil {
-			fmt.Errorf("%s \n %s", self.downloadErr, err.Error())
-			//fmt.Println("Failed to download:", err)
-		}
-
-		self.waitGroup.Done()
-
-	}()
+	if args.IsAsyncDownload {
+		self.waitGroup.Add(1)
+		go func() {
+			self.doDownloadRecursive(f, args)
+			self.waitGroup.Done()
+		}()
+	} else {
+		self.doDownloadRecursive(f, args)
+	}
 
 	return nil
+}
+
+func (self *Drive) doDownloadRecursive(f *drive.File, args DownloadArgs) {
+	var err error
+	if isDir(f) {
+		err = self.downloadDirectory(f, args)
+	} else if isBinary(f) {
+		_, _, err = self.downloadBinary(f, args)
+	}
+
+	if err != nil {
+		fmt.Errorf("%s \n %s", self.downloadErr, err.Error())
+		//fmt.Println("Failed to download:", err)
+	}
 }
 
 func (self *Drive) downloadBinary(f *drive.File, args DownloadArgs) (int64, int64, error) {
