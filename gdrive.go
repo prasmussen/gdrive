@@ -45,6 +45,11 @@ func main() {
 			Patterns:    []string{"--service-account"},
 			Description: "Oauth service account filename, used for server to server communication without user interaction (filename path is relative to config dir)",
 		},
+		cli.StringFlag{
+			Name:        "oauthCredentials",
+			Patterns:    []string{"--oauth-credentials"},
+			Description: "Oauth Credentials file as downloaded from https://console.cloud.google.com/apis/credentials",
+		},
 	}
 
 	handlers := []*cli.Handler{
