@@ -3,6 +3,7 @@ package drive
 import (
 	"fmt"
 	"io"
+	"math"
 	"os"
 	"path/filepath"
 	"time"
@@ -24,10 +25,12 @@ type DownloadArgs struct {
 	Timeout             time.Duration
 	RecursiveExtraQuery string // add extra query
 	IsAsyncDownload     bool
+	LimitPerSec         int64
 }
 
 func (self *Drive) Download(args DownloadArgs) error {
 	if args.Recursive {
+		self.ResetDownloadTime()
 		self.downloadRecursive(args)
 		self.waitGroup.Wait()
 		return self.downloadErr
@@ -78,6 +81,7 @@ type DownloadQueryArgs struct {
 	Recursive           bool
 	RecursiveExtraQuery string
 	IsAsyncDownload     bool
+	LimitPerSec         int64
 }
 
 func (self *Drive) DownloadQuery(args DownloadQueryArgs) error {
@@ -98,7 +102,10 @@ func (self *Drive) DownloadQuery(args DownloadQueryArgs) error {
 		Skip:                args.Skip,
 		RecursiveExtraQuery: args.RecursiveExtraQuery,
 		IsAsyncDownload:     args.IsAsyncDownload,
+		LimitPerSec:         args.LimitPerSec,
 	}
+
+	self.ResetDownloadTime()
 
 	for _, f := range files {
 		if isDir(f) && args.Recursive {
@@ -118,6 +125,22 @@ func (self *Drive) DownloadQuery(args DownloadQueryArgs) error {
 }
 
 func (self *Drive) downloadRecursive(args DownloadArgs) error {
+	self.downlaodCount++
+	perid := time.Now().Unix() - self.downloadStartUnix
+	if perid < 1 {
+		perid = 1
+	}
+	limit := perid * args.LimitPerSec
+	if limit < 0 {
+		limit = math.MaxInt64
+	}
+	for self.downlaodCount > limit {
+		gap := self.downlaodCount - limit
+		time.Sleep(time.Duration(gap) * time.Second)
+		perid = time.Now().Unix() - self.downloadStartUnix
+		limit = perid * args.LimitPerSec
+	}
+
 	f, err := self.service.Files.Get(args.Id).SupportsAllDrives(true).Fields("id", "name", "size", "mimeType", "md5Checksum").Do()
 	if err != nil {
 		return fmt.Errorf("Failed to get file: %s, err:", args.Id, err)
