@@ -2,12 +2,13 @@ package drive
 
 import (
 	"fmt"
-	"google.golang.org/api/drive/v3"
-	"google.golang.org/api/googleapi"
 	"io"
 	"mime"
 	"path/filepath"
 	"time"
+
+	"google.golang.org/api/drive/v3"
+	"google.golang.org/api/googleapi"
 )
 
 type UpdateArgs struct {
@@ -64,7 +65,7 @@ func (self *Drive) Update(args UpdateArgs) error {
 	fmt.Fprintf(args.Out, "Uploading %s\n", args.Path)
 	started := time.Now()
 
-	f, err := self.service.Files.Update(args.Id, dstFile).Fields("id", "name", "size").Context(ctx).Media(reader, chunkSize).Do()
+	f, err := self.service.Files.Update(args.Id, dstFile).SupportsAllDrives(true).Fields("id", "name", "size").Context(ctx).Media(reader, chunkSize).Do()
 	if err != nil {
 		if isTimeoutError(err) {
 			return fmt.Errorf("Failed to upload file: timeout, no data was transferred for %v", args.Timeout)

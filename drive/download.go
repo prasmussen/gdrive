@@ -3,6 +3,7 @@ package drive
 import (
 	"fmt"
 	"io"
+	"math"
 	"os"
 	"path/filepath"
 	"time"
@@ -12,26 +13,32 @@ import (
 )
 
 type DownloadArgs struct {
-	Out       io.Writer
-	Progress  io.Writer
-	Id        string
-	Path      string
-	Force     bool
-	Skip      bool
-	Recursive bool
-	Delete    bool
-	Stdout    bool
-	Timeout   time.Duration
+	Out                 io.Writer
+	Progress            io.Writer
+	Id                  string
+	Path                string
+	Force               bool
+	Skip                bool
+	Recursive           bool
+	Delete              bool
+	Stdout              bool
+	Timeout             time.Duration
+	RecursiveExtraQuery string // add extra query
+	IsAsyncDownload     bool
+	LimitPerSec         int64
 }
 
 func (self *Drive) Download(args DownloadArgs) error {
 	if args.Recursive {
-		return self.downloadRecursive(args)
+		self.ResetDownloadTime()
+		self.downloadRecursive(args)
+		self.waitGroup.Wait()
+		return self.downloadErr
 	}
 
-	f, err := self.service.Files.Get(args.Id).Fields("id", "name", "size", "mimeType", "md5Checksum").Do()
+	f, err := self.service.Files.Get(args.Id).SupportsAllDrives(true).Fields("id", "name", "size", "mimeType", "md5Checksum").Do()
 	if err != nil {
-		return fmt.Errorf("Failed to get file: %s", err)
+		return fmt.Errorf("Failed to get file: %s, err:", args.Id, err)
 	}
 
 	if isDir(f) {
@@ -65,13 +72,16 @@ func (self *Drive) Download(args DownloadArgs) error {
 }
 
 type DownloadQueryArgs struct {
-	Out       io.Writer
-	Progress  io.Writer
-	Query     string
-	Path      string
-	Force     bool
-	Skip      bool
-	Recursive bool
+	Out                 io.Writer
+	Progress            io.Writer
+	Query               string
+	Path                string
+	Force               bool
+	Skip                bool
+	Recursive           bool
+	RecursiveExtraQuery string
+	IsAsyncDownload     bool
+	LimitPerSec         int64
 }
 
 func (self *Drive) DownloadQuery(args DownloadQueryArgs) error {
@@ -85,12 +95,17 @@ func (self *Drive) DownloadQuery(args DownloadQueryArgs) error {
 	}
 
 	downloadArgs := DownloadArgs{
-		Out:      args.Out,
-		Progress: args.Progress,
-		Path:     args.Path,
-		Force:    args.Force,
-		Skip:     args.Skip,
+		Out:                 args.Out,
+		Progress:            args.Progress,
+		Path:                args.Path,
+		Force:               args.Force,
+		Skip:                args.Skip,
+		RecursiveExtraQuery: args.RecursiveExtraQuery,
+		IsAsyncDownload:     args.IsAsyncDownload,
+		LimitPerSec:         args.LimitPerSec,
 	}
+
+	self.ResetDownloadTime()
 
 	for _, f := range files {
 		if isDir(f) && args.Recursive {
@@ -104,30 +119,64 @@ func (self *Drive) DownloadQuery(args DownloadQueryArgs) error {
 		}
 	}
 
-	return nil
+	self.waitGroup.Wait()
+
+	return self.downloadErr
 }
 
 func (self *Drive) downloadRecursive(args DownloadArgs) error {
-	f, err := self.service.Files.Get(args.Id).Fields("id", "name", "size", "mimeType", "md5Checksum").Do()
-	if err != nil {
-		return fmt.Errorf("Failed to get file: %s", err)
+	self.downlaodCount++
+	perid := time.Now().Unix() - self.downloadStartUnix
+	if perid < 1 {
+		perid = 1
+	}
+	limit := perid * args.LimitPerSec
+	if limit < 0 {
+		limit = math.MaxInt64
+	}
+	for self.downlaodCount > limit {
+		gap := self.downlaodCount - limit
+		time.Sleep(time.Duration(gap) * time.Second)
+		perid = time.Now().Unix() - self.downloadStartUnix
+		limit = perid * args.LimitPerSec
 	}
 
-	if isDir(f) {
-		return self.downloadDirectory(f, args)
-	} else if isBinary(f) {
-		_, _, err = self.downloadBinary(f, args)
-		return err
+	f, err := self.service.Files.Get(args.Id).SupportsAllDrives(true).Fields("id", "name", "size", "mimeType", "md5Checksum").Do()
+	if err != nil {
+		return fmt.Errorf("Failed to get file: %s, err:", args.Id, err)
+	}
+
+	if args.IsAsyncDownload {
+		self.waitGroup.Add(1)
+		go func() {
+			self.doDownloadRecursive(f, args)
+			self.waitGroup.Done()
+		}()
+	} else {
+		self.doDownloadRecursive(f, args)
 	}
 
 	return nil
+}
+
+func (self *Drive) doDownloadRecursive(f *drive.File, args DownloadArgs) {
+	var err error
+	if isDir(f) {
+		err = self.downloadDirectory(f, args)
+	} else if isBinary(f) {
+		_, _, err = self.downloadBinary(f, args)
+	}
+
+	if err != nil {
+		fmt.Errorf("%s \n %s", self.downloadErr, err.Error())
+		//fmt.Println("Failed to download:", err)
+	}
 }
 
 func (self *Drive) downloadBinary(f *drive.File, args DownloadArgs) (int64, int64, error) {
 	// Get timeout reader wrapper and context
 	timeoutReaderWrapper, ctx := getTimeoutReaderWrapperContext(args.Timeout)
-
-	res, err := self.service.Files.Get(f.Id).Context(ctx).Download()
+	res, err := self.service.Files.Get(f.Id).SupportsAllDrives(true).Context(ctx).Download()
 	if err != nil {
 		if isTimeoutError(err) {
 			return 0, 0, fmt.Errorf("Failed to download file: timeout, no data was transferred for %v", args.Timeout)
@@ -140,6 +189,7 @@ func (self *Drive) downloadBinary(f *drive.File, args DownloadArgs) (int64, int6
 
 	// Path to file
 	fpath := filepath.Join(args.Path, f.Name)
+	fmt.Println("fpath:", fpath)
 
 	if !args.Stdout {
 		fmt.Fprintf(args.Out, "Downloading %s -> %s\n", f.Name, fpath)
@@ -197,6 +247,8 @@ func (self *Drive) saveFile(args saveFileArgs) (int64, int64, error) {
 	// Download to tmp file
 	tmpPath := args.fpath + ".incomplete"
 
+	fmt.Println("tmpPath:", tmpPath)
+
 	// Create new file
 	outFile, err := os.Create(tmpPath)
 	if err != nil {
@@ -225,7 +277,7 @@ func (self *Drive) saveFile(args saveFileArgs) (int64, int64, error) {
 
 func (self *Drive) downloadDirectory(parent *drive.File, args DownloadArgs) error {
 	listArgs := listAllFilesArgs{
-		query:  fmt.Sprintf("'%s' in parents", parent.Id),
+		query:  fmt.Sprintf("'%s' in parents %s", parent.Id, args.RecursiveExtraQuery),
 		fields: []googleapi.Field{"nextPageToken", "files(id,name)"},
 	}
 	files, err := self.listAllFiles(listArgs)

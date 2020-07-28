@@ -3,13 +3,14 @@ package drive
 import (
 	"bytes"
 	"fmt"
-	"google.golang.org/api/drive/v3"
-	"google.golang.org/api/googleapi"
 	"io"
 	"os"
 	"path/filepath"
 	"sort"
 	"time"
+
+	"google.golang.org/api/drive/v3"
+	"google.golang.org/api/googleapi"
 )
 
 type UploadSyncArgs struct {
@@ -96,7 +97,7 @@ func (self *Drive) UploadSync(args UploadSyncArgs) error {
 
 func (self *Drive) prepareSyncRoot(args UploadSyncArgs) (*drive.File, error) {
 	fields := []googleapi.Field{"id", "name", "mimeType", "appProperties"}
-	f, err := self.service.Files.Get(args.RootId).Fields(fields...).Do()
+	f, err := self.service.Files.Get(args.RootId).SupportsAllDrives(true).Fields(fields...).Do()
 	if err != nil {
 		return nil, fmt.Errorf("Failed to find root dir: %s", err)
 	}
@@ -128,7 +129,7 @@ func (self *Drive) prepareSyncRoot(args UploadSyncArgs) (*drive.File, error) {
 		AppProperties: map[string]string{"sync": "true", "syncRoot": "true"},
 	}
 
-	f, err = self.service.Files.Update(f.Id, dstFile).Fields(fields...).Do()
+	f, err = self.service.Files.Update(f.Id, dstFile).SupportsAllDrives(true).Fields(fields...).Do()
 	if err != nil {
 		return nil, fmt.Errorf("Failed to update root directory: %s", err)
 	}
@@ -268,7 +269,7 @@ func (self *Drive) createMissingRemoteDir(args createMissingRemoteDirArgs) (*dri
 		return dstFile, nil
 	}
 
-	f, err := self.service.Files.Create(dstFile).Do()
+	f, err := self.service.Files.Create(dstFile).SupportsAllDrives(true).Do()
 	if err != nil {
 		if isBackendOrRateLimitError(err) && args.try < MaxErrorRetries {
 			exponentialBackoffSleep(args.try)
@@ -311,7 +312,7 @@ func (self *Drive) uploadMissingFile(parentId string, lf *LocalFile, args Upload
 	// Wrap reader in timeout reader
 	reader, ctx := getTimeoutReaderContext(progressReader, args.Timeout)
 
-	_, err = self.service.Files.Create(dstFile).Fields("id", "name", "size", "md5Checksum").Context(ctx).Media(reader, chunkSize).Do()
+	_, err = self.service.Files.Create(dstFile).SupportsAllDrives(true).Fields("id", "name", "size", "md5Checksum").Context(ctx).Media(reader, chunkSize).Do()
 	if err != nil {
 		if isBackendOrRateLimitError(err) && try < MaxErrorRetries {
 			exponentialBackoffSleep(try)
@@ -352,7 +353,7 @@ func (self *Drive) updateChangedFile(cf *changedFile, args UploadSyncArgs, try i
 	// Wrap reader in timeout reader
 	reader, ctx := getTimeoutReaderContext(progressReader, args.Timeout)
 
-	_, err = self.service.Files.Update(cf.remote.file.Id, dstFile).Context(ctx).Media(reader, chunkSize).Do()
+	_, err = self.service.Files.Update(cf.remote.file.Id, dstFile).SupportsAllDrives(true).Context(ctx).Media(reader, chunkSize).Do()
 	if err != nil {
 		if isBackendOrRateLimitError(err) && try < MaxErrorRetries {
 			exponentialBackoffSleep(try)
@@ -373,7 +374,7 @@ func (self *Drive) deleteRemoteFile(rf *RemoteFile, args UploadSyncArgs, try int
 		return nil
 	}
 
-	err := self.service.Files.Delete(rf.file.Id).Do()
+	err := self.service.Files.Delete(rf.file.Id).SupportsAllDrives(true).Do()
 	if err != nil {
 		if isBackendOrRateLimitError(err) && try < MaxErrorRetries {
 			exponentialBackoffSleep(try)
@@ -389,7 +390,7 @@ func (self *Drive) deleteRemoteFile(rf *RemoteFile, args UploadSyncArgs, try int
 
 func (self *Drive) dirIsEmpty(id string) (bool, error) {
 	query := fmt.Sprintf("'%s' in parents", id)
-	fileList, err := self.service.Files.List().Q(query).Do()
+	fileList, err := self.service.Files.List().Corpora("allDrives").IncludeItemsFromAllDrives(true).SupportsAllDrives(true).Q(query).Do()
 	if err != nil {
 		return false, fmt.Errorf("Empty dir check failed: ", err)
 	}
