@@ -31,7 +31,7 @@ func (self *Drive) Delete(args DeleteArgs) error {
 }
 
 func (self *Drive) deleteFile(fileId string) error {
-	err := self.service.Files.Delete(fileId).Do()
+	err := self.service.Files.Delete(fileId).SupportsAllDrives(true).Do()
 	if err != nil {
 		return fmt.Errorf("Failed to delete file: %s", err)
 	}

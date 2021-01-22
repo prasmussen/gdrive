@@ -389,7 +389,7 @@ func (self *Drive) deleteRemoteFile(rf *RemoteFile, args UploadSyncArgs, try int
 
 func (self *Drive) dirIsEmpty(id string) (bool, error) {
 	query := fmt.Sprintf("'%s' in parents", id)
-	fileList, err := self.service.Files.List().SupportsAllDrives(true).Q(query).Do()
+	fileList, err := self.service.Files.List().SupportsAllDrives(true).Corpora("allDrives").IncludeItemsFromAllDrives(true).Q(query).Do()
 	if err != nil {
 		return false, fmt.Errorf("Empty dir check failed: ", err)
 	}
