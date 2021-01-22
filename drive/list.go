@@ -82,7 +82,7 @@ func (self *Drive) listAllFiles(args listAllFilesArgs) ([]*drive.File, error) {
 
 	controlledStop := fmt.Errorf("Controlled stop")
 
-	err := self.service.Files.List().SupportsTeamDrives(true).IncludeTeamDriveItems(true).Q(args.query).Fields(args.fields...).OrderBy(args.sortOrder).PageSize(pageSize).Pages(context.TODO(), func(fl *drive.FileList) error {
+	err := self.service.Files.List().SupportsAllDrives(true).IncludeTeamDriveItems(true).Q(args.query).Fields(args.fields...).OrderBy(args.sortOrder).PageSize(pageSize).Pages(context.TODO(), func(fl *drive.FileList) error {
 		files = append(files, fl.Files...)
 
 		// Stop when we have all the files we need
