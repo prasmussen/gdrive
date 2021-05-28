@@ -20,8 +20,7 @@ Version 1.5 or higher.
 brew install gdrive
 ```
 ### Other
-Download `gdrive` from one of the links below. On unix systems
-run `chmod +x gdrive` after download to make the binary executable.
+Download `gdrive` from one of the [links in the latest release](https://github.com/prasmussen/gdrive/releases).
 The first time gdrive is launched (i.e. run `gdrive about` in your
 terminal not just `gdrive`), you will be prompted for a verification code.
 The code is obtained by following the printed url and authenticating with the
