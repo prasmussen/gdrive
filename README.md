@@ -2,11 +2,12 @@ gdrive
 ======
 
 
-## Important
-This tool is no longer maintained.
-
 ## Overview
 gdrive is a command line utility for interacting with Google Drive.
+
+## News
+#### 28.05.2021
+gdrive is finally verified for using sensitive scopes which should fix the `This app is blocked` error.
 
 ## Prerequisites
 None, binaries are statically linked.
@@ -39,14 +40,8 @@ go get github.com/prasmussen/gdrive
 The gdrive binary should now be available at `$GOPATH/bin/gdrive`
 
 
-## Gdrive 2
-Gdrive 2 is more or less a full rewrite and is not backwards compatible
-with gdrive 1 as all the command line arguments has changed slightly.
-Gdrive 2 uses version 3 of the google drive api and my google-api-go-client
-fork is no longer needed.
-
 ### Syncing
-Gdrive 2 supports basic syncing. It only syncs one way at the time and works
+Gdrive supports basic syncing. It only syncs one way at the time and works
 more like rsync than e.g. dropbox. Files that are synced to google drive
 are tagged with an appProperty so that the files on drive can be traversed
 faster. This means that you can't upload files with `gdrive upload` into
