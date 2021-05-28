@@ -7,7 +7,7 @@ gdrive is a command line utility for interacting with Google Drive.
 
 ## News
 #### 28.05.2021
-gdrive is finally verified for using sensitive scopes which should fix the `This app is blocked` error.
+gdrive is finally verified for using sensitive scopes which should fix the `This app is blocked` error. Note that the project name will show up as `project-367116221053` when granting access to you account. (I don't dare to change any more settings in the google console.)
 
 ## Prerequisites
 None, binaries are statically linked.
