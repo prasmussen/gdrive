@@ -2,14 +2,12 @@ gdrive
 ======
 
 
-## Note
-~~This tool is not being actively maintained at the moment, ymmv~~ **Active maintenance will be resumed soon.**
-For incremental and encrypted backup of unix systems [borg](https://github.com/borgbackup/borg)
-is a great alternative and [rsync.net](http://rsync.net/products/attic.html) provides
-a cheap and reliable backup target.
-
 ## Overview
 gdrive is a command line utility for interacting with Google Drive.
+
+## News
+#### 28.05.2021
+gdrive is finally verified for using sensitive scopes which should fix the `This app is blocked` error. Note that the project name will show up as `project-367116221053` when granting access to you account. (I don't dare to change any more settings in the google console.)
 
 ## Prerequisites
 None, binaries are statically linked.
@@ -22,8 +20,7 @@ Version 1.5 or higher.
 brew install gdrive
 ```
 ### Other
-Download `gdrive` from one of the links below. On unix systems
-run `chmod +x gdrive` after download to make the binary executable.
+Download `gdrive` from one of the [links in the latest release](https://github.com/prasmussen/gdrive/releases).
 The first time gdrive is launched (i.e. run `gdrive about` in your
 terminal not just `gdrive`), you will be prompted for a verification code.
 The code is obtained by following the printed url and authenticating with the
@@ -35,36 +32,6 @@ or set the environment variable `GDRIVE_CONFIG_DIR`.
 Example: `GDRIVE_CONFIG_DIR="/home/user/.gdrive-secondary" gdrive list`
 You will be prompted for a new verification code if the folder does not exist.
 
-### Downloads
-| Filename               | Version | Description        | Shasum                                   |
-|:-----------------------|:--------|:-------------------|:-----------------------------------------|
-| [gdrive-osx-x64](https://drive.google.com/uc?id=1hs1l26Kk4xwqLlUuPB8pMfv4Z4qMvM3D&export=download) | 2.1.0 | OS X 64-bit | 2d817cab0912e0efa5529ada7a4bb73fe90d2d74 |
-| [gdrive-osx-386](https://drive.google.com/uc?id=1tlzNnSGK12zviZX57qiLCnOoJBLqDlIT&export=download) | 2.1.0 | OS X 32-bit | ed1a12998270f8176c96729d80f3f7307a2e2db6 |
-| [gdrive-linux-x64](https://drive.google.com/uc?id=1Ej8VgsW5RgK66Btb9p74tSdHMH3p4UNb&export=download) | 2.1.0 | Linux 64-bit | 6ef7c740e980358a9a5de36c1aac7ea375319aa3 |
-| [gdrive-linux-386](https://drive.google.com/uc?id=1eo9hMXz0WyuBwRxPM0LrTtQmhTgOLUlg&export=download) | 2.1.0 | Linux 32-bit | 03f423fc7a444e95de3998d24dbfbdb0335fd055 |
-| [gdrive-linux-rpi](https://drive.google.com/uc?id=1f5Q-yAwUYZYt_frYjodFHbU0v7ppQkem&export=download) | 2.1.0 | Linux Raspberry Pi | 0247d36e2591ea009ddbd003300bf10cb58089da |
-| [gdrive-linux-arm64](https://drive.google.com/uc?id=1tAx8hbUy4xbGAuvUFistgWZy3twk9rBP&export=download) | 2.1.0 | Linux arm 64-bit | 3a41c27e10587eef0be20fe00415c65723fa3aee |
-| [gdrive-linux-arm](https://drive.google.com/uc?id=1140F8FbMxBsvhMjV4BCznnC6qiRYmOCc&export=download) | 2.1.0 | Linux arm 32-bit | 0247d36e2591ea009ddbd003300bf10cb58089da |
-| [gdrive-linux-mips64](https://drive.google.com/uc?id=1evxhgWwtb-qDqnUdk_EIr67pM9--1njT&export=download) | 2.1.0 | Linux mips 64-bit | 69bdf4b9a4ae1f9ead9d35ba118a70005bea3829 |
-| [gdrive-linux-mips64le](https://drive.google.com/uc?id=1ujljxt_Psl9Kqlsnv4_wgHv4JzvaJEH_&export=download) | 2.1.0 | Linux mips 64-bit le | 421ae3662ed9b486649560512e3c8a43dbf6cdc6 |
-| [gdrive-linux-ppc64](https://drive.google.com/uc?id=1wnDeGUkiixmBaWkEgiXL-LcyaRqpFcUl&export=download) | 2.1.0 | Linux PPC 64-bit | 9b1621d1656fa8e4f2be21202708ab3bb8c0aa77 |
-| [gdrive-linux-ppc64le](https://drive.google.com/uc?id=1iv7qtJom61MPRl-w-0gTqpPr3A41Whfo&export=download) | 2.1.0 | Linux PPC 64-bit le | 0bf501abb505f851a7592456db304f2c4430e9cd |
-| [gdrive-windows-386.exe](https://drive.google.com/uc?id=1nbwcqKI1ohhjbUKLH2NcPSRKvYdBwfEI&export=download) | 2.1.0 | Window 32-bit | 4974290122f635d9c71875bc2c760e46b943c5ab |
-| [gdrive-windows-x64.exe](https://drive.google.com/uc?id=1zEaLExCMQnwftSYCF7GTONHX-lV7SlTe&export=download) | 2.1.0 | Windows 64-bit | 53780f9a4168c71fd9f3d429932207069d1dcf03 |
-| [gdrive-dragonfly-x64](https://drive.google.com/uc?id=1EQc5um6eStZguz5_XX3o-zFFucVlha6V&export=download) | 2.1.0 | DragonFly BSD 64-bit | 5871ee54f992b71b3a1586ec224d93a79265a8b4 |
-| [gdrive-freebsd-x64](https://drive.google.com/uc?id=1qVz1-PWdkQHQIJ6MH6X5Z6ZftA1Q-SMT&export=download) | 2.1.0 | FreeBSD 64-bit | ad4d16b0144b8fd05ef7f3174a54fe39b04a766d |
-| [gdrive-freebsd-386](https://drive.google.com/uc?id=1NeXS64JMg4Sfr-Szu-MQOh-hg3LX5TYJ&export=download) | 2.1.0 | FreeBSD 32-bit | cc636c839434689b73274e3574ac8477c9542880 |
-| [gdrive-freebsd-arm](https://drive.google.com/uc?id=1rrdVWNFcPjx517M04H-V2zt-4gxO3dzQ&export=download) | 2.1.0 | FreeBSD arm | 19abe4b23ad7dd968d0089313eca3108601dca02 |
-| [gdrive-netbsd-x64](https://drive.google.com/uc?id=1EOvpqad6Aeh3UuszaOD4-D3mTm-IZwI2&export=download) | 2.1.0 | NetBSD 64-bit | 07af67d4a149a926ee9ccf82591a593eb2330c36 |
-| [gdrive-netbsd-386](https://drive.google.com/uc?id=1DKTa2nV6LTs62jFPEwoxjVBdHFouZRC7&export=download) | 2.1.0 | NetBSD 32-bit | 95a090ff3ecb8b6e2180afb02bec6ba7419a33e0 |
-| [gdrive-netbsd-arm](https://drive.google.com/uc?id=1lPJd6EgjzBoELJo7Z68ilpJZX2kiwYfr&export=download) | 2.1.0 | NetBSD arm | b953d575f2c306053e31718050698c47388dea26 |
-| [gdrive-openbsd-x64](https://drive.google.com/uc?id=1xjpuwbOEuKiks0bIomtt-uYajysrR3Lc&export=download) | 2.1.0 | OpenBSD 64-bit | ac8dbed27ffd7ed0b13b2abb8be4b5ca72da9d7c |
-| [gdrive-openbsd-386](https://drive.google.com/uc?id=1sBlO73K8HdyRl1j1GE9QVUDvxGKxjspB&export=download) | 2.1.0 | OpenBSD 32-bit | d7a2d1441d3b41e36da080643c3d5f6306181eae |
-| [gdrive-openbsd-arm](https://drive.google.com/uc?id=1-K0eFoNw6fpgw_UINj5ViEuDDjwlOy0A&export=download) | 2.1.0 | OpenBSD arm | 9e508032367471515199f6787aa771e271d307f4 |
-| [gdrive-solaris-x64](https://drive.google.com/uc?id=1UNvH_Nj54qR3UCTszXWqtKiD-yqqsnwe&export=download) | 2.1.0 | Solaris 64-bit | c18612da275065064aa650b669de7140dcd94a5f |
-| [gdrive-plan9-x64](https://drive.google.com/uc?id=1Es1R2trxekHkk_Fj7vAfd0PxJW2AErHV&export=download) | 2.1.0 | Plan9 64-bit | 8907f5ffb8c5d6b2e15cd9d8f5a51ef762173298 |
-| [gdrive-plan9-386](https://drive.google.com/uc?id=19HxOhQDjI_nsMBUQ7Rs79oBhWYeMOX3b&export=download) | 2.1.0 | Plan9 32-bit | f60b749ba57b8b2d824d06a7bd788a8c5808a607 |
-
 ## Compile from source
 ```bash
 go get github.com/prasmussen/gdrive
@@ -72,14 +39,8 @@ go get github.com/prasmussen/gdrive
 The gdrive binary should now be available at `$GOPATH/bin/gdrive`
 
 
-## Gdrive 2
-Gdrive 2 is more or less a full rewrite and is not backwards compatible
-with gdrive 1 as all the command line arguments has changed slightly.
-Gdrive 2 uses version 3 of the google drive api and my google-api-go-client
-fork is no longer needed.
-
 ### Syncing
-Gdrive 2 supports basic syncing. It only syncs one way at the time and works
+Gdrive supports basic syncing. It only syncs one way at the time and works
 more like rsync than e.g. dropbox. Files that are synced to google drive
 are tagged with an appProperty so that the files on drive can be traversed
 faster. This means that you can't upload files with `gdrive upload` into
@@ -118,7 +79,6 @@ gdrive [global] share [options] <fileId>                       Share file or dir
 gdrive [global] share list <fileId>                            List files permissions
 gdrive [global] share revoke <fileId> <permissionId>           Revoke permission
 gdrive [global] delete [options] <fileId>                      Delete file or directory
-gdrive [global] rename <fileId> <newName>                      Rename file or directory
 gdrive [global] sync list [options]                            List all syncable directories on drive
 gdrive [global] sync content [options] <fileId>                List content of syncable directory
 gdrive [global] sync download [options] <fileId> <path>        Sync drive directory to local directory
@@ -346,17 +306,6 @@ global:
   
 options:
   -r, --recursive   Delete directory and all it's content
-```
-
-#### Rename file or directory
-```
-Rename file or directory
-gdrive [global] rename <fileId> <newName>
-
-global:
-  -c, --config <configDir>         Application path, default: /Users/jack/.gdrive
-  --refresh-token <refreshToken>   Oauth refresh token used to get access token (for advanced users)
-  --access-token <accessToken>     Oauth access token, only recommended for short-lived requests because of short lifetime (for advanced users)
 ```
 
 #### List all syncable directories on drive
