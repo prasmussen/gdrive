@@ -1,0 +1,12 @@
+#!/usr/bin/make -f
+
+export CGO_ENABLED := 0
+export GO111MODULE := on
+export GOPROXY := https://proxy.golang.org
+export GOCACHE := /tmp/.cache
+
+override_dh_auto_install:
+	dh_auto_install -- --no-source
+
+%:
+	dh $@ --buildsystem=golang --with=golang
