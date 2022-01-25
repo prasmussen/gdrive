@@ -8,6 +8,3 @@ Session.vim
 .netrwhist
 gdrive
 gdrive.sh
-go.mod
-go.sum
-vendor
