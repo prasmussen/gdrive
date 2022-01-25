@@ -1,10 +1,10 @@
 # .github/workflows/release.yaml
 
-on:
-  push:
-    branches:
-      - master
-      - develop
+on: release
+  # push:
+  #   branches:
+  #     - master
+  #     - develop
 
 name: Build Release
 jobs:
