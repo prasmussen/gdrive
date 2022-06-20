@@ -41,7 +41,7 @@ func (c callback) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		fmt.Fprintln(w, "</body></html>")
 		return
 	}
-	if req.Form.Has("error") {
+	if req.Form.Get("error") != "" {
 		fmt.Printf("authentication failed, server response is %s\n", req.Form.Get("error"))
 		c.bad <- true
 		fmt.Fprintln(w, "<html><head>")
@@ -52,7 +52,7 @@ func (c callback) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	if !req.Form.Has("code") || !req.Form.Has("state") {
+	if req.Form.Get("code") == "" || req.Form.Get("state") == "" {
 		fmt.Println("callback request is missing parameters")
 		w.WriteHeader(400)
 		fmt.Fprintln(w, "<html><head>")
