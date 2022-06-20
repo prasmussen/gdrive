@@ -84,10 +84,7 @@ func (c callback) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	c.done <- code
 }
 
-func AuthCodeHTTP(conf *oauth2.Config, state, challenge string) (func() (string, error), error) {
-
-	authChallengeMeth := oauth2.SetAuthURLParam("code_challenge_method", "S256")
-	authChallengeVal := oauth2.SetAuthURLParam("code_challenge", challenge)
+func AuthCodeHTTP(conf *oauth2.Config, state string) (func() (string, error), error) {
 
 	ln, err := net.Listen("tcp4", "127.0.0.1:0")
 	if err != nil {
@@ -113,7 +110,7 @@ func AuthCodeHTTP(conf *oauth2.Config, state, challenge string) (func() (string,
 	myconf := conf
 	myconf.RedirectURL = fmt.Sprintf("http://127.0.0.1:%s/callback", port)
 
-	authUrl := myconf.AuthCodeURL(state, oauth2.AccessTypeOffline, authChallengeMeth, authChallengeVal)
+	authUrl := myconf.AuthCodeURL(state, oauth2.AccessTypeOffline)
 	authorizer := authorize{authUrl: authUrl}
 	mux.Handle("/authorize", authorizer)
 	callback := callback{state: state,

@@ -13,7 +13,7 @@ import (
 	"golang.org/x/oauth2/google"
 )
 
-type authCodeFn func(*oauth2.Config, string, string) (func() (string, error), error)
+type authCodeFn func(*oauth2.Config, string) (func() (string, error), error)
 
 func NewFileSourceClient(clientId, clientSecret, tokenFile string, authFn authCodeFn) (*http.Client, error) {
 	conf := getConfig(clientId, clientSecret)
@@ -31,11 +31,7 @@ func NewFileSourceClient(clientId, clientSecret, tokenFile string, authFn authCo
 		if err != nil {
 			return nil, fmt.Errorf("could not build state string: %s", err)
 		}
-		verifier, challenge, err := makeCodeChallenge()
-		if err != nil {
-			return nil, fmt.Errorf("could not set up PKCE challenge: %s", err)
-		}
-		authFnInt, err := authFn(conf, state, challenge)
+		authFnInt, err := authFn(conf, state)
 		if err != nil {
 			return nil, fmt.Errorf("could not receive auth code: %s", err)
 		}
@@ -43,8 +39,7 @@ func NewFileSourceClient(clientId, clientSecret, tokenFile string, authFn authCo
 		if err != nil {
 			return nil, fmt.Errorf("could not receive auth code: %s", err)
 		}
-		authVerifyVal := oauth2.SetAuthURLParam("code_verifier", verifier)
-		token, err = conf.Exchange(oauth2.NoContext, authCode, authVerifyVal)
+		token, err = conf.Exchange(oauth2.NoContext, authCode)
 		if err != nil {
 			return nil, fmt.Errorf("failed to exchange auth code for token: %s", err)
 		}
