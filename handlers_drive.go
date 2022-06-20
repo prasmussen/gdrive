@@ -364,7 +364,7 @@ func getOauthClient(args cli.Arguments) (*http.Client, error) {
 	}
 
 	tokenPath := ConfigFilePath(configDir, TokenFilename)
-	return auth.NewFileSourceClient(clientId, clientSecret, tokenPath, auth.AuthCodeHTTP)
+	return auth.NewFileSourceClient(ClientId, ClientSecret, tokenPath, auth.AuthCodeHTTP)
 }
 
 func getConfigDir(args cli.Arguments) string {
