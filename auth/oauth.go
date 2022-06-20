@@ -35,8 +35,6 @@ func NewFileSourceClient(clientId, clientSecret, tokenFile string, authFn authCo
 		if err != nil {
 			return nil, fmt.Errorf("could not set up PKCE challenge: %s", err)
 		}
-		fmt.Println("The code challenge is", challenge)
-		fmt.Println("The code challenge verifier is", verifier)
 		authFnInt, err := authFn(conf, state, challenge)
 		if err != nil {
 			return nil, fmt.Errorf("could not receive auth code: %s", err)

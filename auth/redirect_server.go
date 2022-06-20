@@ -75,7 +75,6 @@ func (r redirect) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		fmt.Fprintln(w, "</body></html>")
 		return
 	}
-	fmt.Println("Received code", code)
 	fmt.Fprintln(w, "<html><head>")
 	fmt.Fprintln(w, "<title>Authentication response received</title>")
 	fmt.Fprintln(w, "</head><body>")
@@ -115,7 +114,6 @@ func AuthCodeHTTP(conf *oauth2.Config, state, challenge string) (func() (string,
 	myconf.RedirectURL = fmt.Sprintf("http://127.0.0.1:%s/callback", port)
 
 	authUrl := myconf.AuthCodeURL(state, oauth2.AccessTypeOffline, authChallengeMeth, authChallengeVal)
-	fmt.Println("Authorize url is", authUrl)
 	authorizer := authorize{authUrl: authUrl}
 	mux.Handle("/authorize", authorizer)
 	callback := redirect{state: state,
