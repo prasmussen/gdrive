@@ -12,7 +12,7 @@ import (
 )
 
 type authorize struct{ authUrl string }
-type redirect struct {
+type callback struct {
 	done  chan string
 	bad   chan bool
 	state string
@@ -29,10 +29,10 @@ func (a authorize) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	fmt.Fprintln(w, "</body></html>")
 }
 
-func (r redirect) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+func (c callback) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	err := req.ParseForm()
 	if err != nil {
-		fmt.Printf("Could not parse form on /redirect: %s\n", err)
+		fmt.Printf("Could not parse form on /callback: %s\n", err)
 		w.WriteHeader(400)
 		fmt.Fprintln(w, "<html><head>")
 		fmt.Fprintln(w, "<title>Bad request</title>")
@@ -43,7 +43,7 @@ func (r redirect) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	}
 	if req.Form.Has("error") {
 		fmt.Printf("authentication failed, server response is %s\n", req.Form.Get("error"))
-		r.bad <- true
+		c.bad <- true
 		fmt.Fprintln(w, "<html><head>")
 		fmt.Fprintln(w, "<title>Google Drive authentication failed</title>")
 		fmt.Fprintln(w, "</head><body>")
@@ -53,7 +53,7 @@ func (r redirect) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	}
 
 	if !req.Form.Has("code") || !req.Form.Has("state") {
-		fmt.Println("redirect request is missing parameters")
+		fmt.Println("callback request is missing parameters")
 		w.WriteHeader(400)
 		fmt.Fprintln(w, "<html><head>")
 		fmt.Fprintln(w, "<title>Bad request</title>")
@@ -65,8 +65,8 @@ func (r redirect) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 	code := req.Form.Get("code")
 	state := req.Form.Get("state")
-	if state != r.state {
-		fmt.Printf("Redirect state mismatch: %s vs %s", state, r.state)
+	if state != c.state {
+		fmt.Printf("Callback state mismatch: %s vs %s", state, c.state)
 		w.WriteHeader(400)
 		fmt.Fprintln(w, "<html><head>")
 		fmt.Fprintln(w, "<title>Bad request</title>")
@@ -81,7 +81,7 @@ func (r redirect) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	fmt.Fprintln(w, "Authentication response has been received. Check the terminal where gdrive is running")
 	fmt.Fprintln(w, "</body></html>")
 
-	r.done <- code
+	c.done <- code
 }
 
 func AuthCodeHTTP(conf *oauth2.Config, state, challenge string) (func() (string, error), error) {
@@ -116,7 +116,7 @@ func AuthCodeHTTP(conf *oauth2.Config, state, challenge string) (func() (string,
 	authUrl := myconf.AuthCodeURL(state, oauth2.AccessTypeOffline, authChallengeMeth, authChallengeVal)
 	authorizer := authorize{authUrl: authUrl}
 	mux.Handle("/authorize", authorizer)
-	callback := redirect{state: state,
+	callback := callback{state: state,
 		done: make(chan string, 1),
 		bad:  make(chan bool, 1),
 	}
