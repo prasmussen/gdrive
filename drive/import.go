@@ -15,6 +15,7 @@ type ImportArgs struct {
 	Progress io.Writer
 	Path     string
 	Parents  []string
+	DriveId  string
 }
 
 func (self *Drive) Import(args ImportArgs) error {
@@ -41,6 +42,7 @@ func (self *Drive) Import(args ImportArgs) error {
 		Progress: args.Progress,
 		Path:     args.Path,
 		Parents:  args.Parents,
+		DriveId:  args.DriveId,
 		Mime:     toMimes[0],
 	})
 	if err != nil {

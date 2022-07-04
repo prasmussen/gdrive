@@ -13,6 +13,7 @@ type MkdirArgs struct {
 	Name        string
 	Description string
 	Parents     []string
+	DriveId     string
 }
 
 func (self *Drive) Mkdir(args MkdirArgs) error {
@@ -33,9 +34,11 @@ func (self *Drive) mkdir(args MkdirArgs) (*drive.File, error) {
 
 	// Set parent folders
 	dstFile.Parents = args.Parents
+	// Set DriveId
+	dstFile.DriveId = args.DriveId
 
 	// Create directory
-	f, err := self.service.Files.Create(dstFile).Do()
+	f, err := self.service.Files.Create(dstFile).SupportsAllDrives(true).Do()
 	if err != nil {
 		return nil, fmt.Errorf("Failed to create directory: %s", err)
 	}
