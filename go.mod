@@ -1,4 +1,4 @@
-module github.com/halmakidon/gdrive
+module github.com/Sparty-Inc/gdrive
 
 go 1.18
 

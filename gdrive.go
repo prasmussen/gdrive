@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/halmakidon/gdrive/cli"
+	"github.com/Sparty-Inc/gdrive/cli"
 )
 
 const Name = "gdrive"
-const Version = "2.1.1-halmakidon"
+const Version = "2.2.0"
 
 const DefaultMaxFiles = 30
 const DefaultMaxChanges = 100
