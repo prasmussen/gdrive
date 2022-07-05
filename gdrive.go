@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/prasmussen/gdrive/cli"
+	"github.com/halmakidon/gdrive/cli"
 )
 
 const Name = "gdrive"
-const Version = "2.1.1"
+const Version = "2.1.1-halmakidon"
 
 const DefaultMaxFiles = 30
 const DefaultMaxChanges = 100
@@ -214,6 +214,11 @@ func main() {
 						Description: "Parent id, used to upload file to a specific directory, can be specified multiple times to give many parents",
 					},
 					cli.StringFlag{
+						Name:        "driveId",
+						Patterns:    []string{"-d", "--driveId"},
+						Description: "Drive id",
+					},
+					cli.StringFlag{
 						Name:        "name",
 						Patterns:    []string{"--name"},
 						Description: "Filename",
@@ -273,6 +278,11 @@ func main() {
 						Patterns:    []string{"-p", "--parent"},
 						Description: "Parent id, used to upload file to a specific directory, can be specified multiple times to give many parents",
 					},
+					cli.StringFlag{
+						Name:        "driveId",
+						Patterns:    []string{"-d", "--driveId"},
+						Description: "Drive id",
+					},
 					cli.IntFlag{
 						Name:         "chunksize",
 						Patterns:     []string{"--chunksize"},
@@ -321,6 +331,11 @@ func main() {
 						Name:        "parent",
 						Patterns:    []string{"-p", "--parent"},
 						Description: "Parent id, used to upload file to a specific directory, can be specified multiple times to give many parents",
+					},
+					cli.StringFlag{
+						Name:        "driveId",
+						Patterns:    []string{"-d", "--driveId"},
+						Description: "Drive id",
 					},
 					cli.StringFlag{
 						Name:        "name",
@@ -385,6 +400,11 @@ func main() {
 						Name:        "parent",
 						Patterns:    []string{"-p", "--parent"},
 						Description: "Parent id of created directory, can be specified multiple times to give many parents",
+					},
+					cli.StringFlag{
+						Name:        "driveId",
+						Patterns:    []string{"-d", "--driveId"},
+						Description: "Drive id",
 					},
 					cli.StringFlag{
 						Name:        "description",
@@ -755,6 +775,11 @@ func main() {
 						Name:        "parent",
 						Patterns:    []string{"-p", "--parent"},
 						Description: "Parent id, used to upload file to a specific directory, can be specified multiple times to give many parents",
+					},
+					cli.StringFlag{
+						Name:        "driveId",
+						Patterns:    []string{"-d", "--driveId"},
+						Description: "Drive id",
 					},
 					cli.BoolFlag{
 						Name:        "noProgress",

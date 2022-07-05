@@ -9,9 +9,9 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/prasmussen/gdrive/auth"
-	"github.com/prasmussen/gdrive/cli"
-	"github.com/prasmussen/gdrive/drive"
+	"github.com/halmakidon/gdrive/auth"
+	"github.com/halmakidon/gdrive/cli"
+	"github.com/halmakidon/gdrive/drive"
 )
 
 const ClientId = "367116221053-7n0vf5akeru7on6o2fjinrecpdoe99eg.apps.googleusercontent.com"
@@ -121,6 +121,7 @@ func uploadHandler(ctx cli.Context) {
 		Name:        args.String("name"),
 		Description: args.String("description"),
 		Parents:     args.StringSlice("parent"),
+		DriveId:     args.String("driveId"),
 		Mime:        args.String("mime"),
 		Recursive:   args.Bool("recursive"),
 		Share:       args.Bool("share"),
@@ -139,6 +140,7 @@ func uploadStdinHandler(ctx cli.Context) {
 		Name:        args.String("name"),
 		Description: args.String("description"),
 		Parents:     args.StringSlice("parent"),
+		DriveId:     args.String("driveId"),
 		Mime:        args.String("mime"),
 		Share:       args.Bool("share"),
 		ChunkSize:   args.Int64("chunksize"),
@@ -175,6 +177,7 @@ func updateHandler(ctx cli.Context) {
 		Name:        args.String("name"),
 		Description: args.String("description"),
 		Parents:     args.StringSlice("parent"),
+		DriveId:     args.String("driveId"),
 		Mime:        args.String("mime"),
 		Progress:    progressWriter(args.Bool("noProgress")),
 		ChunkSize:   args.Int64("chunksize"),
@@ -200,6 +203,7 @@ func importHandler(ctx cli.Context) {
 		Out:      os.Stdout,
 		Path:     args.String("path"),
 		Parents:  args.StringSlice("parent"),
+		DriveId:  args.String("driveId"),
 		Progress: progressWriter(args.Bool("noProgress")),
 	})
 	checkErr(err)
@@ -236,6 +240,7 @@ func mkdirHandler(ctx cli.Context) {
 		Name:        args.String("name"),
 		Description: args.String("description"),
 		Parents:     args.StringSlice("parent"),
+		DriveId:     args.String("driveId"),
 	})
 	checkErr(err)
 }

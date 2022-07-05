@@ -18,6 +18,7 @@ type UploadArgs struct {
 	Name        string
 	Description string
 	Parents     []string
+	DriveId     string
 	Mime        string
 	Recursive   bool
 	Share       bool
@@ -114,6 +115,7 @@ func (self *Drive) uploadDirectory(args UploadArgs) error {
 		Out:         args.Out,
 		Name:        srcFileInfo.Name(),
 		Parents:     args.Parents,
+		DriveId:     args.DriveId,
 		Description: args.Description,
 	})
 	if err != nil {
@@ -172,6 +174,9 @@ func (self *Drive) uploadFile(args UploadArgs) (*drive.File, int64, error) {
 	// Set parent folders
 	dstFile.Parents = args.Parents
 
+	// Set drive ID
+	dstFile.DriveId = args.DriveId
+
 	// Chunk size option
 	chunkSize := googleapi.ChunkSize(int(args.ChunkSize))
 
@@ -184,7 +189,12 @@ func (self *Drive) uploadFile(args UploadArgs) (*drive.File, int64, error) {
 	fmt.Fprintf(args.Out, "Uploading %s\n", args.Path)
 	started := time.Now()
 
-	f, err := self.service.Files.Create(dstFile).Fields("id", "name", "size", "md5Checksum", "webContentLink").Context(ctx).Media(reader, chunkSize).Do()
+	f, err := self.service.Files.Create(dstFile).
+		SupportsAllDrives(true).
+		Fields("id", "name", "size", "md5Checksum", "webContentLink").
+		Context(ctx).
+		Media(reader, chunkSize).
+		Do()
 	if err != nil {
 		if isTimeoutError(err) {
 			return nil, 0, fmt.Errorf("Failed to upload file: timeout, no data was transferred for %v", args.Timeout)
@@ -204,6 +214,7 @@ type UploadStreamArgs struct {
 	Name        string
 	Description string
 	Parents     []string
+	DriveId     string
 	Mime        string
 	Share       bool
 	ChunkSize   int64
@@ -226,6 +237,8 @@ func (self *Drive) UploadStream(args UploadStreamArgs) error {
 
 	// Set parent folders
 	dstFile.Parents = args.Parents
+	// Set drive Id
+	dstFile.DriveId = args.DriveId
 
 	// Chunk size option
 	chunkSize := googleapi.ChunkSize(int(args.ChunkSize))
@@ -239,7 +252,11 @@ func (self *Drive) UploadStream(args UploadStreamArgs) error {
 	fmt.Fprintf(args.Out, "Uploading %s\n", dstFile.Name)
 	started := time.Now()
 
-	f, err := self.service.Files.Create(dstFile).Fields("id", "name", "size", "webContentLink").Context(ctx).Media(reader, chunkSize).Do()
+	f, err := self.service.Files.Create(dstFile).
+		SupportsAllDrives(true).
+		Fields("id", "name", "size", "webContentLink").
+		Context(ctx).
+		Media(reader, chunkSize).Do()
 	if err != nil {
 		if isTimeoutError(err) {
 			return fmt.Errorf("Failed to upload file: timeout, no data was transferred for %v", args.Timeout)
