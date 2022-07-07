@@ -1,12 +1,13 @@
 package drive
 
 import (
+	"context"
 	"fmt"
-	"golang.org/x/net/context"
-	"google.golang.org/api/drive/v3"
-	"google.golang.org/api/googleapi"
 	"io"
 	"text/tabwriter"
+
+	"google.golang.org/api/drive/v3"
+	"google.golang.org/api/googleapi"
 )
 
 type ListFilesArgs struct {
@@ -63,38 +64,7 @@ type listAllFilesArgs struct {
 }
 
 func (self *Drive) listAllFiles(args listAllFilesArgs) ([]*drive.File, error) {
-	var files []*drive.File
-
-	var pageSize int64
-	if args.maxFiles > 0 && args.maxFiles < 1000 {
-		pageSize = args.maxFiles
-	} else {
-		pageSize = 1000
-	}
-
-	controlledStop := fmt.Errorf("Controlled stop")
-
-	err := self.service.Files.List().Q(args.query).Fields(args.fields...).OrderBy(args.sortOrder).PageSize(pageSize).Pages(context.TODO(), func(fl *drive.FileList) error {
-		files = append(files, fl.Files...)
-
-		// Stop when we have all the files we need
-		if args.maxFiles > 0 && len(files) >= int(args.maxFiles) {
-			return controlledStop
-		}
-
-		return nil
-	})
-
-	if err != nil && err != controlledStop {
-		return nil, err
-	}
-
-	if args.maxFiles > 0 {
-		n := min(len(files), int(args.maxFiles))
-		return files[:n], nil
-	}
-
-	return files, nil
+	return self.listAllFilesWithContext(context.TODO(), &args)
 }
 
 type PrintFileListArgs struct {

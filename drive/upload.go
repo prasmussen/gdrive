@@ -1,6 +1,7 @@
 package drive
 
 import (
+	"context"
 	"fmt"
 	"google.golang.org/api/drive/v3"
 	"google.golang.org/api/googleapi"
@@ -17,6 +18,7 @@ type UploadArgs struct {
 	Path        string
 	Name        string
 	Description string
+	Overwrite   bool
 	Parents     []string
 	DriveId     string
 	Mime        string
@@ -177,35 +179,58 @@ func (self *Drive) uploadFile(args UploadArgs) (*drive.File, int64, error) {
 	// Set drive ID
 	dstFile.DriveId = args.DriveId
 
-	// Chunk size option
-	chunkSize := googleapi.ChunkSize(int(args.ChunkSize))
-
-	// Wrap file in progress reader
-	progressReader := getProgressReader(srcFile, args.Progress, srcFileInfo.Size())
-
-	// Wrap reader in timeout reader
-	reader, ctx := getTimeoutReaderContext(progressReader, args.Timeout)
-
-	fmt.Fprintf(args.Out, "Uploading %s\n", args.Path)
-	started := time.Now()
-
-	f, err := self.service.Files.Create(dstFile).
-		SupportsAllDrives(true).
-		Fields("id", "name", "size", "md5Checksum", "webContentLink").
-		Context(ctx).
-		Media(reader, chunkSize).
-		Do()
-	if err != nil {
-		if isTimeoutError(err) {
-			return nil, 0, fmt.Errorf("Failed to upload file: timeout, no data was transferred for %v", args.Timeout)
+	if f, err := self.fileExists(context.TODO(), dstFile); err != nil {
+		return nil, 0, err
+	} else if f != nil {
+		err := self.Update(UpdateArgs{
+			Out:         args.Out,
+			Progress:    args.Progress,
+			Id:          f.Id,
+			Path:        args.Path,
+			Name:        args.Name,
+			Description: args.Description,
+			Parents:     args.Parents,
+			DriveId:     args.DriveId,
+			Mime:        args.Mime,
+			Recursive:   args.Recursive,
+			ChunkSize:   args.ChunkSize,
+			Timeout:     args.Timeout,
+		})
+		if err != nil {
+			return nil, 0, err
 		}
-		return nil, 0, fmt.Errorf("Failed to upload file: %s", err)
+		return f, 0, nil
+	} else {
+		// Chunk size option
+		chunkSize := googleapi.ChunkSize(int(args.ChunkSize))
+
+		// Wrap file in progress reader
+		progressReader := getProgressReader(srcFile, args.Progress, srcFileInfo.Size())
+
+		// Wrap reader in timeout reader
+		reader, ctx := getTimeoutReaderContext(progressReader, args.Timeout)
+
+		fmt.Fprintf(args.Out, "Uploading %s\n", args.Path)
+		started := time.Now()
+
+		f, err := self.service.Files.Create(dstFile).
+			SupportsAllDrives(true).
+			Fields("id", "name", "size", "md5Checksum", "webContentLink").
+			Context(ctx).
+			Media(reader, chunkSize).
+			Do()
+		if err != nil {
+			if isTimeoutError(err) {
+				return nil, 0, fmt.Errorf("Failed to upload file: timeout, no data was transferred for %v", args.Timeout)
+			}
+			return nil, 0, fmt.Errorf("Failed to upload file: %s", err)
+		}
+
+		// Calculate average upload rate
+		rate := calcRate(f.Size, started, time.Now())
+
+		return f, rate, nil
 	}
-
-	// Calculate average upload rate
-	rate := calcRate(f.Size, started, time.Now())
-
-	return f, rate, nil
 }
 
 type UploadStreamArgs struct {

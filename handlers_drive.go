@@ -120,6 +120,7 @@ func uploadHandler(ctx cli.Context) {
 		Path:        args.String("path"),
 		Name:        args.String("name"),
 		Description: args.String("description"),
+		Overwrite:   args.Bool("overwrite"),
 		Parents:     args.StringSlice("parent"),
 		DriveId:     args.String("driveId"),
 		Mime:        args.String("mime"),

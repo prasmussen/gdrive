@@ -208,6 +208,12 @@ func main() {
 						Description: "Upload directory recursively",
 						OmitValue:   true,
 					},
+					cli.BoolFlag{
+						Name:        "overwrite",
+						Patterns:    []string{"-w", "--overwrite"},
+						Description: "Overwrite file already exists",
+						OmitValue:   true,
+					},
 					cli.StringSliceFlag{
 						Name:        "parent",
 						Patterns:    []string{"-p", "--parent"},
