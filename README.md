@@ -19,6 +19,10 @@ Version 1.5 or higher.
 ```
 brew install gdrive
 ```
+### With [Chocolatey](https://chocolatey.org) on Windows
+```
+choco install gdrive
+```
 ### Other
 Download `gdrive` from one of the [links in the latest release](https://github.com/prasmussen/gdrive/releases).
 The first time gdrive is launched (i.e. run `gdrive about` in your
