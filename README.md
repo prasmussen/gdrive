@@ -6,6 +6,10 @@ gdrive
 gdrive is a command line utility for interacting with Google Drive.
 
 ## News
+
+#### 11.11.2022
+Because this repo didnot update, You can use this [Repo](https://github.com/Msameim181/gdrive-cli-builder) to build and use gdrive.
+
 #### 28.05.2021
 gdrive is finally verified for using sensitive scopes which should fix the `This app is blocked` error. Note that the project name will show up as `project-367116221053` when granting access to you account. (I don't dare to change any more settings in the google console.)
 
