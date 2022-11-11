@@ -2,8 +2,9 @@ package drive
 
 import (
 	"fmt"
-	"google.golang.org/api/drive/v3"
 	"io"
+
+	"google.golang.org/api/drive/v3"
 )
 
 const DirectoryMimeType = "application/vnd.google-apps.folder"
@@ -35,7 +36,7 @@ func (self *Drive) mkdir(args MkdirArgs) (*drive.File, error) {
 	dstFile.Parents = args.Parents
 
 	// Create directory
-	f, err := self.service.Files.Create(dstFile).Do()
+	f, err := self.service.Files.Create(dstFile).SupportsAllDrives(true).Do()
 	if err != nil {
 		return nil, fmt.Errorf("Failed to create directory: %s", err)
 	}

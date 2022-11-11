@@ -3,13 +3,14 @@ package drive
 import (
 	"bytes"
 	"fmt"
-	"google.golang.org/api/drive/v3"
-	"google.golang.org/api/googleapi"
 	"io"
 	"os"
 	"path/filepath"
 	"sort"
 	"time"
+
+	"google.golang.org/api/drive/v3"
+	"google.golang.org/api/googleapi"
 )
 
 type DownloadSyncArgs struct {
@@ -85,7 +86,7 @@ func (self *Drive) DownloadSync(args DownloadSyncArgs) error {
 
 func (self *Drive) getSyncRoot(rootId string) (*drive.File, error) {
 	fields := []googleapi.Field{"id", "name", "mimeType", "appProperties"}
-	f, err := self.service.Files.Get(rootId).Fields(fields...).Do()
+	f, err := self.service.Files.Get(rootId).Fields(fields...).SupportsAllDrives(true).Do()
 	if err != nil {
 		return nil, fmt.Errorf("Failed to find root dir: %s", err)
 	}

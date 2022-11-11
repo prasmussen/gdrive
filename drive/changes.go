@@ -2,9 +2,10 @@ package drive
 
 import (
 	"fmt"
-	"google.golang.org/api/drive/v3"
 	"io"
 	"text/tabwriter"
+
+	"google.golang.org/api/drive/v3"
 )
 
 type ListChangesArgs struct {
@@ -27,7 +28,7 @@ func (self *Drive) ListChanges(args ListChangesArgs) error {
 		return nil
 	}
 
-	changeList, err := self.service.Changes.List(args.PageToken).PageSize(args.MaxChanges).RestrictToMyDrive(true).Fields("newStartPageToken", "nextPageToken", "changes(fileId,removed,time,file(id,name,md5Checksum,mimeType,createdTime,modifiedTime))").Do()
+	changeList, err := self.service.Changes.List(args.PageToken).PageSize(args.MaxChanges).RestrictToMyDrive(true).Fields("newStartPageToken", "nextPageToken", "changes(fileId,removed,time,file(id,name,md5Checksum,mimeType,createdTime,modifiedTime))").SupportsAllDrives(true).Do()
 	if err != nil {
 		return fmt.Errorf("Failed listing changes: %s", err)
 	}
@@ -43,7 +44,7 @@ func (self *Drive) ListChanges(args ListChangesArgs) error {
 }
 
 func (self *Drive) GetChangesStartPageToken() (string, error) {
-	res, err := self.service.Changes.GetStartPageToken().Do()
+	res, err := self.service.Changes.GetStartPageToken().SupportsAllDrives(true).Do()
 	if err != nil {
 		return "", fmt.Errorf("Failed getting start page token: %s", err)
 	}

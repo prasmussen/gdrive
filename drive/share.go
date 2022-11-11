@@ -2,9 +2,10 @@ package drive
 
 import (
 	"fmt"
-	"google.golang.org/api/drive/v3"
 	"io"
 	"text/tabwriter"
+
+	"google.golang.org/api/drive/v3"
 )
 
 type ShareArgs struct {
@@ -26,7 +27,7 @@ func (self *Drive) Share(args ShareArgs) error {
 		Domain:             args.Domain,
 	}
 
-	_, err := self.service.Permissions.Create(args.FileId, permission).Do()
+	_, err := self.service.Permissions.Create(args.FileId, permission).SupportsAllDrives(true).Do()
 	if err != nil {
 		return fmt.Errorf("Failed to share file: %s", err)
 	}
