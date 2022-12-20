@@ -1,4 +1,4 @@
-gdrive
+gdrive *(temporary fix 400 invalid request) - read release description for how it work*
 ======
 
 
