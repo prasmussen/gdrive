@@ -1,13 +1,11 @@
-gdrive
-======
-
-
-## Overview
-gdrive is a command line utility for interacting with Google Drive.
-
 ## News
-#### 28.05.2021
-gdrive is finally verified for using sensitive scopes which should fix the `This app is blocked` error. Note that the project name will show up as `project-367116221053` when granting access to you account. (I don't dare to change any more settings in the google console.)
+#### 01.01.2023
+Work has started on [Gdrive 3.0](https://github.com/glotlabs/gdrive) which will replace this project.
+It is not quite ready yet, but you can follow the progress.
+
+Gdrive3 will only implement the most requested functionality.
+If you have specific features that you want implemented please create an issue or join the discord to dicuss.
+
 
 ## Prerequisites
 None, binaries are statically linked.
