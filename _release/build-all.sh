@@ -1,18 +1,15 @@
 #!/bin/bash
 
-# Load crosscompile environment
-source _release/crosscompile.bash
+APP_NAME="gdrive"
+PLATFORMS="darwin/386 darwin/amd64 darwin/arm darwin/arm64 dragonfly/amd64 freebsd/386 freebsd/amd64 freebsd/arm linux/386 linux/amd64 linux/arm linux/arm64 linux/ppc64 linux/ppc64le linux/mips64 linux/mips64le linux/rpi netbsd/386 netbsd/amd64 netbsd/arm openbsd/386 openbsd/amd64 openbsd/arm plan9/386 plan9/amd64 solaris/amd64 windows/386 windows/amd64"
 
-APP_NAME="drive"
-PLATFORMS="darwin/386 darwin/amd64 freebsd/386 freebsd/amd64 linux/386 linux/amd64 linux/arm linux/rpi windows/386 windows/amd64"
 BIN_PATH="_release/bin"
 
 # Initialize bin dir
 mkdir -p $BIN_PATH
-rm $BIN_PATH/*
+rm $BIN_PATH/* 2> /dev/null
 
-
-# Build binary for each platform in parallel
+# Build binary for each platform
 for PLATFORM in $PLATFORMS; do
     GOOS=${PLATFORM%/*}
     GOARCH=${PLATFORM#*/}
@@ -30,15 +27,11 @@ for PLATFORM in $PLATFORMS; do
         unset GOARM
     fi
 
-    BUILD_CMD="go-${GOOS}-${GOARCH} build -ldflags '-w' -o ${BIN_PATH}/${BIN_NAME} $APP_NAME.go"
+    export GOOS=$GOOS
+    export GOARCH=$GOARCH
 
     echo "Building $BIN_NAME"
-    $BUILD_CMD &
-done
-
-# Wait for builds to complete
-for job in $(jobs -p); do
-    wait $job
+    go build -ldflags '-w -s' -o ${BIN_PATH}/${BIN_NAME}
 done
 
 echo "All done"
