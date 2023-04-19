@@ -1,11 +1,24 @@
-## News
-#### 01.01.2023
-Work has started on [Gdrive 3.0](https://github.com/glotlabs/gdrive) which will replace this project.
-It is not quite ready yet, but you can follow the progress.
+## IMPORTANT
+This repository is not maintained anymore. [Gdrive 3](https://github.com/glotlabs/gdrive) is its successor.
 
-Gdrive3 will only implement the most requested functionality.
-If you have specific features that you want implemented please create an issue or join the discord to dicuss.
+```
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+```
 
 ## Prerequisites
 None, binaries are statically linked.
