@@ -25,7 +25,7 @@ type ExportArgs struct {
 }
 
 func (self *Drive) Export(args ExportArgs) error {
-	f, err := self.service.Files.Get(args.Id).Fields("name", "mimeType").Do()
+	f, err := self.service.Files.Get(args.Id).SupportsTeamDrives(true).Fields("name", "mimeType").Do()
 	if err != nil {
 		return fmt.Errorf("Failed to get file: %s", err)
 	}

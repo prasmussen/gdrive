@@ -35,7 +35,7 @@ func (self *Drive) mkdir(args MkdirArgs) (*drive.File, error) {
 	dstFile.Parents = args.Parents
 
 	// Create directory
-	f, err := self.service.Files.Create(dstFile).Do()
+	f, err := self.service.Files.Create(dstFile).SupportsTeamDrives(true).Do()
 	if err != nil {
 		return nil, fmt.Errorf("Failed to create directory: %s", err)
 	}

@@ -26,7 +26,7 @@ func (self *Drive) Share(args ShareArgs) error {
 		Domain:             args.Domain,
 	}
 
-	_, err := self.service.Permissions.Create(args.FileId, permission).Do()
+	_, err := self.service.Permissions.Create(args.FileId, permission).SupportsTeamDrives(true).Do()
 	if err != nil {
 		return fmt.Errorf("Failed to share file: %s", err)
 	}
@@ -42,7 +42,7 @@ type RevokePermissionArgs struct {
 }
 
 func (self *Drive) RevokePermission(args RevokePermissionArgs) error {
-	err := self.service.Permissions.Delete(args.FileId, args.PermissionId).Do()
+	err := self.service.Permissions.Delete(args.FileId, args.PermissionId).SupportsTeamDrives(true).Do()
 	if err != nil {
 		fmt.Errorf("Failed to revoke permission: %s", err)
 		return err
@@ -58,7 +58,7 @@ type ListPermissionsArgs struct {
 }
 
 func (self *Drive) ListPermissions(args ListPermissionsArgs) error {
-	permList, err := self.service.Permissions.List(args.FileId).Fields("permissions(id,role,type,domain,emailAddress,allowFileDiscovery)").Do()
+	permList, err := self.service.Permissions.List(args.FileId).SupportsTeamDrives(true).Fields("permissions(id,role,type,domain,emailAddress,allowFileDiscovery)").Do()
 	if err != nil {
 		fmt.Errorf("Failed to list permissions: %s", err)
 		return err
@@ -77,7 +77,7 @@ func (self *Drive) shareAnyoneReader(fileId string) error {
 		Type: "anyone",
 	}
 
-	_, err := self.service.Permissions.Create(fileId, permission).Do()
+	_, err := self.service.Permissions.Create(fileId, permission).SupportsTeamDrives(true).Do()
 	if err != nil {
 		return fmt.Errorf("Failed to share file: %s", err)
 	}

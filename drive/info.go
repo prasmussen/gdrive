@@ -13,7 +13,7 @@ type FileInfoArgs struct {
 }
 
 func (self *Drive) Info(args FileInfoArgs) error {
-	f, err := self.service.Files.Get(args.Id).Fields("id", "name", "size", "createdTime", "modifiedTime", "md5Checksum", "mimeType", "parents", "shared", "description", "webContentLink", "webViewLink").Do()
+	f, err := self.service.Files.Get(args.Id).SupportsTeamDrives(true).Fields("id", "name", "size", "createdTime", "modifiedTime", "md5Checksum", "mimeType", "parents", "shared", "description", "webContentLink", "webViewLink").Do()
 	if err != nil {
 		return fmt.Errorf("Failed to get file: %s", err)
 	}

@@ -85,7 +85,7 @@ func (self *Drive) DownloadSync(args DownloadSyncArgs) error {
 
 func (self *Drive) getSyncRoot(rootId string) (*drive.File, error) {
 	fields := []googleapi.Field{"id", "name", "mimeType", "appProperties"}
-	f, err := self.service.Files.Get(rootId).Fields(fields...).Do()
+	f, err := self.service.Files.Get(rootId).SupportsTeamDrives(true).Fields(fields...).Do()
 	if err != nil {
 		return nil, fmt.Errorf("Failed to find root dir: %s", err)
 	}
@@ -191,7 +191,7 @@ func (self *Drive) downloadRemoteFile(id, fpath string, args DownloadSyncArgs, t
 	// Get timeout reader wrapper and context
 	timeoutReaderWrapper, ctx := getTimeoutReaderWrapperContext(args.Timeout)
 
-	res, err := self.service.Files.Get(id).Context(ctx).Download()
+	res, err := self.service.Files.Get(id).SupportsTeamDrives(true).Context(ctx).Download()
 	if err != nil {
 		if isBackendOrRateLimitError(err) && try < MaxErrorRetries {
 			exponentialBackoffSleep(try)
