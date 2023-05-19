@@ -273,6 +273,17 @@ func shareRevokeHandler(ctx cli.Context) {
 	checkErr(err)
 }
 
+func shareUpdateHandler(ctx cli.Context) {
+	args := ctx.Args()
+	err := newDrive(args).UpdatePermission(drive.UpdatePermissionArgs{
+		Out:          os.Stdout,
+		FileId:       args.String("fileId"),
+		PermissionId: args.String("permissionId"),
+		Role: args.String("role"),
+	})
+	checkErr(err)
+}
+
 func deleteHandler(ctx cli.Context) {
 	args := ctx.Args()
 	err := newDrive(args).Delete(drive.DeleteArgs{
