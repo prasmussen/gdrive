@@ -435,6 +435,12 @@ func main() {
 						Description: "Delete all sharing permissions (owner roles will be skipped)",
 						OmitValue:   true,
 					},
+					cli.BoolFlag{
+						Name:        "disableNotification",
+						Patterns:    []string{"--no-notification"},
+						Description: "Disable notification e-mail when sharing to user or group. Cannot be disabled for ownership transfer.",
+						OmitValue:   true,
+					},
 				),
 			},
 		},
