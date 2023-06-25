@@ -29,6 +29,7 @@ for PLATFORM in $PLATFORMS; do
 
     export GOOS=$GOOS
     export GOARCH=$GOARCH
+    export CGO_ENABLED=0
 
     echo "Building $BIN_NAME"
     go build -ldflags '-w -s' -o ${BIN_PATH}/${BIN_NAME}
