@@ -1,0 +1,19 @@
+Source: gdrive
+Section: devel
+Priority: optional
+Maintainer: Petter Rasmussen <petter@hask.no>
+Build-Depends: debhelper (>= 11),
+               dh-golang,
+               golang-any
+Standards-Version: 4.2.1
+Homepage: https://github.com/prasmussen/gdrive
+XS-Go-Import-Path: github.com/prasmussen/gdrive
+Testsuite: autopkgtest-pkg-go
+
+Package: gdrive
+Architecture: any
+Built-Using: ${misc:Built-Using}
+Depends: ${misc:Depends},
+         ${shlibs:Depends}
+Description: Google Drive CLI Client
+ gdrive is a command line utility for interacting with Google Drive.
