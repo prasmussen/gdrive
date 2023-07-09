@@ -13,6 +13,7 @@ type ListRevisionsArgs struct {
 	NameWidth   int64
 	SkipHeader  bool
 	SizeInBytes bool
+	JsonOutput  int64
 }
 
 func (self *Drive) ListRevisions(args ListRevisionsArgs) (err error) {
@@ -21,6 +22,13 @@ func (self *Drive) ListRevisions(args ListRevisionsArgs) (err error) {
 		return fmt.Errorf("Failed listing revisions: %s", err)
 	}
 
+	if args.JsonOutput > 0 {
+		return OutputRevisionList(OutputRevisionListArgs{
+			Out:        args.Out,
+			Revisions:  revList.Revisions,
+			JsonOutput: args.JsonOutput,
+		})
+	}
 	PrintRevisionList(PrintRevisionListArgs{
 		Out:         args.Out,
 		Revisions:   revList.Revisions,
@@ -30,6 +38,28 @@ func (self *Drive) ListRevisions(args ListRevisionsArgs) (err error) {
 	})
 
 	return
+}
+
+type OutputRevisionListArgs struct {
+	Out        io.Writer
+	Revisions  []*drive.Revision
+	JsonOutput int64
+}
+
+func OutputRevisionList(args OutputRevisionListArgs) error {
+	var data []map[string]interface{}
+
+	for _, rev := range args.Revisions {
+		data = append(data, map[string]interface{}{
+			"id":       rev.Id,
+			"name":     rev.OriginalFilename,
+			"size":     rev.Size,
+			"modified": formatDatetime(rev.ModifiedTime),
+			"forever":  rev.KeepForever,
+		})
+	}
+
+	return jsonOutput(args.Out, args.JsonOutput == 2, data)
 }
 
 type PrintRevisionListArgs struct {

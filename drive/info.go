@@ -10,6 +10,7 @@ type FileInfoArgs struct {
 	Out         io.Writer
 	Id          string
 	SizeInBytes bool
+	JsonOutput  int64
 }
 
 func (self *Drive) Info(args FileInfoArgs) error {
@@ -22,6 +23,25 @@ func (self *Drive) Info(args FileInfoArgs) error {
 	absPath, err := pathfinder.absPath(f)
 	if err != nil {
 		return err
+	}
+
+	if args.JsonOutput > 0 {
+		data := map[string]interface{}{
+			"Id":          f.Id,
+			"Name":        f.Name,
+			"Path":        absPath,
+			"Description": f.Description,
+			"Mime":        f.MimeType,
+			"Size":        f.Size,
+			"Created":     formatDatetime(f.CreatedTime),
+			"Modified":    formatDatetime(f.ModifiedTime),
+			"Md5sum":      f.Md5Checksum,
+			"Shared":      formatBool(f.Shared),
+			"Parents":     f.Parents,
+			"ViewUrl":     f.WebViewLink,
+			"DownloadUrl": f.WebContentLink,
+		}
+		return jsonOutput(args.Out, args.JsonOutput == 2, data)
 	}
 
 	PrintFileInfo(PrintFileInfoArgs{
