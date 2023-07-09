@@ -27,7 +27,7 @@ func (self *Drive) List(args ListFilesArgs) (err error) {
 		sortOrder: args.SortOrder,
 		maxFiles:  args.MaxFiles,
 	}
-	files, err := self.listAllFiles(listArgs)
+	files, err := self.listAllFiles(listArgs, 1)
 	if err != nil {
 		return fmt.Errorf("Failed to list files: %s", err)
 	}
@@ -62,7 +62,7 @@ type listAllFilesArgs struct {
 	maxFiles  int64
 }
 
-func (self *Drive) listAllFiles(args listAllFilesArgs) ([]*drive.File, error) {
+func (self *Drive) listAllFiles(args listAllFilesArgs, try int) ([]*drive.File, error) {
 	var files []*drive.File
 
 	var pageSize int64
@@ -85,8 +85,14 @@ func (self *Drive) listAllFiles(args listAllFilesArgs) ([]*drive.File, error) {
 		return nil
 	})
 
-	if err != nil && err != controlledStop {
-		return nil, err
+	if err != nil {
+		if isBackendOrRateLimitError(err) && try < MaxErrorRetries {
+			exponentialBackoffSleep(try)
+			try++
+			return self.listAllFiles(args, try)
+		} else if err != controlledStop {
+			return nil, err
+		}
 	}
 
 	if args.maxFiles > 0 {

@@ -26,14 +26,14 @@ type UploadArgs struct {
 	Timeout     time.Duration
 }
 
-func (self *Drive) Upload(args UploadArgs) error {
+func (self *Drive) Upload(args UploadArgs, try int) error {
 	if args.ChunkSize > intMax()-1 {
 		return fmt.Errorf("Chunk size is to big, max chunk size for this computer is %d", intMax()-1)
 	}
 
 	// Ensure that none of the parents are sync dirs
 	for _, parent := range args.Parents {
-		isSyncDir, err := self.isSyncFile(parent)
+		isSyncDir, err := self.isSyncFile(parent, 1)
 		if err != nil {
 			return err
 		}
@@ -56,7 +56,7 @@ func (self *Drive) Upload(args UploadArgs) error {
 		return fmt.Errorf("'%s' is a directory, use --recursive to upload directories", info.Name())
 	}
 
-	f, rate, err := self.uploadFile(args)
+	f, rate, err := self.uploadFile(args, 1)
 	if err != nil {
 		return err
 	}
@@ -92,7 +92,7 @@ func (self *Drive) uploadRecursive(args UploadArgs) error {
 		args.Name = ""
 		return self.uploadDirectory(args)
 	} else if info.Mode().IsRegular() {
-		_, _, err := self.uploadFile(args)
+		_, _, err := self.uploadFile(args, 1)
 		return err
 	}
 
@@ -115,7 +115,7 @@ func (self *Drive) uploadDirectory(args UploadArgs) error {
 		Name:        srcFileInfo.Name(),
 		Parents:     args.Parents,
 		Description: args.Description,
-	})
+	}, 1)
 	if err != nil {
 		return err
 	}
@@ -143,7 +143,7 @@ func (self *Drive) uploadDirectory(args UploadArgs) error {
 	return nil
 }
 
-func (self *Drive) uploadFile(args UploadArgs) (*drive.File, int64, error) {
+func (self *Drive) uploadFile(args UploadArgs, try int) (*drive.File, int64, error) {
 	srcFile, srcFileInfo, err := openFile(args.Path)
 	if err != nil {
 		return nil, 0, err
@@ -186,7 +186,11 @@ func (self *Drive) uploadFile(args UploadArgs) (*drive.File, int64, error) {
 
 	f, err := self.service.Files.Create(dstFile).Fields("id", "name", "size", "md5Checksum", "webContentLink").Context(ctx).Media(reader, chunkSize).Do()
 	if err != nil {
-		if isTimeoutError(err) {
+		if isBackendOrRateLimitError(err) && try < MaxErrorRetries {
+			exponentialBackoffSleep(try)
+			try++
+			return self.uploadFile(args, try)
+		} else if isTimeoutError(err) {
 			return nil, 0, fmt.Errorf("Failed to upload file: timeout, no data was transferred for %v", args.Timeout)
 		}
 		return nil, 0, fmt.Errorf("Failed to upload file: %s", err)
@@ -211,7 +215,7 @@ type UploadStreamArgs struct {
 	Timeout     time.Duration
 }
 
-func (self *Drive) UploadStream(args UploadStreamArgs) error {
+func (self *Drive) UploadStream(args UploadStreamArgs, try int) error {
 	if args.ChunkSize > intMax()-1 {
 		return fmt.Errorf("Chunk size is to big, max chunk size for this computer is %d", intMax()-1)
 	}
@@ -241,7 +245,11 @@ func (self *Drive) UploadStream(args UploadStreamArgs) error {
 
 	f, err := self.service.Files.Create(dstFile).Fields("id", "name", "size", "webContentLink").Context(ctx).Media(reader, chunkSize).Do()
 	if err != nil {
-		if isTimeoutError(err) {
+		if isBackendOrRateLimitError(err) && try < MaxErrorRetries {
+			exponentialBackoffSleep(try)
+			try++
+			return self.UploadStream(args, try)
+		} else if isTimeoutError(err) {
 			return fmt.Errorf("Failed to upload file: timeout, no data was transferred for %v", args.Timeout)
 		}
 		return fmt.Errorf("Failed to upload file: %s", err)

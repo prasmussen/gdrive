@@ -29,7 +29,7 @@ func (self *Drive) DownloadSync(args DownloadSyncArgs) error {
 	started := time.Now()
 
 	// Get remote root dir
-	rootDir, err := self.getSyncRoot(args.RootId)
+	rootDir, err := self.getSyncRoot(args.RootId, 1)
 	if err != nil {
 		return err
 	}
@@ -83,10 +83,15 @@ func (self *Drive) DownloadSync(args DownloadSyncArgs) error {
 	return nil
 }
 
-func (self *Drive) getSyncRoot(rootId string) (*drive.File, error) {
+func (self *Drive) getSyncRoot(rootId string, try int) (*drive.File, error) {
 	fields := []googleapi.Field{"id", "name", "mimeType", "appProperties"}
 	f, err := self.service.Files.Get(rootId).Fields(fields...).Do()
 	if err != nil {
+		if isBackendOrRateLimitError(err) && try < MaxErrorRetries {
+			exponentialBackoffSleep(try)
+			try++
+			return self.getSyncRoot(rootId, try)
+		}
 		return nil, fmt.Errorf("Failed to find root dir: %s", err)
 	}
 
