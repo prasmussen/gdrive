@@ -56,7 +56,7 @@ func (self *Handler) getParser() Parser {
 	return CompleteParser{parsers}
 }
 
-// Split on spaces but ignore spaces inside <...> and [...]
+// SplitPattern splits on spaces but ignore spaces inside <...> and [...]
 func (self *Handler) SplitPattern() []string {
 	re := regexp.MustCompile(`(<[^>]+>|\[[^\]]+]|\S+)`)
 	matches := []string{}
