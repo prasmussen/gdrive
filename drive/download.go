@@ -22,6 +22,7 @@ type DownloadArgs struct {
 	Delete    bool
 	Stdout    bool
 	Timeout   time.Duration
+	Try       int
 }
 
 func (self *Drive) Download(args DownloadArgs) error {
@@ -31,6 +32,11 @@ func (self *Drive) Download(args DownloadArgs) error {
 
 	f, err := self.service.Files.Get(args.Id).Fields("id", "name", "size", "mimeType", "md5Checksum").Do()
 	if err != nil {
+		if isBackendOrRateLimitError(err) && args.Try < MaxErrorRetries {
+			exponentialBackoffSleep(args.Try)
+			args.Try++
+			return self.Download(args)
+		}
 		return fmt.Errorf("Failed to get file: %s", err)
 	}
 
@@ -72,6 +78,7 @@ type DownloadQueryArgs struct {
 	Force     bool
 	Skip      bool
 	Recursive bool
+	Try       int
 }
 
 func (self *Drive) DownloadQuery(args DownloadQueryArgs) error {
@@ -81,6 +88,11 @@ func (self *Drive) DownloadQuery(args DownloadQueryArgs) error {
 	}
 	files, err := self.listAllFiles(listArgs)
 	if err != nil {
+		if isBackendOrRateLimitError(err) && args.Try < MaxErrorRetries {
+			exponentialBackoffSleep(args.Try)
+			args.Try++
+			return self.DownloadQuery(args)
+		}
 		return fmt.Errorf("Failed to list files: %s", err)
 	}
 
@@ -110,6 +122,11 @@ func (self *Drive) DownloadQuery(args DownloadQueryArgs) error {
 func (self *Drive) downloadRecursive(args DownloadArgs) error {
 	f, err := self.service.Files.Get(args.Id).Fields("id", "name", "size", "mimeType", "md5Checksum").Do()
 	if err != nil {
+		if isBackendOrRateLimitError(err) && args.Try < MaxErrorRetries {
+			exponentialBackoffSleep(args.Try)
+			args.Try++
+			return self.downloadRecursive(args)
+		}
 		return fmt.Errorf("Failed to get file: %s", err)
 	}
 
@@ -131,6 +148,10 @@ func (self *Drive) downloadBinary(f *drive.File, args DownloadArgs) (int64, int6
 	if err != nil {
 		if isTimeoutError(err) {
 			return 0, 0, fmt.Errorf("Failed to download file: timeout, no data was transferred for %v", args.Timeout)
+		} else if isBackendOrRateLimitError(err) && (args.Try < MaxErrorRetries) {
+			exponentialBackoffSleep(args.Try)
+			args.Try++
+			return self.downloadBinary(f, args)
 		}
 		return 0, 0, fmt.Errorf("Failed to download file: %s", err)
 	}
@@ -230,6 +251,11 @@ func (self *Drive) downloadDirectory(parent *drive.File, args DownloadArgs) erro
 	}
 	files, err := self.listAllFiles(listArgs)
 	if err != nil {
+		if isBackendOrRateLimitError(err) && args.Try < MaxErrorRetries {
+			exponentialBackoffSleep(args.Try)
+			args.Try++
+			return self.downloadDirectory(parent, args)
+		}
 		return fmt.Errorf("Failed listing files: %s", err)
 	}
 
