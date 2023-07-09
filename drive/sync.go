@@ -264,7 +264,7 @@ func checkFiles(files []*drive.File) error {
 	for _, f := range files {
 		// Ensure all files have exactly one parent
 		if len(f.Parents) != 1 {
-			return fmt.Errorf("File %s does not have exacly one parent", f.Id)
+			return fmt.Errorf("File %s does not have exactly one parent", f.Id)
 		}
 
 		// Ensure that there are no duplicate files
