@@ -250,6 +250,7 @@ func shareHandler(ctx cli.Context) {
 		Email:        args.String("email"),
 		Domain:       args.String("domain"),
 		Discoverable: args.Bool("discoverable"),
+		NotificationMessage:	args.String("notificationMessage"),
 	})
 	checkErr(err)
 }
