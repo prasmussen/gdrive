@@ -26,7 +26,14 @@ func (self *Drive) Share(args ShareArgs) error {
 		Domain:             args.Domain,
 	}
 
-	_, err := self.service.Permissions.Create(args.FileId, permission).Do()
+    call := self.service.Permissions.Create(args.FileId, permission)
+
+    if permission.Role == "owner" {
+        call.TransferOwnership(true);
+    }
+
+    _, err := call.Do()
+
 	if err != nil {
 		return fmt.Errorf("Failed to share file: %s", err)
 	}
@@ -52,8 +59,39 @@ func (self *Drive) RevokePermission(args RevokePermissionArgs) error {
 	return nil
 }
 
+type UpdatePermissionArgs struct {
+	Out          io.Writer
+	FileId       string
+	PermissionId string
+	Role         string
+}
+
+func (self *Drive) UpdatePermission(args UpdatePermissionArgs) error {
+    permission := &drive.Permission{
+		Role:               args.Role,
+	}
+
+	call := self.service.Permissions.Update(args.FileId, args.PermissionId, permission)
+
+    if permission.Role == "owner" {
+        call.TransferOwnership(true);
+    }
+
+    _, err := call.Do()
+
+	if err != nil {
+		fmt.Errorf("Failed to update permission: %s", err)
+		return err
+	}
+
+	fmt.Fprintf(args.Out, "Permission updated\n")
+	return nil
+}
+
 type ListPermissionsArgs struct {
 	Out    io.Writer
+	SkipHeader  bool
+	Separator   string
 	FileId string
 }
 
@@ -66,6 +104,8 @@ func (self *Drive) ListPermissions(args ListPermissionsArgs) error {
 
 	printPermissions(printPermissionsArgs{
 		out:         args.Out,
+		separator:   args.Separator,
+		skipHeader:  args.SkipHeader,
 		permissions: permList.Permissions,
 	})
 	return nil
@@ -87,6 +127,9 @@ func (self *Drive) shareAnyoneReader(fileId string) error {
 
 type printPermissionsArgs struct {
 	out         io.Writer
+	skipHeader  bool
+	separator   string
+
 	permissions []*drive.Permission
 }
 
@@ -94,16 +137,19 @@ func printPermissions(args printPermissionsArgs) {
 	w := new(tabwriter.Writer)
 	w.Init(args.out, 0, 0, 3, ' ', 0)
 
-	fmt.Fprintln(w, "Id\tType\tRole\tEmail\tDomain\tDiscoverable")
+	if !args.skipHeader {
+		fmt.Fprintf(w, "Id%[1]sType%[1]sRole%[1]sEmail%[1]sDomain%[1]sDiscoverable\n", args.separator)
+	}
 
 	for _, p := range args.permissions {
-		fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\t%s\n",
+		fmt.Fprintf(w, "%[1]s%[7]s%[2]s%[7]s%[3]s%[7]s%[4]s%[7]s%[5]s%[7]s%[6]s\n",
 			p.Id,
 			p.Type,
 			p.Role,
 			p.EmailAddress,
 			p.Domain,
 			formatBool(p.AllowFileDiscovery),
+			args.separator,
 		)
 	}
 

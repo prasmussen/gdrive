@@ -19,6 +19,7 @@ const DefaultTimeout = 5 * 60
 const DefaultQuery = "trashed = false and 'me' in owners"
 const DefaultShareRole = "reader"
 const DefaultShareType = "anyone"
+const DefaultSeparator = "\t"
 
 var DefaultConfigDir = GetDefaultConfigDir()
 
@@ -44,6 +45,18 @@ func main() {
 			Name:        "serviceAccount",
 			Patterns:    []string{"--service-account"},
 			Description: "Oauth service account filename, used for server to server communication without user interaction (filename path is relative to config dir)",
+		},
+		cli.BoolFlag{
+			Name:        "skipHeader",
+			Patterns:    []string{"--no-header"},
+			Description: "Dont print the header",
+			OmitValue:   true,
+		},
+		cli.StringFlag{
+		Name:        "separator",
+		Patterns:    []string{"--separator"},
+		Description: "Print list entries separated by provided character",
+			DefaultValue: DefaultSeparator,
 		},
 	}
 
@@ -82,12 +95,6 @@ func main() {
 						Name:        "absPath",
 						Patterns:    []string{"--absolute"},
 						Description: "Show absolute path to file (will only show path from first parent)",
-						OmitValue:   true,
-					},
-					cli.BoolFlag{
-						Name:        "skipHeader",
-						Patterns:    []string{"--no-header"},
-						Description: "Dont print the header",
 						OmitValue:   true,
 					},
 					cli.BoolFlag{
@@ -446,6 +453,14 @@ func main() {
 				cli.NewFlagGroup("global", globalFlags...),
 			},
 		},
+        &cli.Handler{
+			Pattern:     "[global] share update <fileId> <permissionId> <role>",
+			Description: "Update permission",
+			Callback:    shareUpdateHandler,
+			FlagGroups: cli.FlagGroups{
+				cli.NewFlagGroup("global", globalFlags...),
+			},
+		},
 		&cli.Handler{
 			Pattern:     "[global] share revoke <fileId> <permissionId>",
 			Description: "Revoke permission",
@@ -476,14 +491,6 @@ func main() {
 			Callback:    listSyncHandler,
 			FlagGroups: cli.FlagGroups{
 				cli.NewFlagGroup("global", globalFlags...),
-				cli.NewFlagGroup("options",
-					cli.BoolFlag{
-						Name:        "skipHeader",
-						Patterns:    []string{"--no-header"},
-						Description: "Dont print the header",
-						OmitValue:   true,
-					},
-				),
 			},
 		},
 		&cli.Handler{
@@ -503,12 +510,6 @@ func main() {
 						Patterns:     []string{"--path-width"},
 						Description:  fmt.Sprintf("Width of path column, default: %d, minimum: 9, use 0 for full width", DefaultPathWidth),
 						DefaultValue: DefaultPathWidth,
-					},
-					cli.BoolFlag{
-						Name:        "skipHeader",
-						Patterns:    []string{"--no-header"},
-						Description: "Dont print the header",
-						OmitValue:   true,
 					},
 					cli.BoolFlag{
 						Name:        "sizeInBytes",
@@ -660,12 +661,6 @@ func main() {
 						Description:  fmt.Sprintf("Width of name column, default: %d, minimum: 9, use 0 for full width", DefaultNameWidth),
 						DefaultValue: DefaultNameWidth,
 					},
-					cli.BoolFlag{
-						Name:        "skipHeader",
-						Patterns:    []string{"--no-header"},
-						Description: "Dont print the header",
-						OmitValue:   true,
-					},
 				),
 			},
 		},
@@ -681,12 +676,6 @@ func main() {
 						Patterns:     []string{"--name-width"},
 						Description:  fmt.Sprintf("Width of name column, default: %d, minimum: 9, use 0 for full width", DefaultNameWidth),
 						DefaultValue: DefaultNameWidth,
-					},
-					cli.BoolFlag{
-						Name:        "skipHeader",
-						Patterns:    []string{"--no-header"},
-						Description: "Dont print the header",
-						OmitValue:   true,
 					},
 					cli.BoolFlag{
 						Name:        "sizeInBytes",
