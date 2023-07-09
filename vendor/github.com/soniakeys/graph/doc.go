@@ -4,7 +4,7 @@
 // Graph algorithms: Dijkstra, A*, Bellman Ford, Floyd Warshall;
 // Kruskal and Prim minimal spanning tree; topological sort and DAG longest
 // and shortest paths; Eulerian cycle and path; degeneracy and k-cores;
-// Bron Kerbosch clique finding; connected components; and others.
+// Bron Kerbosch clique finding; connected components; dominance; and others.
 //
 // This is a graph library of integer indexes.  To use it with application
 // data, you associate data with integer indexes, perform searches or other
@@ -44,8 +44,8 @@
 //
 // In contrast to Half, the type Edge represents both ends of an edge (but
 // no label.)  The type LabeledEdge adds the label.  The type WeightedEdgeList
-// bundles a list of LabeledEdges with a WeightFunc.  WeightedEdgeList is
-// currently only used by Kruskal methods.
+// bundles a list of LabeledEdges with a WeightFunc.  (WeightedEdgeList has
+// few methods.  It exists primarily to support the Kruskal algorithm.)
 //
 // FromList is a compact rooted tree (or forest) respresentation.  Like
 // AdjacencyList and LabeledAdjacencyList, it is a list with one element for
@@ -59,8 +59,7 @@
 // simply by ignoring the label.  In these cases code generation provides
 // methods on both types from a single source implementation. These methods
 // are documented with the sentence "There are equivalent labeled and unlabeled
-// versions of this method" and examples are provided only for the unlabeled
-// version.
+// versions of this method."
 //
 // Terminology
 //
@@ -114,15 +113,10 @@
 // distance with the same minimum length, search methods are free to return
 // any of them.
 //
-//  Type name      Description, methods
-//  BreadthFirst   Unweigted arcs, traversal, single path search or all paths.
-//  BreadthFirst2  Direction-optimizing variant of BreadthFirst.
+//  Algorithm      Description
 //  Dijkstra       Non-negative arc weights, single or all paths.
 //  AStar          Non-negative arc weights, heuristic guided, single path.
 //  BellmanFord    Negative arc weights allowed, no negative cycles, all paths.
 //  DAGPath        O(n) algorithm for DAGs, arc weights of any sign.
 //  FloydWarshall  all pairs distances, no negative cycles.
-//
-// These searches typically have one method that is full-featured and
-// then a convenience method with a simpler API targeting a simpler use case.
 package graph

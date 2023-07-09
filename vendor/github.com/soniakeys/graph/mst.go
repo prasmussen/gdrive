@@ -6,6 +6,8 @@ package graph
 import (
 	"container/heap"
 	"sort"
+
+	"github.com/soniakeys/bits"
 )
 
 type dsElement struct {
@@ -82,35 +84,47 @@ func (ds disjointSet) find(n NI) NI {
 // Kruskal implements Kruskal's algorithm for constructing a minimum spanning
 // forest on an undirected graph.
 //
-// While the input graph is interpreted as undirected, the receiver edge list
-// does not actually need to contain reciprocal arcs.  A property of the
-// algorithm is that arc direction is ignored.  Thus only a single arc out of
-// a reciprocal pair must be present in the edge list.  Reciprocal arcs (and
-// parallel arcs) are allowed though, and do not affect the result.
+// The forest is returned as an undirected graph.
+//
+// Also returned is a total distance for the returned forest.
+//
+// This method is a convenience wrapper for LabeledEdgeList.Kruskal.
+// If you have no need for the input graph as a LabeledUndirected, it may be
+// more efficient to construct a LabeledEdgeList directly.
+func (g LabeledUndirected) Kruskal(w WeightFunc) (spanningForest LabeledUndirected, dist float64) {
+	return g.WeightedArcsAsEdges(w).Kruskal()
+}
+
+// Kruskal implements Kruskal's algorithm for constructing a minimum spanning
+// forest on an undirected graph.
+//
+// The algorithm allows parallel edges, thus it is acceptable to construct
+// the receiver with LabeledUndirected.WeightedArcsAsEdges.  It may be more
+// efficient though, if you can construct the receiver WeightedEdgeList
+// directly without parallel edges.
 //
 // The forest is returned as an undirected graph.
 //
 // Also returned is a total distance for the returned forest.
 //
-// The edge list of the receiver is sorted as a side effect of this method.
-// See KruskalSorted for a version that relies on the edge list being already
-// sorted.
+// The edge list of the receiver is sorted in place as a side effect of this
+// method.  See KruskalSorted for a version that relies on the edge list being
+// already sorted.  This method is a wrapper for KruskalSorted.  If you can
+// generate the input graph sorted as required for KruskalSorted, you can
+// call that method directly and avoid the overhead of the sort.
 func (l WeightedEdgeList) Kruskal() (g LabeledUndirected, dist float64) {
-	sort.Sort(l)
+	e := l.Edges
+	w := l.WeightFunc
+	sort.Slice(e, func(i, j int) bool { return w(e[i].LI) < w(e[j].LI) })
 	return l.KruskalSorted()
 }
 
 // KruskalSorted implements Kruskal's algorithm for constructing a minimum
 // spanning tree on an undirected graph.
 //
-// While the input graph is interpreted as undirected, the receiver edge list
-// does not actually need to contain reciprocal arcs.  A property of the
-// algorithm is that arc direction is ignored.  Thus only a single arc out of
-// a reciprocal pair must be present in the edge list.  Reciprocal arcs (and
-// parallel arcs) are allowed though, and do not affect the result.
-//
 // When called, the edge list of the receiver must be already sorted by weight.
-// See Kruskal for a version that accepts an unsorted edge list.
+// See the Kruskal method for a version that accepts an unsorted edge list.
+// As with Kruskal, parallel edges are allowed.
 //
 // The forest is returned as an undirected graph.
 //
@@ -148,10 +162,13 @@ func (l WeightedEdgeList) KruskalSorted() (g LabeledUndirected, dist float64) {
 // Returned are the number of nodes spanned for the single tree (which will be
 // the order of the connected component) and the total spanned distance for the
 // single tree.
-func (g LabeledUndirected) Prim(start NI, w WeightFunc, f *FromList, labels []LI, componentLeaves *Bits) (numSpanned int, dist float64) {
+func (g LabeledUndirected) Prim(start NI, w WeightFunc, f *FromList, labels []LI, componentLeaves *bits.Bits) (numSpanned int, dist float64) {
 	al := g.LabeledAdjacencyList
 	if len(f.Paths) != len(al) {
 		*f = NewFromList(len(al))
+	}
+	if f.Leaves.Num != len(al) {
+		f.Leaves = bits.New(len(al))
 	}
 	b := make([]prNode, len(al)) // "best"
 	for n := range b {
@@ -163,9 +180,12 @@ func (g LabeledUndirected) Prim(start NI, w WeightFunc, f *FromList, labels []LI
 	rp[start] = PathEnd{From: -1, Len: 1}
 	numSpanned = 1
 	fLeaves := &f.Leaves
-	fLeaves.SetBit(start, 1)
+	fLeaves.SetBit(int(start), 1)
 	if componentLeaves != nil {
-		componentLeaves.SetBit(start, 1)
+		if componentLeaves.Num != len(al) {
+			*componentLeaves = bits.New(len(al))
+		}
+		componentLeaves.SetBit(int(start), 1)
 	}
 	for a := start; ; {
 		for _, nb := range al[a] {
@@ -194,25 +214,15 @@ func (g LabeledUndirected) Prim(start NI, w WeightFunc, f *FromList, labels []LI
 			labels[a] = bp.from.Label
 		}
 		dist += bp.wt
-		fLeaves.SetBit(bp.from.From, 0)
-		fLeaves.SetBit(a, 1)
+		fLeaves.SetBit(int(bp.from.From), 0)
+		fLeaves.SetBit(int(a), 1)
 		if componentLeaves != nil {
-			componentLeaves.SetBit(bp.from.From, 0)
-			componentLeaves.SetBit(a, 1)
+			componentLeaves.SetBit(int(bp.from.From), 0)
+			componentLeaves.SetBit(int(a), 1)
 		}
 		numSpanned++
 	}
 	return
-}
-
-// fromHalf is a half arc, representing a labeled arc and the "neighbor" node
-// that the arc originates from.
-//
-// (This used to be exported when there was a LabeledFromList.  Currently
-// unexported now that it seems to have much more limited use.)
-type fromHalf struct {
-	From  NI
-	Label LI
 }
 
 type prNode struct {

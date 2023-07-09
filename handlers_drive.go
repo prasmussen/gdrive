@@ -17,7 +17,10 @@ import (
 const ClientId = "367116221053-7n0vf5akeru7on6o2fjinrecpdoe99eg.apps.googleusercontent.com"
 const ClientSecret = "1qsNodXNaWq1mQuBjUjmvhoO"
 const TokenFilename = "token_v2.json"
+const ClientCredentialsFilename = "client_id.json"
 const DefaultCacheFileName = "file_cache.json"
+
+var usingClientCredentialsFile = false
 
 func listHandler(ctx cli.Context) {
 	args := ctx.Args()
@@ -345,15 +348,30 @@ func getOauthClient(args cli.Arguments) (*http.Client, error) {
 		ExitF("Access token not needed when refresh token is provided")
 	}
 
+	configDir := getConfigDir(args)
+
+	clientCredentialsPath := ConfigFilePath(configDir, ClientCredentialsFilename)
+	clientCredentials, exists, err := auth.ReadClientCredentials(clientCredentialsPath)
+	if err != nil {
+		ExitF("Failed to read client credentials file: %s", err)
+	} else if !exists {
+		clientCredentials = auth.AssembleClientCredentials(ClientId, ClientSecret)
+	} else {
+		usingClientCredentialsFile = true
+		// Make sure the google drive scope is present
+		if len(clientCredentials.Scopes) == 0 {
+			clientCredentials.Scopes = append(clientCredentials.Scopes, "https://www.googleapis.com/auth/drive")
+		}
+	}
+
+
 	if args.String("refreshToken") != "" {
-		return auth.NewRefreshTokenClient(ClientId, ClientSecret, args.String("refreshToken")), nil
+		return auth.NewRefreshTokenClient(clientCredentials, args.String("refreshToken")), nil
 	}
 
 	if args.String("accessToken") != "" {
-		return auth.NewAccessTokenClient(ClientId, ClientSecret, args.String("accessToken")), nil
+		return auth.NewAccessTokenClient(clientCredentials, args.String("accessToken")), nil
 	}
-
-	configDir := getConfigDir(args)
 
 	if args.String("serviceAccount") != "" {
 		serviceAccountPath := ConfigFilePath(configDir, args.String("serviceAccount"))
@@ -365,7 +383,7 @@ func getOauthClient(args cli.Arguments) (*http.Client, error) {
 	}
 
 	tokenPath := ConfigFilePath(configDir, TokenFilename)
-	return auth.NewFileSourceClient(ClientId, ClientSecret, tokenPath, authCodePrompt)
+	return auth.NewFileSourceClient(clientCredentials, tokenPath, authCodePrompt)
 }
 
 func getConfigDir(args cli.Arguments) string {
@@ -392,6 +410,12 @@ func newDrive(args cli.Arguments) *drive.Drive {
 
 func authCodePrompt(url string) func() string {
 	return func() string {
+		if (usingClientCredentialsFile == true) {
+			fmt.Println("Client credentials loaded from file\n")
+		} else {
+			fmt.Println("Client credentials file not found. Using built-in defaults\n")
+		}
+
 		fmt.Println("Authentication needed")
 		fmt.Println("Go to the following url in your browser:")
 		fmt.Printf("%s\n\n", url)
