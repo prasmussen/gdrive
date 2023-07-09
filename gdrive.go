@@ -19,6 +19,7 @@ const DefaultTimeout = 5 * 60
 const DefaultQuery = "trashed = false and 'me' in owners"
 const DefaultShareRole = "reader"
 const DefaultShareType = "anyone"
+const DefaultJsonOutput = 0
 
 var DefaultConfigDir = GetDefaultConfigDir()
 
@@ -95,6 +96,12 @@ func main() {
 						Patterns:    []string{"--bytes"},
 						Description: "Size in bytes",
 						OmitValue:   true,
+					},
+					cli.IntFlag{
+						Name:         "jsonOutput",
+						Patterns:     []string{"--jsonOutput"},
+						Description:  "Print json output (1: normal, 2: pretty)",
+						DefaultValue: DefaultJsonOutput,
 					},
 				),
 			},
@@ -371,6 +378,12 @@ func main() {
 						Description: "Show size in bytes",
 						OmitValue:   true,
 					},
+					cli.IntFlag{
+						Name:         "jsonOutput",
+						Patterns:     []string{"--jsonOutput"},
+						Description:  "Print json output (1: normal, 2: pretty)",
+						DefaultValue: DefaultJsonOutput,
+					},
 				),
 			},
 		},
@@ -468,6 +481,14 @@ func main() {
 						OmitValue:   true,
 					},
 				),
+			},
+		},
+		&cli.Handler{
+			Pattern:     "[global] rename <fileId> <newName>",
+			Description: "Rename file or directory",
+			Callback:    renameHandler,
+			FlagGroups: cli.FlagGroups{
+				cli.NewFlagGroup("global", globalFlags...),
 			},
 		},
 		&cli.Handler{
@@ -694,6 +715,12 @@ func main() {
 						Description: "Size in bytes",
 						OmitValue:   true,
 					},
+					cli.IntFlag{
+						Name:         "jsonOutput",
+						Patterns:     []string{"--jsonOutput"},
+						Description:  "Print json output (1: normal, 2: pretty)",
+						DefaultValue: DefaultJsonOutput,
+					},
 				),
 			},
 		},
@@ -809,6 +836,12 @@ func main() {
 						Patterns:    []string{"--bytes"},
 						Description: "Show size in bytes",
 						OmitValue:   true,
+					},
+					cli.IntFlag{
+						Name:         "jsonOutput",
+						Patterns:     []string{"--jsonOutput"},
+						Description:  "Print json output (1: normal, 2: pretty)",
+						DefaultValue: DefaultJsonOutput,
 					},
 				),
 			},

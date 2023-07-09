@@ -29,7 +29,7 @@ func (self *Drive) Download(args DownloadArgs) error {
 		return self.downloadRecursive(args)
 	}
 
-	f, err := self.service.Files.Get(args.Id).Fields("id", "name", "size", "mimeType", "md5Checksum").Do()
+	f, err := self.service.Files.Get(args.Id).SupportsAllDrives(true).Fields("id", "name", "size", "mimeType", "md5Checksum").Do()
 	if err != nil {
 		return fmt.Errorf("Failed to get file: %s", err)
 	}
@@ -108,7 +108,7 @@ func (self *Drive) DownloadQuery(args DownloadQueryArgs) error {
 }
 
 func (self *Drive) downloadRecursive(args DownloadArgs) error {
-	f, err := self.service.Files.Get(args.Id).Fields("id", "name", "size", "mimeType", "md5Checksum").Do()
+	f, err := self.service.Files.Get(args.Id).SupportsAllDrives(true).Fields("id", "name", "size", "mimeType", "md5Checksum").Do()
 	if err != nil {
 		return fmt.Errorf("Failed to get file: %s", err)
 	}
@@ -124,10 +124,24 @@ func (self *Drive) downloadRecursive(args DownloadArgs) error {
 }
 
 func (self *Drive) downloadBinary(f *drive.File, args DownloadArgs) (int64, int64, error) {
+	// Path to file
+	fpath := filepath.Join(args.Path, f.Name)
+
+	// Check if file exists to force
+	if !args.Skip && !args.Force && fileExists(fpath) {
+		return 0, 0, fmt.Errorf("File '%s' already exists, use --force to overwrite or --skip to skip", fpath)
+	}
+
+	//Check if file exists to skip
+	if args.Skip && fileExists(fpath) {
+		fmt.Printf("File '%s' already exists, skipping\n", fpath)
+		return 0, 0, nil
+	}
+
 	// Get timeout reader wrapper and context
 	timeoutReaderWrapper, ctx := getTimeoutReaderWrapperContext(args.Timeout)
 
-	res, err := self.service.Files.Get(f.Id).Context(ctx).Download()
+	res, err := self.service.Files.Get(f.Id).SupportsAllDrives(true).Context(ctx).Download()
 	if err != nil {
 		if isTimeoutError(err) {
 			return 0, 0, fmt.Errorf("Failed to download file: timeout, no data was transferred for %v", args.Timeout)
@@ -137,9 +151,6 @@ func (self *Drive) downloadBinary(f *drive.File, args DownloadArgs) (int64, int6
 
 	// Close body on function exit
 	defer res.Body.Close()
-
-	// Path to file
-	fpath := filepath.Join(args.Path, f.Name)
 
 	if !args.Stdout {
 		fmt.Fprintf(args.Out, "Downloading %s -> %s\n", f.Name, fpath)
@@ -176,17 +187,6 @@ func (self *Drive) saveFile(args saveFileArgs) (int64, int64, error) {
 		// Write file content to stdout
 		_, err := io.Copy(args.out, srcReader)
 		return 0, 0, err
-	}
-
-	// Check if file exists to force
-	if !args.skip && !args.force && fileExists(args.fpath) {
-		return 0, 0, fmt.Errorf("File '%s' already exists, use --force to overwrite or --skip to skip", args.fpath)
-	}
-
-	//Check if file exists to skip
-	if args.skip && fileExists(args.fpath) {
-		fmt.Printf("File '%s' already exists, skipping\n", args.fpath)
-		return 0, 0, nil
 	}
 
 	// Ensure any parent directories exists

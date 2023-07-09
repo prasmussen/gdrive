@@ -18,6 +18,7 @@ type ListFilesArgs struct {
 	SkipHeader  bool
 	SizeInBytes bool
 	AbsPath     bool
+	JsonOutput  int64
 }
 
 func (self *Drive) List(args ListFilesArgs) (err error) {
@@ -44,6 +45,13 @@ func (self *Drive) List(args ListFilesArgs) (err error) {
 		}
 	}
 
+	if args.JsonOutput > 0 {
+		return OutputFileList(OutputFileListArgs{
+			Out:        args.Out,
+			Files:      files,
+			JsonOutput: args.JsonOutput,
+		})
+	}
 	PrintFileList(PrintFileListArgs{
 		Out:         args.Out,
 		Files:       files,
@@ -74,7 +82,7 @@ func (self *Drive) listAllFiles(args listAllFilesArgs) ([]*drive.File, error) {
 
 	controlledStop := fmt.Errorf("Controlled stop")
 
-	err := self.service.Files.List().Q(args.query).Fields(args.fields...).OrderBy(args.sortOrder).PageSize(pageSize).Pages(context.TODO(), func(fl *drive.FileList) error {
+	err := self.service.Files.List().SupportsAllDrives(true).Corpora("allDrives").IncludeItemsFromAllDrives(true).Q(args.query).Fields(args.fields...).OrderBy(args.sortOrder).PageSize(pageSize).Pages(context.TODO(), func(fl *drive.FileList) error {
 		files = append(files, fl.Files...)
 
 		// Stop when we have all the files we need
@@ -95,6 +103,28 @@ func (self *Drive) listAllFiles(args listAllFilesArgs) ([]*drive.File, error) {
 	}
 
 	return files, nil
+}
+
+type OutputFileListArgs struct {
+	Out        io.Writer
+	Files      []*drive.File
+	JsonOutput int64
+}
+
+func OutputFileList(args OutputFileListArgs) error {
+	var data []map[string]interface{}
+
+	for _, f := range args.Files {
+		data = append(data, map[string]interface{}{
+			"id":      f.Id,
+			"name":    f.Name,
+			"type":    filetype(f),
+			"size":    f.Size,
+			"created": formatDatetime(f.CreatedTime),
+		})
+	}
+
+	return jsonOutput(args.Out, args.JsonOutput == 2, data)
 }
 
 type PrintFileListArgs struct {

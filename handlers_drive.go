@@ -30,6 +30,7 @@ func listHandler(ctx cli.Context) {
 		SkipHeader:  args.Bool("skipHeader"),
 		SizeInBytes: args.Bool("sizeInBytes"),
 		AbsPath:     args.Bool("absPath"),
+		JsonOutput:  args.Int64("jsonOutput"),
 	})
 	checkErr(err)
 }
@@ -189,6 +190,7 @@ func infoHandler(ctx cli.Context) {
 		Out:         os.Stdout,
 		Id:          args.String("fileId"),
 		SizeInBytes: args.Bool("sizeInBytes"),
+		JsonOutput:  args.Int64("jsonOutput"),
 	})
 	checkErr(err)
 }
@@ -225,6 +227,7 @@ func listRevisionsHandler(ctx cli.Context) {
 		NameWidth:   args.Int64("nameWidth"),
 		SizeInBytes: args.Bool("sizeInBytes"),
 		SkipHeader:  args.Bool("skipHeader"),
+		JsonOutput:  args.Int64("jsonOutput"),
 	})
 	checkErr(err)
 }
@@ -283,6 +286,16 @@ func deleteHandler(ctx cli.Context) {
 	checkErr(err)
 }
 
+func renameHandler(ctx cli.Context) {
+	args := ctx.Args()
+	err := newDrive(args).Rename(drive.RenameArgs{
+		Out:       os.Stdout,
+		Id:        args.String("fileId"),
+		NewName:   args.String("newName"),
+	})
+	checkErr(err)
+}
+
 func listSyncHandler(ctx cli.Context) {
 	args := ctx.Args()
 	err := newDrive(args).ListSync(drive.ListSyncArgs{
@@ -320,6 +333,7 @@ func aboutHandler(ctx cli.Context) {
 	err := newDrive(args).About(drive.AboutArgs{
 		Out:         os.Stdout,
 		SizeInBytes: args.Bool("sizeInBytes"),
+		JsonOutput:  args.Int64("jsonOutput"),
 	})
 	checkErr(err)
 }
